@@ -188,7 +188,7 @@ var SupSub = P(MathCommand, function(_, super_) {
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
         cursor.insRightOf(this.parent);
       }
-      if ((supsub == 'sub') && cursor.options.NoOperatorsInSubscript && !RegExp(/[A-Za-z0-9]/).test(ch)) {
+      if ((supsub == 'sub') && cursor.options.noOperatorsInSubscript && !RegExp(/[A-Za-z0-9]/).test(ch)) {
         cursor.insRightOf(this.parent);
       }
       MathBlock.p.write.apply(this, arguments);
@@ -205,7 +205,7 @@ var SupSub = P(MathCommand, function(_, super_) {
     //subscript first
     var tex = '';
     if(this.sub) {
-      if(opts.NoOperatorsInSubscript) {
+      if(opts.noOperatorsInSubscript) {
         // If this flag is enabled, subscripts should create variable names like 'r_outer', not 'r_(outer)'
         tex += '_' + (this.sub && this.sub.ends[L] === this.sub.ends[R] ?
             this.sub.ends[L].text(opts) :
