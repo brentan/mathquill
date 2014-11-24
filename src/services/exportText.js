@@ -7,6 +7,6 @@ Controller.open(function(_, super_) {
   _.exportText = function() {
     return this.root.foldChildren('', function(text, child) {
       return text + child.text();
-    }).replace(/\\/g, "").replace(/operatorname\{(.*?)\}/g,"$1").replace(/cdot/g,'*').replace(/\*\*/g,'*');
+    }).replace(/\\/g, "").replace(/operatorname\{(.*?)\}/g,"$1").replace(/cdot/g,'*').replace(/\*\*/g,'*'); //TODO: ** shouldnt happen anyways...should do a better job keeping that from popping up
   };
 });
