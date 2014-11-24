@@ -335,6 +335,7 @@ LatexCmds.superscript =
 LatexCmds.supscript =
 LatexCmds['^'] = P(SupSub, function(_, super_) {
   _.supsub = 'sup';
+  _.ctrlSeq = '^';
   _.htmlTemplate =
       '<span class="mq-supsub mq-non-leaf mq-sup-only">'
     +   '<span class="mq-sup">&0</span>'
