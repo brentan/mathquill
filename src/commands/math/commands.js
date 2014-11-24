@@ -317,6 +317,7 @@ function insLeftOfMeUnlessAtEnd(cursor) {
 LatexCmds.subscript =
 LatexCmds._ = P(SupSub, function(_, super_) {
   _.supsub = 'sub';
+  _.ctrlSeq = '_';
   _.htmlTemplate =
       '<span class="mq-supsub mq-non-leaf">'
     +   '<span class="mq-sub">&0</span>'
