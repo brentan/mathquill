@@ -356,10 +356,12 @@ var MathBlock = P(MathElement, function(_, super_) {
   };
   _.html = function() { return this.join('html'); };
   _.latex = function() { return this.join('latex'); };
-  _.text = function() {
+  _.text = function(opts) {
     return this.ends[L] === this.ends[R] ?
-      this.ends[L].text() :
-      '(' + this.join('text') + ')'
+      this.ends[L].text(opts) :
+      '(' + this.foldChildren('', function(text, child) {
+        return text + child.text(opts);
+      }) + ')'
     ;
   };
 
