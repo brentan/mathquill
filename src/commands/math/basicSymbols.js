@@ -12,6 +12,7 @@ var Variable = P(Symbol, function(_, super_) {
         && !(this[L] instanceof BinaryOperator))
       text = '*' + text;
     if (this[R] && !(this[R] instanceof BinaryOperator)
+        && !(this[R] instanceof Variable)
         && !(this[R].ctrlSeq === '^'))
       text += '*';
     return text;
