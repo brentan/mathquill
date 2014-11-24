@@ -183,8 +183,12 @@ var SupSub = P(MathCommand, function(_, super_) {
   };
   Options.p.charsThatBreakOutOfSupSub = '';
   _.finalizeTree = function() {
+    var supsub = this.supsub;
     this.ends[L].write = function(cursor, ch) {
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
+        cursor.insRightOf(this.parent);
+      }
+      if ((supsub == 'sub') && cursor.options.NoOperatorsInSubscript && !RegExp(/[A-Za-z0-9]/).test(ch)) {
         cursor.insRightOf(this.parent);
       }
       MathBlock.p.write.apply(this, arguments);
@@ -198,11 +202,34 @@ var SupSub = P(MathCommand, function(_, super_) {
     return latex('_', this.sub) + latex('^', this.sup);
   };
   _.text = function(opts) {
-    function text(prefix, block) {
-      var l = block && block.text(opts);
-      return block ? prefix + l : '';
+    //subscript first
+    var tex = '';
+    if(this.sub) {
+      if(opts.NoOperatorsInSubscript) {
+        // If this flag is enabled, subscripts should create variable names like 'r_outer', not 'r_(outer)'
+        tex += '_' + (this.sub && this.sub.ends[L] === this.sub.ends[R] ?
+            this.sub.ends[L].text(opts) :
+            this.sub.foldChildren('', function (text, child) {
+              return text + child.text(opts);
+            }));
+      } else {
+        tex += '_' +  (this.sub && this.sub.ends[L] === this.sub.ends[R] ?
+            this.sub.ends[L].text(opts) :
+        '(' + this.sub.foldChildren('', function (text, child) {
+          return text + child.text(opts);
+        })
+        + ')');
+      }
     }
-    return text('_', this.sub) + text('^', this.sup);
+    if(this.sup) {
+      tex += '^' + (this.sup && this.sup.ends[L] === this.sup.ends[R] ?
+          this.sup.ends[L].text(opts) :
+      '(' + this.sup.foldChildren('', function (text, child) {
+        return text + child.text(opts);
+      })
+      + ')');
+    }
+    return tex;
   };
   _.respace = _.siblingCreated = _.siblingDeleted = function(opts, dir) {
     if (dir === R) return; // ignore if sibling only changed on the right
