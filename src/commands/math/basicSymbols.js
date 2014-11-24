@@ -78,6 +78,7 @@ var Letter = P(Variable, function(_, super_) {
   _.finalizeTree = _.siblingDeleted = _.siblingCreated = function(opts, dir) {
     // don't auto-un-italicize if the sibling to my right changed (dir === R or
     // undefined) and it's now a Letter, it will un-italicize everyone
+    if(opts.autoOnBrackets) return;
     if (dir !== L && this[R] instanceof Letter) return;
     this.autoUnItalicize(opts);
   };
@@ -102,7 +103,7 @@ var Letter = P(Variable, function(_, super_) {
     outer: for (var i = 0, first = l[R] || this.parent.ends[L]; i < str.length; i += 1, first = first[R]) {
       for (var len = min(autoOps._maxLength, str.length - i); len > 0; len -= 1) {
         var word = str.slice(i, i + len);
-        if (autoOps.hasOwnProperty(word)) {
+        if (opts.autoAllFunctions || autoOps.hasOwnProperty(word)) {
           for (var j = 0, letter = first; j < len; j += 1, letter = letter[R]) {
             letter.italicize(false);
             var last = letter;

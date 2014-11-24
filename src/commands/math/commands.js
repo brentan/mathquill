@@ -587,10 +587,12 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
   _.deleteTowards = function(dir, cursor) {
     this.deleteSide(-dir, false, cursor);
   };
-  _.finalizeTree = function() {
+  _.finalizeTree = function(opts) {
     this.ends[L].deleteOutOf = function(dir, cursor) {
       this.parent.deleteSide(dir, true, cursor);
     };
+    if(opts.autoOnBrackets && this[L] instanceof Letter)
+      this[L].autoUnItalicize(opts);
     // FIXME HACK: after initial creation/insertion, finalizeTree would only be
     // called if the paren is selected and replaced, e.g. by LiveFraction
     this.finalizeTree = this.intentionalBlur = function() {
