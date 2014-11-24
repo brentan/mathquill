@@ -6,7 +6,7 @@ var Variable = P(Symbol, function(_, super_) {
   _.init = function(ch, html) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
   };
-  _.text = function() {
+  _.text = function(opts) {
     var text = this.ctrlSeq;
     if (this[L] && !(this[L] instanceof Variable)
         && !(this[L] instanceof BinaryOperator))

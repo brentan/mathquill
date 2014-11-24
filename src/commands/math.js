@@ -278,15 +278,15 @@ var MathCommand = P(MathElement, function(_, super_) {
     });
   };
   _.textTemplate = [''];
-  _.text = function() {
+  _.text = function(opts) {
     var cmd = this, i = 0;
     return cmd.foldChildren(cmd.textTemplate[i], function(text, child) {
       i += 1;
-      var child_text = child.text();
+      var child_text = child.text(opts);
       if (text && cmd.textTemplate[i] === '('
           && child_text[0] === '(' && child_text.slice(-1) === ')')
         return text + child_text.slice(1, -1) + cmd.textTemplate[i];
-      return text + child.text() + (cmd.textTemplate[i] || '');
+      return text + child.text(opts) + (cmd.textTemplate[i] || '');
     });
   };
 });

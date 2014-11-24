@@ -74,7 +74,7 @@ var AbstractMathQuill = P(function(_) {
     return this;
   };
   _.el = function() { return this.__controller.container[0]; };
-  _.text = function() { return this.__controller.exportText(); };
+  _.text = function() { return this.__controller.exportText(this.__options); };
   _.latex = function(latex) {
     if (arguments.length > 0) {
       this.__controller.renderLatexMath(latex);
