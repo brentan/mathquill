@@ -14,10 +14,13 @@ var Variable = P(Symbol, function(_, super_) {
     if (this[L] && !(this[L] instanceof BinaryOperator)
         && (this.ctrlSeq[0] == '\\'))
       text = '*' + text;
+    var auto_complete_command = false;
+    for (var l = this[L]; l instanceof Letter; l = l[L]) if(l.ctrlSeq[0] == '\\') { auto_complete_command = true; break;}
     if (this[R] && !(this[R] instanceof BinaryOperator)
         && !(this[R] instanceof Variable)
         && !(this[R].ctrlSeq === '^')
-        && !(this[R].ctrlSeq === '_'))
+        && !(this[R].ctrlSeq === '_')
+        && !auto_complete_command)
       text += '*';
     return text;
   };
