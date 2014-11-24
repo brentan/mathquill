@@ -9,7 +9,6 @@ Controller.open(function(_, super_) {
       return text + child.text(opts);
     })
         .replace(/\\operatorname\{(.*?)\}/g,"$1")
-        .replace(/\\cdot/g,'*')
         .replace(/\\/g, "")
         .replace(/\*\*/g,'*');
         //TODO: '**' shouldnt happen, so it should really be dealt with by fixing whatever is causing them
