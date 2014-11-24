@@ -197,6 +197,13 @@ var SupSub = P(MathCommand, function(_, super_) {
     }
     return latex('_', this.sub) + latex('^', this.sup);
   };
+  _.text = function(opts) {
+    function text(prefix, block) {
+      var l = block && block.text(opts);
+      return block ? prefix + l : '';
+    }
+    return text('_', this.sub) + text('^', this.sup);
+  };
   _.respace = _.siblingCreated = _.siblingDeleted = function(opts, dir) {
     if (dir === R) return; // ignore if sibling only changed on the right
     this.jQ.toggleClass('mq-limit', this[L].ctrlSeq === '\\int ');
