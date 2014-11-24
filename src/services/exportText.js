@@ -7,6 +7,6 @@ Controller.open(function(_, super_) {
   _.exportText = function() {
     return this.root.foldChildren('', function(text, child) {
       return text + child.text();
-    });
+    }).replace(/\\/g, "");
   };
 });
