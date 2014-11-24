@@ -64,6 +64,7 @@ var TextBlock = P(Node, function(_, super_) {
     });
   };
   _.text = function(opts) {
+    if (opts.dropTextFieldsOnTextOutput) return '';
     return '"' + this.textContents() + '"';
   };
   _.latex = function() { return '\\text{' + this.textContents() + '}'; };
