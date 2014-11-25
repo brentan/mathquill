@@ -11,6 +11,7 @@ Controller.open(function(_, super_) {
         .replace(/\\operatorname\{(.*?)\}/g,"$1")
         .replace(/\\/g, "")
         .replace(/\* *\*/g,'*')
+        .replace(/ *_/g,'_')
         .replace(/\* *$/,''); //Random cases of hanging multiplications...just remove these.
         //TODO: '**' shouldnt happen, so it should really be dealt with by fixing whatever is causing them
   };
