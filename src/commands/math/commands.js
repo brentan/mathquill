@@ -487,6 +487,9 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
   _.latex = function() {
     return '\\sqrt['+this.ends[L].latex()+']{'+this.ends[R].latex()+'}';
   };
+  _.text = function(opts) {
+    return this.ends[R].text(opts) + '^(1/' + this.ends[L].text(opts) + ')';
+  }
 });
 
 function DelimsMixin(_, super_) {
@@ -570,6 +573,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     }
     if (side === L) cursor.insAtLeftEnd(brack.ends[L]);
     else cursor.insRightOf(brack);
+    cursor.parent.bubble('workingGroupChange');
   };
   _.placeCursor = noop;
   _.unwrap = function() {

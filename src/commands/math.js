@@ -81,6 +81,11 @@ var MathCommand = P(MathElement, function(_, super_) {
     }
     cmd.finalizeInsert(cursor.options);
     cmd.placeCursor(cursor);
+    if((this instanceof BinaryOperator) ||
+        (this instanceof Fraction) ||
+        (this instanceof SupSub) ||
+        (this instanceof SquareRoot))
+      this.bubble('workingGroupChange');
   };
   _.createBlocks = function() {
     var cmd = this,
