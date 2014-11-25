@@ -66,6 +66,7 @@ var Letter = P(Variable, function(_, super_) {
           cursor[L] = l[L];
           return LatexCmds[str](str).createLeftOf(cursor);
         }
+        if(cursor.options.autoCommandFullWordOnly) break;
         str = str.slice(1);
       }
     }
