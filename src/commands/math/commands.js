@@ -274,12 +274,17 @@ var SupSub = P(MathCommand, function(_, super_) {
 var SummationNotation = P(MathCommand, function(_, super_) {
   _.init = function(ch, html) {
     var htmlTemplate =
-      '<span class="mq-large-operator mq-non-leaf">'
-    +   '<span class="mq-to"><span>&1</span></span>'
-    +   '<big>'+html+'</big>'
-    +   '<span class="mq-from"><span>&0</span></span>'
-    + '</span>'
-    ;
+            '<span><span class="mq-large-operator mq-non-leaf">'
+            +   '<span class="mq-to"><span>&1</span></span>'
+            +   '<big>'+html+'</big>'
+            +   '<span class="mq-from"><span>&0</span></span>'
+            + '</span>'
+            + '<span class="mq-non-leaf">'
+            + '<span class="mq-scaled mq-paren">(</span>'
+            + '<span class="mq-non-leaf">&2</span>'
+            + '<span class="mq-scaled mq-paren">)</span>'
+            + '</span></span>'
+        ;
     Symbol.prototype.init.call(this, ch, htmlTemplate);
   };
   _.createLeftOf = function(cursor) {
@@ -289,21 +294,31 @@ var SummationNotation = P(MathCommand, function(_, super_) {
       Equality().createLeftOf(cursor);
     }
   };
+  _.reflow = function() {
+    var delimjQs = this.jQ.children(':last').children(':first').add(this.jQ.children(':last').children(':last'));
+    var contentjQ = this.jQ.children(':last').children(':eq(1)');
+    var height = contentjQ.outerHeight() / parseInt(contentjQ.css('fontSize'), 10);
+    scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
+  };
   _.latex = function() {
     function simplify(latex) {
-      return latex.length === 1 ? latex : '{' + (latex || ' ') + '}';
+      return latex.length === 1 ? latex + ' ' : '{' + (latex || ' ') + '}';
     }
-    return this.ctrlSeq + '_' + simplify(this.ends[L].latex()) +
-      '^' + simplify(this.ends[R].latex());
+    return this.ctrlSeq + '_' + simplify(this.blocks[0].latex()) +
+        '^' + simplify(this.blocks[1].latex()) + '\\left(' + this.blocks[2].latex() + '\\right)';
   };
+  _.text = function(opts) {
+    return this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ').slice(1,-1) + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
+  }
   _.parser = function() {
     var string = Parser.string;
     var optWhitespace = Parser.optWhitespace;
+    var whitespace = Parser.whitespace;
     var succeed = Parser.succeed;
     var block = latexMathParser.block;
 
     var self = this;
-    var blocks = self.blocks = [ MathBlock(), MathBlock() ];
+    var blocks = self.blocks = [ MathBlock(), MathBlock(), MathBlock() ];
     for (var i = 0; i < blocks.length; i += 1) {
       blocks[i].adopt(self, self.ends[R], 0);
     }
@@ -314,7 +329,13 @@ var SummationNotation = P(MathCommand, function(_, super_) {
         block.children().adopt(child, child.ends[R], 0);
         return succeed(self);
       });
-    }).many().result(self);
+    }).many().then(whitespace).then(function() {
+      var child = blocks[2];
+      return block.then(function (block) {
+        block.children().adopt(child, child.ends[R], 0);
+        return succeed(self);
+      });
+    }).result(self);
   };
   _.finalizeTree = function() {
     this.downInto = this.ends[L];
