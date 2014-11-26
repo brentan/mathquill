@@ -273,18 +273,25 @@ var SupSub = P(MathCommand, function(_, super_) {
 
 var SummationNotation = P(MathCommand, function(_, super_) {
   _.init = function(ch, html) {
-    var htmlTemplate =
-            '<span><span class="mq-large-operator mq-non-leaf">'
-            +   '<span class="mq-to"><span>&1</span></span>'
-            +   '<big>'+html+'</big>'
-            +   '<span class="mq-from"><span>&0</span></span>'
-            + '</span>'
-            + '<span class="mq-non-leaf">'
-            + '<span class="mq-scaled mq-paren">(</span>'
-            + '<span class="mq-non-leaf">&2</span>'
-            + '<span class="mq-scaled mq-paren">)</span>'
-            + '</span></span>'
-        ;
+    if(Options.p.autoParensSummationNotation)
+      var htmlTemplate =
+          '<span><span class="mq-large-operator mq-non-leaf">'
+          +   '<span class="mq-to"><span>&1</span></span>'
+          +   '<big>'+html+'</big>'
+          +   '<span class="mq-from"><span>&0</span></span>'
+          + '</span>'
+          + '<span class="mq-non-leaf">'
+          + '<span class="mq-scaled mq-paren">(</span>'
+          + '<span class="mq-non-leaf">&2</span>'
+          + '<span class="mq-scaled mq-paren">)</span>'
+          + '</span></span>';
+    else
+      var htmlTemplate =
+          '<span class="mq-large-operator mq-non-leaf">'
+          +   '<span class="mq-to"><span>&1</span></span>'
+          +   '<big>'+html+'</big>'
+          +   '<span class="mq-from"><span>&0</span></span>'
+          + '</span>';
     Symbol.prototype.init.call(this, ch, htmlTemplate);
   };
   _.createLeftOf = function(cursor) {
@@ -295,17 +302,29 @@ var SummationNotation = P(MathCommand, function(_, super_) {
     }
   };
   _.reflow = function() {
-    var delimjQs = this.jQ.children(':last').children(':first').add(this.jQ.children(':last').children(':last'));
-    var contentjQ = this.jQ.children(':last').children(':eq(1)');
-    var height = contentjQ.outerHeight() / parseInt(contentjQ.css('fontSize'), 10);
-    scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
+    if(Options.p.autoParensSummationNotation) {
+      var delimjQs = this.jQ.children(':last').children(':first').add(this.jQ.children(':last').children(':last'));
+      var contentjQ = this.jQ.children(':last').children(':eq(1)');
+      var height = contentjQ.outerHeight() / parseInt(contentjQ.css('fontSize'), 10);
+      scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
+    }
   };
   _.latex = function() {
-    return this.ctrlSeq + '_{' + this.blocks[0].latex() +
-        '}^{' + this.blocks[1].latex() + '}\\left({' + this.blocks[2].latex() + '}\\right)';
+    function simplify(latex) {
+      return latex.length === 1 ? latex : '{' + (latex || ' ') + '}';
+    }
+    if(Options.p.autoParensSummationNotation)
+      return this.ctrlSeq + '_{' + this.blocks[0].latex() +
+          '}^{' + this.blocks[1].latex() + '}\\left({' + this.blocks[2].latex() + '}\\right)';
+    else
+      return this.ctrlSeq + '_' + simplify(this.ends[L].latex()) +
+          '^' + simplify(this.ends[R].latex());
   };
   _.text = function(opts) {
-    return this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ').slice(1,-1) + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
+    if(Options.p.autoParensSummationNotation)
+      return this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ').slice(1,-1) + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
+    else
+      return this.ctrlSeq +  '("' + this.ends[L].text(opts).replace('=','" , ').slice(1,-1) + ' , ' + this.ends[R].text(opts) + ')';
   }
   _.parser = function() {
     var string = Parser.string;
@@ -315,31 +334,42 @@ var SummationNotation = P(MathCommand, function(_, super_) {
     var block = latexMathParser.block;
 
     var self = this;
-    var blocks = self.blocks = [ MathBlock(), MathBlock(), MathBlock() ];
+    if(Options.p.autoParensSummationNotation)
+      var blocks = self.blocks = [ MathBlock(), MathBlock(), MathBlock() ];
+    else
+      var blocks = self.blocks = [ MathBlock(), MathBlock() ];
     for (var i = 0; i < blocks.length; i += 1) {
       blocks[i].adopt(self, self.ends[R], 0);
     }
 
-    return optWhitespace.then(string('_')).then(function() {
-      var child = blocks[0];
-      return block.then(function(block) {
-        block.children().adopt(child, child.ends[R], 0);
-        return succeed(self);
-      });
-    }).then(optWhitespace).then(string('^')).then(function() {
-      var child = blocks[1];
-      return block.then(function(block) {
-        block.children().adopt(child, child.ends[R], 0);
-        return succeed(self);
-      });
-    })
-        .then(string('\\left(')).then(function() {
-          var child = blocks[2];
-          return block.then(function (block) {
-            block.children().adopt(child, child.ends[R], 0);
-            return succeed(self);
-          });
-        }).then(string('\\right)')).result(self);
+    if(Options.p.autoParensSummationNotation)
+      return optWhitespace.then(string('_')).then(function() {
+        var child = blocks[0];
+        return block.then(function(block) {
+          block.children().adopt(child, child.ends[R], 0);
+          return succeed(self);
+        });
+      }).then(optWhitespace).then(string('^')).then(function() {
+        var child = blocks[1];
+        return block.then(function(block) {
+          block.children().adopt(child, child.ends[R], 0);
+          return succeed(self);
+        });
+      }).then(string('\\left(')).then(function() {
+        var child = blocks[2];
+        return block.then(function (block) {
+          block.children().adopt(child, child.ends[R], 0);
+          return succeed(self);
+        });
+      }).then(string('\\right)')).result(self);
+    else
+      return optWhitespace.then(string('_').or(string('^'))).then(function(supOrSub) {
+        var child = blocks[supOrSub === '_' ? 0 : 1];
+        return block.then(function(block) {
+          block.children().adopt(child, child.ends[R], 0);
+          return succeed(self);
+        });
+      }).many().result(self);
   };
   _.finalizeTree = function() {
     this.downInto = this.ends[L];
