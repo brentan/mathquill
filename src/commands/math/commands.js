@@ -322,9 +322,9 @@ var SummationNotation = P(MathCommand, function(_, super_) {
   };
   _.text = function(opts) {
     if(Options.p.autoParensSummationNotation)
-      return this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ').slice(1,-1) + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
+      return this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ') + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
     else
-      return this.ctrlSeq +  '("' + this.ends[L].text(opts).replace('=','" , ').slice(1,-1) + ' , ' + this.ends[R].text(opts) + ')';
+      return this.ctrlSeq +  '("' + this.ends[L].text(opts).replace('=','" , ') + ' , ' + this.ends[R].text(opts) + ')';
   }
   _.parser = function() {
     var string = Parser.string;
@@ -452,7 +452,7 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
     +   '<span style="display:inline-block;width:0">&nbsp;</span>'
     + '</span>'
   ;
-  _.textTemplate = ['(', '/', ')'];
+  _.textTemplate = ['((', ')/(', '))'];
   _.finalizeTree = function() {
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];

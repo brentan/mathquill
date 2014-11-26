@@ -9,7 +9,8 @@ var Variable = P(Symbol, function(_, super_) {
   _.text = function(opts) {
     var text = this.ctrlSeq;
     if (this[L] && !(this[L] instanceof Variable)
-        && !(this[L] instanceof BinaryOperator))
+        && !(this[L] instanceof BinaryOperator)
+        && !(this[L].ctrlSeq === ','))
       text = '*' + text;
     if (this[L] && !(this[L] instanceof BinaryOperator)
         && (this.ctrlSeq[0] == '\\'))
@@ -19,6 +20,7 @@ var Variable = P(Symbol, function(_, super_) {
     if (this[R] && !(this[R] instanceof BinaryOperator)
         && !(this[R] instanceof Variable)
         && !(this[R].ctrlSeq === '^')
+        && !(this[R].ctrlSeq === ',')
         && !(this[R].ctrlSeq === '_')
         && !auto_complete_command)
       text += '*';

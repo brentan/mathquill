@@ -364,9 +364,9 @@ var MathBlock = P(MathElement, function(_, super_) {
   _.text = function(opts) {
     return this.ends[L] === this.ends[R] ?
       this.ends[L].text(opts) :
-      '(' + this.foldChildren('', function(text, child) {
+      this.foldChildren('', function(text, child) {
         return text + child.text(opts);
-      }) + ')'
+      })
     ;
   };
 
