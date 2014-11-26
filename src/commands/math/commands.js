@@ -322,9 +322,9 @@ var SummationNotation = P(MathCommand, function(_, super_) {
   };
   _.text = function(opts) {
     if(Options.p.autoParensSummationNotation)
-      return this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ') + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
+      return ' ' + this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ') + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
     else
-      return this.ctrlSeq +  '("' + this.ends[L].text(opts).replace('=','" , ') + ' , ' + this.ends[R].text(opts) + ')';
+      return ' ' + this.ctrlSeq +  '("' + this.ends[L].text(opts).replace('=','" , ') + ' , ' + this.ends[R].text(opts) + ')';
   }
   _.parser = function() {
     var string = Parser.string;
@@ -500,7 +500,7 @@ LatexCmds['√'] = P(MathCommand, function(_, super_) {
     +   '<span class="mq-non-leaf mq-sqrt-stem">&0</span>'
     + '</span>'
   ;
-  _.textTemplate = ['sqrt(', ')'];
+  _.textTemplate = [' sqrt(', ')'];
   _.parser = function() {
     return latexMathParser.optBlock.then(function(optBlock) {
       return latexMathParser.block.map(function(block) {
@@ -543,7 +543,7 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
     return '\\sqrt['+this.ends[L].latex()+']{'+this.ends[R].latex()+'}';
   };
   _.text = function(opts) {
-    return this.ends[R].text(opts) + '^(1/' + this.ends[L].text(opts) + ')';
+    return ' ' + this.ends[R].text(opts) + '^(1/' + this.ends[L].text(opts) + ')';
   }
 });
 
