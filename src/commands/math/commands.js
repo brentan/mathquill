@@ -301,11 +301,8 @@ var SummationNotation = P(MathCommand, function(_, super_) {
     scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
   };
   _.latex = function() {
-    function simplify(latex) {
-      return latex.length === 1 ? latex + ' ' : '{' + (latex || ' ') + '}';
-    }
-    return this.ctrlSeq + '_' + simplify(this.blocks[0].latex()) +
-        '^' + simplify(this.blocks[1].latex()) + '\\left(' + this.blocks[2].latex() + '\\right)';
+    return this.ctrlSeq + '_{' + this.blocks[0].latex() +
+        '}^{' + this.blocks[1].latex() + '}\\left({' + this.blocks[2].latex() + '}\\right)';
   };
   _.text = function(opts) {
     return this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ').slice(1,-1) + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
@@ -323,19 +320,26 @@ var SummationNotation = P(MathCommand, function(_, super_) {
       blocks[i].adopt(self, self.ends[R], 0);
     }
 
-    return optWhitespace.then(string('_').or(string('^'))).then(function(supOrSub) {
-      var child = blocks[supOrSub === '_' ? 0 : 1];
+    return optWhitespace.then(string('_')).then(function() {
+      var child = blocks[0];
       return block.then(function(block) {
         block.children().adopt(child, child.ends[R], 0);
         return succeed(self);
       });
-    }).many().then(whitespace).then(function() {
-      var child = blocks[2];
-      return block.then(function (block) {
+    }).then(optWhitespace).then(string('^')).then(function() {
+      var child = blocks[1];
+      return block.then(function(block) {
         block.children().adopt(child, child.ends[R], 0);
         return succeed(self);
       });
-    }).result(self);
+    })
+        .then(string('\\left(')).then(function() {
+          var child = blocks[2];
+          return block.then(function (block) {
+            block.children().adopt(child, child.ends[R], 0);
+            return succeed(self);
+          });
+        }).then(string('\\right)')).result(self);
   };
   _.finalizeTree = function() {
     this.downInto = this.ends[L];
