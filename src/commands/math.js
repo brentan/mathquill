@@ -71,6 +71,23 @@ var MathCommand = P(MathElement, function(_, super_) {
   // createLeftOf(cursor) and the methods it calls
   _.createLeftOf = function(cursor) {
     var cmd = this;
+
+    //Test for matrix specific commands - BRENTAN!
+    if(cursor.options.enableMatrixShortcuts && (typeof cursor.parent !== 'undefined') &&
+        (typeof cursor.parent !== 'undefined') &&
+        (cursor.parent.parent instanceof Matrix)) {
+      if(cmd.ctrlSeq == ',')
+        return cursor.parent.parent.moveOrInsertColumn(cursor);
+      else if(cmd.ctrlSeq == ';')
+        return cursor.parent.parent.insertRow(cursor);
+      else if(cmd.ctrlSeq == ':')
+        return cursor.parent.parent.deleteRow(cursor);
+      else if(cmd.ctrlSeq == '<')
+        return cursor.parent.parent.deleteColumn(cursor);
+      else if(cmd.ctrlSeq == '>')
+        return cursor.parent.parent.insertColumn(cursor);
+    }
+
     var replacedFragment = cmd.replacedFragment;
 
     cmd.createBlocks();

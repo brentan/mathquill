@@ -29,7 +29,15 @@ CharCmds['\\'] = P(MathCommand, function(_, super_) {
     };
     this.ends[L].write = function(cursor, ch, replacedFragment) {
       if (replacedFragment) replacedFragment.remove();
-
+      if (this.parent.ends[L].latex().indexOf('matrix') == 0){
+        if(/^matrix\dx\d$/.test(this.parent.ends[L].latex())){
+          this.parent.renderCommand(cursor);
+          if (ch !== '\\' || !this.isEmpty()) this.parent.parent.write(cursor, ch);
+        } else {
+          VanillaSymbol(ch).createLeftOf(cursor);
+        }
+        return;
+      }
       if (ch.match(/[a-z]/i)) VanillaSymbol(ch).createLeftOf(cursor);
       else {
         this.parent.renderCommand(cursor);
@@ -79,8 +87,7 @@ CharCmds['\\'] = P(MathCommand, function(_, super_) {
       cmd = cmd(latex);
       if (this._replacedFragment) cmd.replaces(this._replacedFragment);
       cmd.createLeftOf(cursor);
-    }
-    else {
+    } else {
       cmd = TextBlock();
       cmd.replaces(latex);
       cmd.createLeftOf(cursor);
