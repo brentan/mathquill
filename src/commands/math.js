@@ -26,6 +26,9 @@ var MathElement = P(Node, function(_, super_) {
     if (self[L].siblingCreated) self[L].siblingCreated(options, R);
     self.bubble('reflow');
   };
+  _.contextMenu = function(cursor) {
+    //Default context menu to call.  
+  }
 });
 
 /**
