@@ -993,7 +993,11 @@ function bindCharBracketPair(open, ctrlSeq) {
   CharCmds[close] = bind(Bracket, R, open, close, ctrlSeq, end);
 }
 bindCharBracketPair('(');
-bindCharBracketPair('[');
+
+// Custom use of the bracket for matrix.  Non-standard for MathQuill
+//bindCharBracketPair('[');
+CharCmds['['] = bind(Matrix, '\\bmatrix',1,1);
+
 bindCharBracketPair('{', '\\{');
 LatexCmds.langle = bind(Bracket, L, '&lang;', '&rang;', '\\langle ', '\\rangle ');
 LatexCmds.rangle = bind(Bracket, R, '&lang;', '&rang;', '\\langle ', '\\rangle ');
