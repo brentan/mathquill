@@ -589,7 +589,6 @@ var Matrix =
         var delimjQs = this.jQ.children('.mq-paren');
         var contentjQ = this.jQ.children('.mq-matrix').first();
         var height = contentjQ.outerHeight() / (1.133333 * parseInt(contentjQ.css('fontSize'), 10));
-        console.log(height);
         scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
         delimjQs.css('position','relative');
         delimjQs.css('top',Math.round(height*0.6) + 'px');

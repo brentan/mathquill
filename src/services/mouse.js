@@ -5,6 +5,24 @@
 Controller.open(function(_) {
   _.delegateMouseEvents = function() {
     var ultimateRootjQ = this.root.jQ;
+    //context-menu event handling
+    this.container.bind('contextmenu.mathquill', function(e) {
+      var rootjQ = $(e.target).closest('.mq-root-block');
+      var root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
+      var ctrlr = root.controller, cursor = ctrlr.cursor, blink = cursor.blink;
+      //Find nearest MathCommand to send this to, or if that fails root
+      var target_node = ctrlr.seek($(e.target), e.pageX, e.pageY).cursor.parent;
+      while(!(target_node instanceof MathCommand)) {
+        target_node = target_node.parent;
+        if(typeof target_node === 'undefined') {
+          target_node = root;
+          break;
+        };
+      }
+      console.log(target_node);
+      e.preventDefault(); // doesn't work in IE\u22648, but it's a one-line fix:
+      return false;
+    });
     //drag-to-select event handling
     this.container.bind('mousedown.mathquill', function(e) {
       var rootjQ = $(e.target).closest('.mq-root-block');
