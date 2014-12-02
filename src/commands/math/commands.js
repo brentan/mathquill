@@ -898,6 +898,38 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
         // check if next to or inside an opposing one-sided bracket
       var brack = this.oppBrack(cursor[L], L) || this.oppBrack(cursor[R], R)
                   || this.oppBrack(cursor.parent.parent);
+      if((!brack) && 
+        (cursor.options.enableMatrixShortcuts) &&
+        (this.ctrlSeq === '\\left[') &&
+        (cursor[L] === 0) && 
+        (cursor[R] === 0) && 
+        (typeof cursor.parent.parent !== 'undefined') && 
+        (cursor.parent.parent.ctrlSeq === this.ctrlSeq)) {
+          var left_item = cursor.parent.parent[L];
+          var parent_item = cursor.parent.parent.parent;
+          //This is a double bracket entry [[.  We want to replace with a Matrix
+          //First remove the brackets
+          cursor.parent.parent.unwrap();
+          //Repalce the cursor
+          if(left_item !== 0)
+            cursor.insRightOf(left_item);
+          else
+            cursor.insAtLeftEnd(parent_item);
+          //Check if we were typing a auto-unitalicized command immediately before the double bracket
+          if(cursor.options.autoOnBrackets) {
+           var el = cursor[L];
+           while(el instanceof Letter) {
+              if(el.jQ.hasClass('mq-operator-name')) 
+                el.italicize(true);
+              el.ctrlSeq = el.ctrlSeq.replace('\\','').replace('operatorname{','').replace('}','').trim();
+              el = el[L];
+            }
+          }
+          //Insert the Matrix at this position
+          var new_mat = Matrix('\\bmatrix',1,1);
+          new_mat.createLeftOf(cursor);
+          return;
+      }
     }
     if (brack) {
       var side = this.side = -brack.side; // may be pipe with .side not yet set
@@ -977,7 +1009,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
       this.parent.deleteSide(dir, true, cursor);
     };
     if(opts.autoOnBrackets && this[L] instanceof Letter)
-      this[L].autoUnItalicize(opts);
+      this[L].autoUnItalicize(opts, this.ctrlSeq !== '\\left[');
     // FIXME HACK: after initial creation/insertion, finalizeTree would only be
     // called if the paren is selected and replaced, e.g. by LiveFraction
     this.finalizeTree = this.intentionalBlur = function() {
@@ -1012,11 +1044,7 @@ function bindCharBracketPair(open, ctrlSeq) {
   CharCmds[close] = bind(Bracket, R, open, close, ctrlSeq, end);
 }
 bindCharBracketPair('(');
-
-// Custom use of the bracket for matrix.  Non-standard for MathQuill
-//bindCharBracketPair('[');
-CharCmds['['] = bind(Matrix, '\\bmatrix',1,1);
-
+bindCharBracketPair('[');
 bindCharBracketPair('{', '\\{');
 LatexCmds.langle = bind(Bracket, L, '&lang;', '&rang;', '\\langle ', '\\rangle ');
 LatexCmds.rangle = bind(Bracket, R, '&lang;', '&rang;', '\\langle ', '\\rangle ');

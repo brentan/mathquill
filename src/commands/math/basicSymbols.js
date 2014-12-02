@@ -16,7 +16,7 @@ var Variable = P(Symbol, function(_, super_) {
         && (this.ctrlSeq[0] == '\\'))
       text = '*' + text;
     var auto_complete_command = false;
-    for (var l = this[L]; l instanceof Letter; l = l[L]) if(l.ctrlSeq[0] == '\\') { auto_complete_command = true; break;}
+    for (var l = this; l instanceof Letter; l = l[L]) if(l.ctrlSeq[0] == '\\') { auto_complete_command = true; break;}
     if (this[R] && !(this[R] instanceof BinaryOperator)
         && !(this[R] instanceof Variable)
         && !(this[R].ctrlSeq === '^')
@@ -83,9 +83,9 @@ var Letter = P(Variable, function(_, super_) {
     // undefined) and it's now a Letter, it will un-italicize everyone
     if(opts.autoOnBrackets) return;
     if (dir !== L && this[R] instanceof Letter) return;
-    this.autoUnItalicize(opts);
+    this.autoUnItalicize(opts, true);
   };
-  _.autoUnItalicize = function(opts) {
+  _.autoUnItalicize = function(opts, unitalicize) {
     var autoOps = opts.autoOperatorNames;
     if (autoOps._maxLength === 0) return;
     // want longest possible operator names, so join together entire contiguous
@@ -108,7 +108,7 @@ var Letter = P(Variable, function(_, super_) {
         var word = str.slice(i, i + len);
         if (opts.autoAllFunctions || autoOps.hasOwnProperty(word)) {
           for (var j = 0, letter = first; j < len; j += 1, letter = letter[R]) {
-            letter.italicize(false);
+            if(unitalicize) letter.italicize(false);
             var last = letter;
           }
 
