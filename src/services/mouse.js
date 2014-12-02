@@ -19,7 +19,7 @@ Controller.open(function(_) {
           break;
         };
       }
-	    target_node.contextMenu(cursor);
+	    target_node.contextMenu(cursor,e);
       e.preventDefault(); // doesn't work in IE\u22648, but it's a one-line fix:
       return false;
     });

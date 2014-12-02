@@ -26,8 +26,47 @@ var MathElement = P(Node, function(_, super_) {
     if (self[L].siblingCreated) self[L].siblingCreated(options, R);
     self.bubble('reflow');
   };
-  _.contextMenu = function(cursor) {
+  _.contextMenu = function(cursor, event) {
     //Default context menu to call.  
+  }
+  _.showPopupMenu = function(menu, event) {
+    //Function creates a popup menu at the current location with the menu options.
+    //Requires the menu widget of JqueryUI.  Menu is an array of items representing each
+    //element in the menu, from top to bottom.  Each element is a hash with a 'text' method
+    //that holds the text to display in the menu, and a 'handler' method that contains a function
+    //to execute on selection
+    //[{text: 'item 1', handler: function() { alert('item 1'); } }, ...]
+
+    //Test if popup menu already exists, if so destroy it
+    if($("#mq-popup-menu").length == 1)
+      $("#mq-popup-menu").remove(); 
+
+    //Create the menu closing ul
+    var menujQ = $('<ul></ul>').attr('id', 'mq-popup-menu').appendTo('body');
+    //Populate the menu
+    for(var i = 0; i < menu.length; i++) 
+      $("<li></li>").attr('mq-menu-id', i).html(menu[i].text).appendTo(menujQ);
+    //Create the menu and listener
+    menujQ.menu({
+      select: function( event, ui ) {
+        var id = ui.item.attr('mq-menu-id')*1;
+        menu[id].handler(event);
+        menujQ.hide();
+      }
+    });
+    //Locate at the click location
+    menujQ.position({
+        my: "left top",
+        of: event
+    });
+    //Show the menu
+    menujQ.show();
+
+    //Global click handle to close the menu on a click anywhere
+    $(document).bind('click', function(e) {
+      menujQ.hide();
+      $( this ).unbind( e );
+    });
   }
 });
 

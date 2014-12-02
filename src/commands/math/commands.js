@@ -593,6 +593,20 @@ var Matrix =
         delimjQs.css('position','relative');
         delimjQs.css('top',Math.round(height*0.6) + 'px');
       };
+      _.contextMenu = function(cursor, event) {
+        var self = this;
+        var menu = [
+          { text: "Insert Column Before", handler: function() { self.insertColumn(cursor, L)}},
+          { text: "Insert Column After", handler: function() { self.insertColumn(cursor, R)}},
+          { text: "Insert Row Before", handler: function() { self.insertRow(cursor, L)}},
+          { text: "Insert Row After", handler: function() { self.insertRow(cursor, R)}}
+        ];
+        if(this.col > 1)
+          menu.push({ text: "Delete Column", handler: function() { self.deleteColumn(cursor)}});
+        if(this.row > 1)
+          menu.push({ text: "Delete Row", handler: function() { self.deleteRow(cursor)}});
+        this.showPopupMenu(menu, event);
+      }
       _.latex = function () {
         var latex = '';
         var index = 1;
@@ -734,11 +748,14 @@ var Matrix =
         this.reflow();
         this.bubble('workingGroupChange');
       }
-      _.insertRow = function(cursor) {
+      _.insertRow = function(cursor, dir) {
         //Insert a row into the matrix immediately after the cell the cursor is in, then move cursor.
         //If the comma is inserted at the beginning of a cell with content, insert BEFORE the cell.
         var cell = this.cursorRowCol(cursor);
-        var insertBefore = ((cursor[L] === 0) && (cursor[R] !== 0));
+        if(typeof dir === 'undefined')
+          var insertBefore = ((cursor[L] === 0) && (cursor[R] !== 0));
+        else
+          var insertBefore = dir == L ? true : false;
         var startIndex = cell.row * this.col + (insertBefore ? 0 : this.col);
         // Add in the new row
         if(insertBefore)
@@ -766,11 +783,14 @@ var Matrix =
         this.reflow();
         this.bubble('workingGroupChange');
       }
-      _.insertColumn = function(cursor) {
+      _.insertColumn = function(cursor, dir) {
         //Insert a column into the matrix immediately after the cell the cursor is in, then move cursor.
         //If the comma is inserted at the beginning of a cell with content, insert BEFORE the cell.
         var cell = this.cursorRowCol(cursor);
-        var insertBefore = ((cursor[L] === 0) && (cursor[R] !== 0));
+        if(typeof dir === 'undefined')
+          var insertBefore = ((cursor[L] === 0) && (cursor[R] !== 0));
+        else
+          var insertBefore = dir == L ? true : false;
 
         // Add in the new column
         for(var i=(this.row - 1); i >= 0; i--) {  //Increment backwards so that block element indexes dont shift as we go
