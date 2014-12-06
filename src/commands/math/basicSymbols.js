@@ -22,6 +22,7 @@ var Variable = P(Symbol, function(_, super_) {
         && !(this[R].ctrlSeq === '^')
         && !(this[R].ctrlSeq === ',')
         && !(this[R].ctrlSeq === '_')
+        && !(this[R].ctrlSeq === '.')
         && !auto_complete_command)
       text += '*';
     return text;
@@ -430,29 +431,35 @@ var Inequality = P(BinaryOperator, function(_, super_) {
   };
 });
 
-var less = { ctrlSeq: '\\le ', html: '&le;', text: '≤',
-             ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: '<' };
-var greater = { ctrlSeq: '\\ge ', html: '&ge;', text: '≥',
-                ctrlSeqStrict: '>', htmlStrict: '&gt;', textStrict: '>' };
+var less = { ctrlSeq: '\\le ', html: '&le;', text: ' <= ',
+             ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: ' < ' };
+var greater = { ctrlSeq: '\\ge ', html: '&ge;', text: ' >= ',
+                ctrlSeqStrict: '>', htmlStrict: '&gt;', textStrict: ' > ' };
+var factorial = { ctrlSeq: '\\ne ', html: '&ne;', text: ' != ',
+                  ctrlSeqStrict: '!', htmlStrict: '!', textStrict: '!' };
 
 LatexCmds['<'] = LatexCmds.lt = bind(Inequality, less, true);
 LatexCmds['>'] = LatexCmds.gt = bind(Inequality, greater, true);
 LatexCmds['≤'] = LatexCmds.le = LatexCmds.leq = bind(Inequality, less, false);
 LatexCmds['≥'] = LatexCmds.ge = LatexCmds.geq = bind(Inequality, greater, false);
+LatexCmds['!'] = bind(Inequality, factorial, true);
+LatexCmds['≠'] = LatexCmds.ne = LatexCmds.neq = bind(Inequality, factorial, false);
 
-var Equality = P(BinaryOperator, function(_, super_) {
-  _.init = function() {
-    super_.init.call(this, '=', '=');
+var Equality = P(Inequality, function(_, super_) {
+  _.init = function(data, strict) {
+    super_.init.call(this, data, strict);
   };
   _.createLeftOf = function(cursor) {
-    if (cursor[L] instanceof Inequality && cursor[L].strict) {
+    if (((cursor[L] instanceof Inequality) || (cursor[L] instanceof Equality)) && cursor[L].strict) {
       cursor[L].swap(false);
       return;
     }
     super_.createLeftOf.apply(this, arguments);
   };
 });
-LatexCmds['='] = Equality;
+var equal = { ctrlSeq: '\\eq ', html: '==', text: ' == ',
+              ctrlSeqStrict: '=', htmlStrict: '=', textStrict: ' = ' };
+LatexCmds['='] = bind(Equality, equal, true);
 
 LatexCmds.times = bind(BinaryOperator, '\\times ', '&times;', '[x]');
 
