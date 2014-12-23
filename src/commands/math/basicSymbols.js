@@ -22,6 +22,7 @@ var Variable = P(Symbol, function(_, super_) {
         && !(this[R].ctrlSeq === '^')
         && !(this[R].ctrlSeq === ',')
         && !(this[R].ctrlSeq === '_')
+        && !(this[R].ctrlSeq === '!')
         && !(this[R].ctrlSeq === '.')
         && !auto_complete_command)
       text += '*';
@@ -460,6 +461,7 @@ var Equality = P(Inequality, function(_, super_) {
 var equal = { ctrlSeq: '\\eq ', html: '==', text: ' == ',
               ctrlSeqStrict: '=', htmlStrict: '=', textStrict: ' = ' };
 LatexCmds['='] = bind(Equality, equal, true);
+LatexCmds.eq = bind(Equality, equal, false);
 
 LatexCmds.times = bind(BinaryOperator, '\\times ', '&times;', '[x]');
 
