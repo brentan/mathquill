@@ -106,7 +106,8 @@ var Letter = P(Variable, function(_, super_) {
     // check for operator names: at each position from left to right, check
     // substrings from longest to shortest
     outer: for (var i = 0, first = l[R] || this.parent.ends[L]; i < str.length; i += 1, first = first[R]) {
-      for (var len = min(autoOps._maxLength, str.length - i); len > 0; len -= 1) {
+      var maxLength = opts.autoAllFunctions ? (str.length - i) : min(autoOps._maxLength, str.length - i);
+      for (var len = maxLength; len > 0; len -= 1) {
         var word = str.slice(i, i + len);
         if (opts.autoAllFunctions || autoOps.hasOwnProperty(word)) {
           for (var j = 0, letter = first; j < len; j += 1, letter = letter[R]) {
