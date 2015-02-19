@@ -81,12 +81,17 @@ BUILD_DIR_EXISTS = $(BUILD_DIR)/.exists--used_by_Makefile
 .PHONY: all basic dev js uglify css font dist clean
 all: font css uglify
 gem: font css uglify
-	cp -f $(BUILD_DIR)/mathquill.css ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css.scss 
+	# copy built files over to the gem folders
+	cp -f $(BUILD_DIR)/mathquill.css ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css
 	cp -f $(BUILD_DIR)/mathquill.min.js ./$(GEM_DIR)/app/assets/javascripts/mathquill.js
 	rm -rf ./$(GEM_DIR)/app/assets/fonts
 	cp -r $(FONT_SOURCE) ./$(GEM_DIR)/app/assets/fonts
-	# Assumes you have gem-release installed
+	# Convert css to scss and use font-url to take advantage of the asset pipeline in rails 4
+	sed -e s/url\(\'font\\//font-url\(\'/g ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css > ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css.scss
+	rm ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css
+	# Assumes you have gem-release installed, increment version number and release
 	cd $(GEM_DIR);	gem bump;  rake build;	git add . ;	git commit -m "Update to new version";	git push; 	rake release
+	# Update the gem in our local development app
 	cd $(APP_DIR); bundle update mathquill_swiftcalcs_rails
 
 basic: $(UGLY_BASIC_JS) $(BASIC_CSS)
