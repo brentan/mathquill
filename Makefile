@@ -42,6 +42,8 @@ UNIT_TESTS = ./test/unit/*.test.js
 VERSION ?= $(shell node -e "console.log(require('./package.json').version)")
 
 BUILD_DIR = ./build
+GEM_DIR = ../mathquill_swiftcalcs_rails
+APP_DIR = ../swift_calcs
 BUILD_JS = $(BUILD_DIR)/mathquill.js
 BASIC_JS = $(BUILD_DIR)/mathquill-basic.js
 BUILD_CSS = $(BUILD_DIR)/mathquill.css
@@ -78,6 +80,15 @@ BUILD_DIR_EXISTS = $(BUILD_DIR)/.exists--used_by_Makefile
 
 .PHONY: all basic dev js uglify css font dist clean
 all: font css uglify
+gem: font css uglify
+	cp -f $(BUILD_DIR)/mathquill.css ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css.scss 
+	cp -f $(BUILD_DIR)/mathquill.min.js ./$(GEM_DIR)/app/assets/javascripts/mathquill.js
+	rm -rf ./$(GEM_DIR)/app/assets/fonts
+	cp -r $(FONT_SOURCE) ./$(GEM_DIR)/app/assets/fonts
+	# Assumes you have gem-release installed
+	cd $(GEM_DIR);	gem bump;  rake build;	git add . ;	git commit -m "Update to new version";	git push; 	rake release
+	cd $(APP_DIR); bundle update mathquill_swiftcalcs_rails
+
 basic: $(UGLY_BASIC_JS) $(BASIC_CSS)
 # dev is like all, but without minification
 dev: font css js
@@ -140,83 +151,3 @@ test: dev $(BUILD_TEST) $(BASIC_JS) $(BASIC_CSS)
 
 $(BUILD_TEST): $(INTRO) $(SOURCES_FULL) $(UNIT_TESTS) $(OUTRO) $(BUILD_DIR_EXISTS)
 	cat $^ > $@
-
-#
-# -*- site (mathquill.github.com) tasks
-#
-
-.PHONY: site publish site-pull
-
-SITE = mathquill.github.com
-SITE_CLONE_URL = git@github.com:mathquill/mathquill.github.com
-SITE_COMMITMSG = 'updating mathquill to $(VERSION)'
-
-DOWNLOADS_PAGE = $(SITE)/downloads.html
-DIST_DOWNLOAD = $(SITE)/downloads/$(DIST)
-
-site: $(SITE) $(SITE)/mathquill $(SITE)/demo.html $(SITE)/support $(DOWNLOADS_PAGE)
-
-publish: site-pull site
-	pwd
-	cd $(SITE) \
-	&& git add -- mathquill demo.html support downloads downloads.html \
-	&& git commit -m $(SITE_COMMITMSG) \
-	&& git push
-
-$(SITE)/mathquill: $(DIST)
-	mkdir -p $@
-	tar -xzf $(DIST) \
-		--directory $@ \
-		--strip-components=2
-
-$(DIST_DOWNLOAD): $(DIST)
-	mkdir -p $(dir $@)
-	cp $^ $@
-
-# freaking bsd, i swear
-# adapted from https://developer.apple.com/library/mac/documentation/opensource/Conceptual/ShellScripting/PortingScriptstoMacOSX/PortingScriptstoMacOSX.html#//apple_ref/doc/uid/TP40004268-TP40003517-SW21
-ifeq (x, $(shell echo xy | sed -r 's/(x)y/\1/' 2>/dev/null))
-  # gnu
-  SED = sed -r
-  SED_I = $(SED) -i
-else
-  # bsd
-  SED = sed -E
-  SED_I = $(SED) -i ''
-endif
-
-$(DOWNLOADS_PAGE): $(DIST_DOWNLOAD)
-	@echo Using $(SED)
-	@echo -n updating downloads page...
-	@$(SED_I) \
-		-e '/Latest version:/ s/[0-9]+[.][0-9]+[.][0-9]+/$(VERSION)/g' \
-		$(DOWNLOADS_PAGE)
-	@mkdir -p tmp
-	@ls $(SITE)/downloads/*.tgz \
-		| egrep -o '[0-9]+[.][0-9]+[.][0-9]+' \
-		| fgrep -v $(VERSION) \
-		| sort -rn -t. -k 1,1 -k 2,2 -k 3,3 \
-		| sed 's|.*|<li><a class="prev" href="downloads/mathquill-&.tgz">v&</a></li>|' \
-		> tmp/versions-list.html
-	@$(SED_I) \
-		-e '/<a class="prev"/d' \
-		-e '/<ul id="prev-versions">/ r tmp/versions-list.html' \
-		$(DOWNLOADS_PAGE)
-	@rm tmp/versions-list.html
-	@echo done.
-
-$(SITE)/demo.html: test/demo.html
-	cat $^ \
-	| $(SED) 's:../build/:mathquill/:' \
-	| $(SED) 's:local test page:live demo:' \
-	> $@
-
-$(SITE)/support: test/support
-	rm -rf $@
-	cp -r $^ $@
-
-$(SITE):
-	git clone $(SITE_CLONE_URL) $@
-
-site-pull: $(SITE)
-	cd $(SITE) && git pull
