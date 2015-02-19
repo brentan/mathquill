@@ -95,6 +95,10 @@ gem: font css uglify
 	cd $(APP_DIR); bundle update mathquill_swiftcalcs_rails
 
 basic: $(UGLY_BASIC_JS) $(BASIC_CSS)
+# app is used to build and auto-copy the js file over to a local app development environment for immediate testing
+app: js
+	# BE SURE TO REMOVE include mathquill AND ADD include mathquill-dev TO APPLICATION.JS
+	cp -f $(BUILD_DIR)/mathquill.js ./$(APP_DIR)/app/assets/javascripts/mathquill-dev.js
 # dev is like all, but without minification
 dev: font css js
 js: $(BUILD_JS)
