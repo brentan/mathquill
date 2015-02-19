@@ -90,7 +90,7 @@ gem: font css uglify
 	sed -e s/url\(\'font\\//font-url\(\'/g ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css > ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css.scss
 	rm ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css
 	# Assumes you have gem-release installed, increment version number and release
-	cd $(GEM_DIR);	gem bump;  rake build;	git add . ;	git commit -m "Update to new version";	git push; 	rake release
+	cd $(GEM_DIR);	git add . ;	gem bump;  rake build;	git push; 	rake release
 	# Update the gem in our local development app
 	cd $(APP_DIR); bundle update mathquill_swiftcalcs_rails
 
