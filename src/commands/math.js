@@ -101,7 +101,6 @@ var MathCommand = P(MathElement, function(_, super_) {
 
     return block.times(self.numBlocks()).map(function(blocks) {
       self.blocks = blocks;
-
       for (var i = 0; i < blocks.length; i += 1) {
         blocks[i].adopt(self, self.ends[R], 0);
       }
@@ -114,9 +113,8 @@ var MathCommand = P(MathElement, function(_, super_) {
   _.createLeftOf = function(cursor) {
     var cmd = this;
 
-    //Test for matrix specific commands - BRENTAN!
-    if(cursor.options.enableMatrixShortcuts && (typeof cursor.parent !== 'undefined') &&
-        (typeof cursor.parent !== 'undefined') &&
+    // Test for matrix specific commands
+    if((typeof cursor.parent !== 'undefined') &&
         (cursor.parent.parent instanceof Matrix)) {
       if(cmd.ctrlSeq == ',')
         return cursor.parent.parent.moveOrInsertColumn(cursor);
@@ -128,6 +126,27 @@ var MathCommand = P(MathElement, function(_, super_) {
         return cursor.parent.parent.deleteColumn(cursor);
       else if(cmd.ctrlSeq == '>')
         return cursor.parent.parent.insertColumn(cursor);
+    } // Similar to matrix commands, see if we are in square brackets and have added a comma (new column command!).  Transform into Matrix 
+    else if((typeof cursor.parent !== 'undefined') &&
+        (cursor.parent.parent instanceof Bracket) &&
+        (cursor.parent.parent.ctrlSeq === '\\left[') && 
+        ((cmd.ctrlSeq == ',') || (cmd.ctrlSeq == ';'))) {
+      var bracket = cursor.parent.parent
+      //Move the cursor
+      if(bracket[L] !== 0)
+        cursor.insRightOf(bracket[L]);
+      else
+        cursor.insAtLeftEnd(bracket.parent);
+      //Insert the Matrix at this position
+      var new_mat = Matrix('\\bmatrix',1,1);
+      new_mat.createLeftOf(cursor);
+      //Move what was in the brackets into the new matrix
+      bracket.ends[L].children().disown().adopt(new_mat.ends[L], 0, 0).jQ.appendTo(new_mat.ends[L].jQ);
+      bracket.remove();
+      if(cmd.ctrlSeq == ',')
+        return new_mat.insertColumn(cursor);
+      else
+        return new_mat.insertRow(cursor);
     }
 
     var replacedFragment = cmd.replacedFragment;
@@ -395,9 +414,17 @@ var Symbol = P(MathCommand, function(_, super_) {
   _.isEmpty = function(){ return true; };
 });
 var VanillaSymbol = P(Symbol, function(_, super_) {
-  _.init = function(ch, html) {
-    super_.init.call(this, ch, '<span>'+(html || ch)+'</span>');
+  _.init = function(ch, html, textTemplate) {
+    super_.init.call(this, ch, '<span>'+(html || ch)+'</span>', (textTemplate || ch));
   };
+  _.createLeftOf = function(cursor) {
+    if((this.ctrlSeq === '.') && (cursor[L] !== 0) && (cursor[L].ctrlSeq === '.')) {// ellipses
+      cursor[L].ctrlSeq = '…';
+      cursor[L].jQ.html('<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>');
+      cursor[L].textTemplate = '..';
+    } else
+      super_.createLeftOf.call(this, cursor);
+  }
 });
 var BinaryOperator = P(Symbol, function(_, super_) {
   _.init = function(ctrlSeq, html, text) {
@@ -464,14 +491,24 @@ var MathBlock = P(MathElement, function(_, super_) {
     return node.seek(pageX, cursor);
   };
   _.write = function(cursor, ch, replacedFragment) {
+    //BRENTAN: deal with subscript issues (allow more '_' and italicize numbers automatically)
+    // Subscripts destroy auto-unitalicize!
+    // Add 0 before . if no digit present already
+    // 'e' is a special case...it is scientific notation
     var cmd;
     if (ch.match(/^[a-eg-zA-Z]$/)) //exclude f because want florin
+      cmd = Letter(ch);
+    else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Letter) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (typeof cursor[L][L] !== 'undefined') && cursor[L][L].ctrlSeq.match(/^[0-9]$/)) {
+      // this should match scientific notation
+      cmd = ScientificNotation(ch);
+      //cmd.incorporate_previous = ch;
+    } else if(ch.match(/^[0-9]$/) && (cursor[L] instanceof Letter)) // Numbers after letters are 'letters' as they are part of a var name
       cmd = Letter(ch);
     else if (cmd = CharCmds[ch] || LatexCmds[ch])
       cmd = cmd(ch);
     else
       cmd = VanillaSymbol(ch);
-
+    // BRENTAN: Test if we should add a '*' before this item (45x for example!)
     if (replacedFragment) cmd.replaces(replacedFragment);
 
     cmd.createLeftOf(cursor);

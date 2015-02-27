@@ -240,9 +240,11 @@ LatexCmds.setminus = LatexCmds.smallsetminus =
 LatexCmds.not = //bind(Symbol,'\\not ','<span class="not">/</span>');
 LatexCmds['¬'] = LatexCmds.neg = bind(VanillaSymbol,'\\neg ','&not;');
 
-LatexCmds['…'] = LatexCmds.dots = LatexCmds.ellip = LatexCmds.hellip =
+LatexCmds.dots = LatexCmds.ellip = LatexCmds.hellip =
 LatexCmds.ellipsis = LatexCmds.hellipsis =
   bind(VanillaSymbol,'\\dots ','&hellip;');
+LatexCmds['…'] = bind(VanillaSymbol, "…", '<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>', '..');
+
 
 LatexCmds.converges =
 LatexCmds.darr = LatexCmds.dnarr = LatexCmds.dnarrow = LatexCmds.downarrow =

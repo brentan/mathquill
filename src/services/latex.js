@@ -2,7 +2,13 @@
 var latexMathParser = (function() {
   function commandToBlock(cmd) {
     var block = MathBlock();
-    cmd.adopt(block, 0, 0);
+    if((cmd instanceof Letter) && (cmd.ctrlSeq.length > 1)) {
+      var stream = cmd.ctrlSeq;
+      for (var i = 0; i < stream.length; i += 1) {
+        Letter(stream[i]).adopt(block, block.ends[R], 0);
+      }
+    } else
+      cmd.adopt(block, 0, 0);
     return block;
   }
   function joinBlocks(blocks) {
@@ -24,8 +30,9 @@ var latexMathParser = (function() {
   var fail = Parser.fail;
 
   // Parsers yielding MathCommands
-  var variable = letter.map(function(c) { return Letter(c); });
+  var variable = regex(/^[a-z]+[0-9]*/i).map(function(c) { return Letter(c); });
   var symbol = regex(/^[^${}\\_^]/).map(function(c) { return VanillaSymbol(c); });
+
 
   var controlSequence =
     regex(/^[^\\a-eg-zA-Z]/) // hotfix #164; match MathBlock::write
@@ -83,7 +90,8 @@ Controller.open(function(_, super_) {
     var eof = Parser.eof;
 
     var block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
-
+    //console.log(block);
+    //alert('pause');
     if (block && !block.isEmpty()) {
       block.children().adopt(cursor.parent, cursor[L], cursor[R]);
       var jQ = block.jQize();

@@ -21,7 +21,6 @@ var Parser = P(function(_, super_, Parser) {
 
   _.parse = function(stream) {
     return this.skip(eof)._(stream, success, parseError);
-
     function success(stream, result) { return result; }
   };
 

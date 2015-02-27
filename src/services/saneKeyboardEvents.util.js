@@ -212,7 +212,6 @@ var saneKeyboardEvents = (function() {
       //
       // And by nifty, we mean dumb (but useful sometimes).
       textarea.focus();
-
       checkTextareaFor(pastedText);
     }
     function pastedText() {

@@ -7,26 +7,8 @@ var Variable = P(Symbol, function(_, super_) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
   };
   _.text = function(opts) {
-    var text = this.ctrlSeq;
-    if (this[L] && !(this[L] instanceof Variable)
-        && !(this[L] instanceof BinaryOperator)
-        && !(this[L].ctrlSeq === ','))
-      text = '*' + text;
-    if (this[L] && !(this[L] instanceof BinaryOperator)
-        && (this.ctrlSeq[0] == '\\'))
-      text = '*' + text;
-    var auto_complete_command = false;
-    for (var l = this; l instanceof Letter; l = l[L]) if(l.ctrlSeq[0] == '\\') { auto_complete_command = true; break;}
-    if (this[R] && !(this[R] instanceof BinaryOperator)
-        && !(this[R] instanceof Variable)
-        && !(this[R].ctrlSeq === '^')
-        && !(this[R].ctrlSeq === ',')
-        && !(this[R].ctrlSeq === '_')
-        && !(this[R].ctrlSeq === '!')
-        && !(this[R].ctrlSeq === '.')
-        && !auto_complete_command)
-      text += '*';
-    return text;
+    return this.textTemplate;
+    //BRENTAN: Need to find insert area to auto-add multiplication when needed
   };
 });
 
@@ -54,6 +36,8 @@ optionProcessors.autoCommands = function(cmds) {
 var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { return super_.init.call(this, this.letter = ch); };
   _.createLeftOf = function(cursor) {
+    //BRENTAN: Fix this to not do pipe => (pi)pe!  It works well EXCEPT for that case
+    // Instead somehow do a fix on the next item if it ISNT a letter?
     var autoCmds = cursor.options.autoCommands, maxLength = autoCmds._maxLength;
     if (maxLength > 0) {
       // want longest possible autocommand, so join together longest
@@ -80,14 +64,8 @@ var Letter = P(Variable, function(_, super_) {
     this.jQ.toggleClass('mq-operator-name', !bool);
     return this;
   };
-  _.finalizeTree = _.siblingDeleted = _.siblingCreated = function(opts, dir) {
-    // don't auto-un-italicize if the sibling to my right changed (dir === R or
-    // undefined) and it's now a Letter, it will un-italicize everyone
-    if(opts.autoOnBrackets) return;
-    if (dir !== L && this[R] instanceof Letter) return;
-    this.autoUnItalicize(opts, true);
-  };
-  _.autoUnItalicize = function(opts, unitalicize) {
+  _.autoUnItalicize = function(opts) {
+    //BRENTAN: Figure this thing out man....
     var autoOps = opts.autoOperatorNames;
     if (autoOps._maxLength === 0) return;
     // want longest possible operator names, so join together entire contiguous
@@ -111,7 +89,7 @@ var Letter = P(Variable, function(_, super_) {
         var word = str.slice(i, i + len);
         if (opts.autoAllFunctions || autoOps.hasOwnProperty(word)) {
           for (var j = 0, letter = first; j < len; j += 1, letter = letter[R]) {
-            if(unitalicize) letter.italicize(false);
+            letter.italicize(false);
             var last = letter;
           }
 
@@ -199,7 +177,7 @@ LatexCmds.operatorname = P(MathCommand, function(_) {
   _.createLeftOf = noop;
   _.numBlocks = function() { return 1; };
   _.parser = function() {
-    return latexMathParser.block.map(function(b) { return b.children(); });
+    return latexMathParser.block.map(function(b) { return b.children(); }); 
   };
 });
 
@@ -233,6 +211,7 @@ var NonSymbolaSymbol = P(Symbol, function(_, super_) {
 LatexCmds['@'] = NonSymbolaSymbol;
 LatexCmds['&'] = bind(NonSymbolaSymbol, '\\&', '&amp;');
 LatexCmds['%'] = bind(NonSymbolaSymbol, '\\%', '%');
+
 
 //the following are all Greek to me, but this helped a lot: http://www.ams.org/STIX/ion/stixsig03.html
 
