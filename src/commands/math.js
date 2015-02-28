@@ -462,6 +462,8 @@ var MathBlock = P(MathElement, function(_, super_) {
         && (key === 'Spacebar' || key === 'Shift-Spacebar')) {
       e.preventDefault();
       ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
+console.log(ctrlr);
+alert('pause'); // Need to use space to also auto turn pi to (pi) etc
       return;
     }
     return super_.keystroke.apply(this, arguments);
@@ -508,6 +510,29 @@ var MathBlock = P(MathElement, function(_, super_) {
       cmd = cmd(ch);
     else
       cmd = VanillaSymbol(ch);
+
+    // Test for autocommands (this does not work with 'sub' vars? should it? - BRENTAN)
+    if(!(cmd instanceof Letter) && (cursor[L] instanceof Letter)) {
+      var autoCmds = cursor.options.autoCommands;
+      // join together longest sequence of letters
+      var str = cursor[L].letter, l = cursor[L][L], i = 1;
+      while (l instanceof Letter) {
+        str = l.letter + str, l = l[L], i += 1;
+      }
+      // check for an autocommand, going thru substrings longest to shortest
+      if(str.length > 1) {
+        if (autoCmds.hasOwnProperty(str)) {
+          for (var i = 1, l = cursor[L]; i < str.length; i += 1, l = l[L]);
+          Fragment(l, cursor[L]).remove();
+          cursor[L] = l[L];
+          LatexCmds[str](str).createLeftOf(cursor);
+        }
+      }
+    }
+
+    // Test for implicit multiplication
+
+
     // BRENTAN: Test if we should add a '*' before this item (45x for example!)
     if (replacedFragment) cmd.replaces(replacedFragment);
 

@@ -133,6 +133,10 @@
     .mq-sub {
       display: block;
       float: left;
+      span {
+        font-family: "Times New Roman", Symbola, serif;
+        font-style: italic;
+      }
     }
     &.mq-limit .mq-sub {
       margin-left: -.25em;
@@ -219,16 +223,10 @@
   ////
   // non-italicized operator names
   // like \sin, \cos, \ln, etc.
-  .mq-operator-name {
+  span.mq-operator-name var, span.mq-operator-name span {
     font-family: Symbola, "Times New Roman", serif;
     line-height: .9;
     font-style: normal;
-  }
-  var.mq-operator-name.mq-first {
-    padding-left: .2em;
-  }
-  var.mq-operator-name.mq-last {
-    padding-right: .2em;
   }
 
   ////

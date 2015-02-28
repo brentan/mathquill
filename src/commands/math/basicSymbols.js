@@ -35,85 +35,22 @@ optionProcessors.autoCommands = function(cmds) {
 
 var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { return super_.init.call(this, this.letter = ch); };
-  _.createLeftOf = function(cursor) {
-    //BRENTAN: Fix this to not do pipe => (pi)pe!  It works well EXCEPT for that case
-    // Instead somehow do a fix on the next item if it ISNT a letter?
-    var autoCmds = cursor.options.autoCommands, maxLength = autoCmds._maxLength;
-    if (maxLength > 0) {
-      // want longest possible autocommand, so join together longest
-      // sequence of letters
-      var str = this.letter, l = cursor[L], i = 1;
-      while (l instanceof Letter && i < maxLength) {
-        str = l.letter + str, l = l[L], i += 1;
-      }
-      // check for an autocommand, going thru substrings longest to shortest
-      while (str.length) {
-        if (autoCmds.hasOwnProperty(str)) {
-          for (var i = 2, l = cursor[L]; i < str.length; i += 1, l = l[L]);
-          Fragment(l, cursor[L]).remove();
-          cursor[L] = l[L];
-          return LatexCmds[str](str).createLeftOf(cursor);
-        }
-        if(cursor.options.autoCommandFullWordOnly) break;
-        str = str.slice(1);
-      }
-    }
-    super_.createLeftOf.apply(this, arguments);
-  };
-  _.italicize = function(bool) {
-    this.jQ.toggleClass('mq-operator-name', !bool);
-    return this;
-  };
-  _.autoUnItalicize = function(opts) {
-    //BRENTAN: Figure this thing out man....
-    var autoOps = opts.autoOperatorNames;
-    if (autoOps._maxLength === 0) return;
+  _.autoUnItalicize = function(cursor) {
     // want longest possible operator names, so join together entire contiguous
     // sequence of letters
-    var str = this.letter;
-    for (var l = this[L]; l instanceof Letter; l = l[L]) str = l.letter + str;
-    for (var r = this[R]; r instanceof Letter; r = r[R]) str += r.letter;
-
-    // removeClass and delete flags from all letters before figuring out
-    // which, if any, are part of an operator name
-    Fragment(l[R] || this.parent.ends[L], r[L] || this.parent.ends[R]).each(function(el) {
-      el.italicize(true).jQ.removeClass('mq-first mq-last');
-      el.ctrlSeq = el.letter;
-    });
-
-    // check for operator names: at each position from left to right, check
-    // substrings from longest to shortest
-    outer: for (var i = 0, first = l[R] || this.parent.ends[L]; i < str.length; i += 1, first = first[R]) {
-      var maxLength = opts.autoAllFunctions ? (str.length - i) : min(autoOps._maxLength, str.length - i);
-      for (var len = maxLength; len > 0; len -= 1) {
-        var word = str.slice(i, i + len);
-        if (opts.autoAllFunctions || autoOps.hasOwnProperty(word)) {
-          for (var j = 0, letter = first; j < len; j += 1, letter = letter[R]) {
-            letter.italicize(false);
-            var last = letter;
-          }
-
-          var isBuiltIn = BuiltInOpNames.hasOwnProperty(word);
-          first.ctrlSeq = (isBuiltIn ? '\\' : '\\operatorname{') + first.ctrlSeq;
-          last.ctrlSeq += (isBuiltIn ? ' ' : '}');
-          if (TwoWordOpNames.hasOwnProperty(word)) last[L][L][L].jQ.addClass('mq-last');
-          if (nonOperatorSymbol(first[L])) first.jQ.addClass('mq-first');
-          if (nonOperatorSymbol(last[R])) last.jQ.addClass('mq-last');
-
-          i += len - 1;
-          first = last;
-          continue outer;
-        }
-      }
+    var str = '';
+    var to_remove = [];
+    for (var l = this; l instanceof Letter; l = l[L]) {
+      str = l.letter + str;
+      to_remove.push(l);
     }
+    //BRENTAN: Above should deal with sub as well! (will need to deal with that in Bracket, where this is called, as well)
+    var block = OperatorName(str).createLeftOf(cursor);
+    for(var i = 0; i < to_remove.length; i++)
+      to_remove[i].remove();
   };
-  function nonOperatorSymbol(node) {
-    return node instanceof Symbol && !(node instanceof BinaryOperator);
-  }
 });
 var BuiltInOpNames = {}; // http://latex.wikia.com/wiki/List_of_LaTeX_symbols#Named_operators:_sin.2C_cos.2C_etc.
-  // except for over/under line/arrow \lim variants like \varlimsup
-var TwoWordOpNames = { limsup: 1, liminf: 1, projlim: 1, injlim: 1 };
 (function() {
   var autoOps = Options.p.autoOperatorNames = { _maxLength: 9 };
   var mostOps = ('arg deg det dim exp gcd hom inf ker lg lim ln log max min sup'
@@ -153,41 +90,48 @@ optionProcessors.autoOperatorNames = function(cmds) {
   dict._maxLength = maxLength;
   return dict;
 };
-var OperatorName = P(Symbol, function(_, super_) {
-  _.init = function(fn) { this.ctrlSeq = fn; };
+var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
+  _.htmlTemplate = '<span class="mq-operator-name">&0</span>';
+  _.init = function(fn) { 
+    super_.init.call(this, fn);
+  };
   _.createLeftOf = function(cursor) {
+    super_.createLeftOf.apply(this, arguments);
     var fn = this.ctrlSeq;
-    for (var i = 0; i < fn.length; i += 1) {
+    for (var i = 0; i < fn.length; i += 1) 
       Letter(fn.charAt(i)).createLeftOf(cursor);
-    }
+    cursor.insRightOf(this);
+  };
+  _.text = function(opts) {
+    return this.blocks[0].text(opts);
+  };
+  _.latex = function() {
+    if(BuiltInOpNames.hasOwnProperty(this.blocks[0].text())) //This is a built-in latex command
+      return '\\' + this.blocks[0].latex() + ' ';
+    else
+      return '\\operatorname{' + this.blocks[0].latex() + '}';
   };
   _.parser = function() {
-    var fn = this.ctrlSeq;
-    var block = MathBlock();
-    for (var i = 0; i < fn.length; i += 1) {
-      Letter(fn.charAt(i)).adopt(block, block.ends[R], 0);
-    }
-    return Parser.succeed(block.children());
+    if(BuiltInOpNames.hasOwnProperty(this.ctrlSeq)) {
+      var fn = this.ctrlSeq;
+      this.createBlocks();
+      //var block = MathBlock();
+      for (var i = 0; i < fn.length; i += 1) {
+        Letter(fn.charAt(i)).adopt(this.ends[L], this.ends[L].ends[R], 0);
+      }
+      //this.adopt(block, block.ends[R], 0);
+      return Parser.succeed(this);
+    } else 
+      return super_.parser.call(this);
   };
 });
 for (var fn in BuiltInOpNames) if (BuiltInOpNames.hasOwnProperty(fn)) {
   LatexCmds[fn] = OperatorName;
 }
-LatexCmds.operatorname = P(MathCommand, function(_) {
-  _.createLeftOf = noop;
-  _.numBlocks = function() { return 1; };
-  _.parser = function() {
-    return latexMathParser.block.map(function(b) { return b.children(); }); 
-  };
-});
 
 LatexCmds.f = P(Letter, function(_, super_) {
   _.init = function() {
     Symbol.p.init.call(this, this.letter = 'f', '<var class="mq-florin">&fnof;</var>');
-  };
-  _.italicize = function(bool) {
-    this.jQ.html(bool ? '&fnof;' : 'f').toggleClass('mq-florin', bool);
-    return super_.italicize.apply(this, arguments);
   };
 });
 

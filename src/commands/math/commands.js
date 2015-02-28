@@ -285,8 +285,6 @@ var ScientificNotation = LatexCmds.scientificNotation = P(MathCommand, function(
     return '\\scientificNotation{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
   }
   _.finalizeTree = function() {
-    this.upInto = this.sup = this.ends[R];
-    this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
     this.downInto = this.ends[L];
     this.upInto = this.ends[R];
     this.ends[L].upOutOf = this.ends[R];
@@ -949,6 +947,9 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
       // BRENTAN: Update this here to look for whether we are closing a bracket at a higher level
       var brack = this.oppBrack(cursor[L], L) || this.oppBrack(cursor[R], R)
                   || this.oppBrack(cursor.parent.parent);
+
+      if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof Letter)) 
+        cursor[L].autoUnItalicize(cursor);
       if((!brack) && 
         (this.ctrlSeq === '\\left[') &&
         (cursor[L] === 0) && 
@@ -1048,8 +1049,6 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     this.ends[L].deleteOutOf = function(dir, cursor) {
       this.parent.deleteSide(dir, true, cursor);
     };
-    if((this.ctrlSeq === '\\left(') && (this[L] instanceof Letter)) 
-      this[L].autoUnItalicize(opts);
     // FIXME HACK: after initial creation/insertion, finalizeTree would only be
     // called if the paren is selected and replaced, e.g. by LiveFraction
     this.finalizeTree = this.intentionalBlur = function() {
