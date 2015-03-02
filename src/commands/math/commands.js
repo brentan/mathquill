@@ -134,10 +134,33 @@ var Class = LatexCmds['class'] = P(MathCommand, function(_, super_) {
 });
 
 var SupSub = P(MathCommand, function(_, super_) {
-  // BRENTAN- Upon creation of sup, see if previous item should be wrapped in ()
   _.ctrlSeq = '_{...}^{...}';
   _.createLeftOf = function(cursor) {
-    if (!cursor[L] && cursor.options.supSubsRequireOperand) return;
+    if(this.supsub === 'sub') {
+      // Only add subscript to a variable name (aka letter) 
+      if (!(cursor[L] instanceof Variable)) return;
+      // Inserting in a string for some reason...
+      if((cursor[L] instanceof Variable) && (cursor[R] instanceof Variable)) {
+        var cdot = LatexCmds.cdot()
+        cdot.createLeftOf(cursor);
+        cursor.insLeftOf(cdot);
+      }
+    } else {
+      // Only add superscript to actual math stuff (digits, variables, brackets, etc)
+      if((cursor[L] === 0) || (cursor[L] instanceof BinaryOperator)) return;
+      if((cursor[L] instanceof Fraction) || (cursor[L] instanceof ScientificNotation)) {
+        // Some items should be wrapped in brackets before we add the exponent
+        var bracket = CharCmds['(']();
+        var to_move = cursor[L];
+        bracket.createLeftOf(cursor);
+        to_move.disown();
+        to_move.adopt(bracket.ends[L], 0, 0);
+        to_move.jQ.prependTo(bracket.ends[L].jQ);
+        var close_it = CharCmds[')']();
+        close_it.createLeftOf(cursor);
+        bracket.reflow();
+      }
+    }
     return super_.createLeftOf.apply(this, arguments);
   };
   _.contactWeld = function(cursor) {
@@ -186,6 +209,7 @@ var SupSub = P(MathCommand, function(_, super_) {
   _.finalizeTree = function() {
     var supsub = this.supsub;
     this.ends[L].write = function(cursor, ch) {
+      if(ch === '_') return;
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
         cursor.insRightOf(this.parent);
       }
@@ -359,7 +383,7 @@ var SummationNotation = P(MathCommand, function(_, super_) {
   _.createLeftOf = function(cursor) {
     super_.createLeftOf.apply(this, arguments);
     Letter('n').createLeftOf(cursor);
-    Equality().createLeftOf(cursor);
+    LatexCmds['=']().createLeftOf(cursor);
   };
   _.reflow = function() {
     var delimjQs = this.jQ.children(':last').children(':first').add(this.jQ.children(':last').children(':last'));
@@ -375,7 +399,7 @@ var SummationNotation = P(MathCommand, function(_, super_) {
         '}^{' + this.blocks[1].latex() + '}\\left({' + this.blocks[2].latex() + '}\\right)';
   };
   _.text = function(opts) {
-    return ' ' + this.ctrlSeq + '("' + this.blocks[0].text(opts).replace('=','" , ') + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
+    return ' ' + this.ctrlSeq + '("' + this.blocks[0].text(opts).replace(' :=','" , ') + ' , ' + this.blocks[1].text(opts) + ',' + this.blocks[2].text(opts) + ')';
   }
   _.parser = function() {
     var string = Parser.string;
@@ -923,8 +947,8 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
   _.text = function(opts) {
     // Brackets are a tricky one...they may represent matrix indeces on a variable name, in which
     // case we want to use [], or they may just be a 'pretty' bracket, in which case we want to use
-    // ().  Vectors should already be transformed into Matrix by use of ',' (BRENTAN: DO THAT!)
-    if((this.ctrlSeq !== '\\left[') || (this[L] instanceof Letter))
+    // ().  Vectors should already be transformed into Matrix by use of ','
+    if((this.ctrlSeq !== '\\left[') || (this[L] instanceof Variable))
       return this.sides[L].textTemplate + this.ends[L].text(opts) + this.sides[R].textTemplate;
     else
       return '(' + this.ends[L].text(opts) + ')';
@@ -944,13 +968,24 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
   _.createLeftOf = function(cursor) {
     if (!this.replacedFragment) { // unless wrapping seln in brackets,
         // check if next to or inside an opposing one-sided bracket
-      // BRENTAN: Update this here to look for whether we are closing a bracket at a higher level
-      var brack = this.oppBrack(cursor[L], L) || this.oppBrack(cursor[R], R)
-                  || this.oppBrack(cursor.parent.parent);
+      var brack = this.oppBrack(cursor[L], L) || this.oppBrack(cursor[R], R);
+      for(var node = cursor.parent.parent; (node !== 0) && !brack; node = node.parent) 
+        brack = this.oppBrack(node);
 
-      if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof Letter)) 
-        cursor[L].autoUnItalicize(cursor);
-      if((!brack) && 
+      // Upon '(', we check if we should un-italicize a variable name (as its now a function handle).  
+      if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof Variable) && (this.side === L)) 
+        return cursor[L].autoUnItalicize(cursor);
+      else if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof SupSub) && (this.side === L) && (cursor[L].supsub === 'sub') && (cursor[L]['sub'].ends[R] instanceof Variable)) {
+        cursor.insAtRightEnd(cursor[L]['sub'])
+        return cursor[L].autoUnItalicize(cursor); 
+      }
+      else if(!brack && (this.side === R) && (this.ctrlSeq === '\\left(')) {
+        // Some objects have 'built in' brackets that to the user look (and should operate) like normal brackets.  If so, escape out of them
+        for(var node = cursor.parent; node !== 0; node = node.parent) {
+          if(node instanceof OperatorName) return cursor.insRightOf(node);
+          else if(node instanceof SummationNotation) return cursor.insRightOf(node);
+        }
+      } else if((!brack) && 
         (this.ctrlSeq === '\\left[') &&
         (cursor[L] === 0) && 
         (cursor[R] === 0) && 

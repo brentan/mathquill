@@ -8,7 +8,37 @@ var Variable = P(Symbol, function(_, super_) {
   };
   _.text = function(opts) {
     return this.textTemplate;
-    //BRENTAN: Need to find insert area to auto-add multiplication when needed
+  };
+  _.autoUnItalicize = function(cursor) {
+    // want longest possible operator names, so join together entire contiguous
+    // sequence of letters
+    var str = '';
+    var to_remove = [];
+    for (var l = this; l instanceof Variable; l = l[L]) {
+      str = l.ctrlSeq + str;
+      to_remove.push(l);
+    }
+    // See if we were in a substring...if so, jump to the main part of the variable name and keep going
+    if(cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')) {
+      str = '_' + str;
+      to_remove = [ cursor.parent.parent ];
+      for (var l = cursor.parent.parent[L]; l instanceof Variable; l = l[L]) {
+        str = l.ctrlSeq + str;
+        to_remove.push(l);
+      }
+      cursor.insRightOf(cursor.parent.parent);
+    }
+    var block = OperatorName();
+    block.createLeftOf(cursor);
+    for(var i = 0; i < to_remove.length; i++) {
+      // f is annoying and must be dealt with
+      if(to_remove[i].ctrlSeq === 'f') 
+        to_remove[i].jQ.removeClass('mq-florin').html('f');
+      to_remove[i].disown();
+      to_remove[i].adopt(block.ends[L], 0, block.ends[L].ends[L]);
+      to_remove[i].jQ.prependTo(block.ends[L].jQ);
+    }
+    block.ends[L].jQ.removeClass('mq-empty');
   };
 });
 
@@ -35,19 +65,22 @@ optionProcessors.autoCommands = function(cmds) {
 
 var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { return super_.init.call(this, this.letter = ch); };
-  _.autoUnItalicize = function(cursor) {
-    // want longest possible operator names, so join together entire contiguous
-    // sequence of letters
-    var str = '';
-    var to_remove = [];
-    for (var l = this; l instanceof Letter; l = l[L]) {
-      str = l.letter + str;
-      to_remove.push(l);
+  _.autoOperator = function(cursor) {
+    var autoCmds = cursor.options.autoCommands;
+    // join together longest sequence of letters
+    var str = cursor[L].letter, l = cursor[L][L], i = 1;
+    while (l instanceof Letter) {
+      str = l.letter + str, l = l[L], i += 1;
     }
-    //BRENTAN: Above should deal with sub as well! (will need to deal with that in Bracket, where this is called, as well)
-    var block = OperatorName(str).createLeftOf(cursor);
-    for(var i = 0; i < to_remove.length; i++)
-      to_remove[i].remove();
+    // check for an autocommand, going thru substrings longest to shortest
+    if(str.length > 1) {
+      if (autoCmds.hasOwnProperty(str)) {
+        for (var i = 1, l = cursor[L]; i < str.length; i += 1, l = l[L]);
+        Fragment(l, cursor[L]).remove();
+        cursor[L] = l[L];
+        LatexCmds[str](str).createLeftOf(cursor);
+      }
+    }
   };
 });
 var BuiltInOpNames = {}; // http://latex.wikia.com/wiki/List_of_LaTeX_symbols#Named_operators:_sin.2C_cos.2C_etc.
@@ -91,38 +124,73 @@ optionProcessors.autoOperatorNames = function(cmds) {
   return dict;
 };
 var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
-  _.htmlTemplate = '<span class="mq-operator-name">&0</span>';
+  _.htmlTemplate = '<span><span class="mq-operator-name">&0</span>'
+        + '<span class="mq-non-leaf">'
+        + '<span class="mq-scaled mq-paren">(</span>'
+        + '<span class="mq-non-leaf">&1</span>'
+        + '<span class="mq-scaled mq-paren">)</span>'
+        + '</span></span>';
   _.init = function(fn) { 
     super_.init.call(this, fn);
   };
   _.createLeftOf = function(cursor) {
     super_.createLeftOf.apply(this, arguments);
-    var fn = this.ctrlSeq;
-    for (var i = 0; i < fn.length; i += 1) 
-      Letter(fn.charAt(i)).createLeftOf(cursor);
-    cursor.insRightOf(this);
+    cursor.insAtRightEnd(this.blocks[1]);
+  };
+  _.reflow = function() {
+    var delimjQs = this.jQ.children(':last').children(':first').add(this.jQ.children(':last').children(':last'));
+    var contentjQ = this.jQ.children(':last').children(':eq(1)');
+    var height = contentjQ.outerHeight() / parseInt(contentjQ.css('fontSize'), 10);
+    scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
   };
   _.text = function(opts) {
-    return this.blocks[0].text(opts);
+    return this.blocks[0].text(opts) + '(' + this.blocks[1].text(opts) + ')';
   };
   _.latex = function() {
     if(BuiltInOpNames.hasOwnProperty(this.blocks[0].text())) //This is a built-in latex command
-      return '\\' + this.blocks[0].latex() + ' ';
+      return '\\' + this.blocks[0].latex() + '\\left({' + this.blocks[1].latex() + '}\\right)';
     else
-      return '\\operatorname{' + this.blocks[0].latex() + '}';
+      return '\\operatorname{' + this.blocks[0].latex() + '}\\left({' + this.blocks[1].latex() + '}\\right)';
   };
   _.parser = function() {
+    var string = Parser.string;
+    var optWhitespace = Parser.optWhitespace;
+    var succeed = Parser.succeed;
+    var block = latexMathParser.block;
+    var fn = this.ctrlSeq;
+
+    var self = this;
+    var blocks = self.blocks = [ MathBlock(), MathBlock() ];
+    for (var i = 0; i < blocks.length; i += 1) {
+      blocks[i].adopt(self, self.ends[R], 0);
+    }
+
     if(BuiltInOpNames.hasOwnProperty(this.ctrlSeq)) {
-      var fn = this.ctrlSeq;
-      this.createBlocks();
-      //var block = MathBlock();
       for (var i = 0; i < fn.length; i += 1) {
         Letter(fn.charAt(i)).adopt(this.ends[L], this.ends[L].ends[R], 0);
       }
-      //this.adopt(block, block.ends[R], 0);
-      return Parser.succeed(this);
-    } else 
-      return super_.parser.call(this);
+      return optWhitespace.then(string('\\left(')).then(function() {
+        var child = blocks[1];
+        return block.then(function (block) {
+          block.children().adopt(child, child.ends[R], 0);
+          return succeed(self);
+        });
+      }).then(string('\\right)')).result(self);
+    } else {
+      return optWhitespace.then(function() {
+        var child = blocks[0];
+        return block.then(function(block) {
+          block.children().adopt(child, child.ends[R], 0);
+          return succeed(self);
+        });
+      }).then(string('\\left(')).then(function() {
+        var child = blocks[1];
+        return block.then(function (block) {
+          block.children().adopt(child, child.ends[R], 0);
+          return succeed(self);
+        });
+      }).then(string('\\right)')).result(self);
+    }
   };
 });
 for (var fn in BuiltInOpNames) if (BuiltInOpNames.hasOwnProperty(fn)) {
@@ -146,7 +214,7 @@ if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
 LatexCmds.$ = bind(VanillaSymbol, '\\$', '$');
 
 // does not use Symbola font
-var NonSymbolaSymbol = P(Symbol, function(_, super_) {
+var NonSymbolaSymbol = P(Variable, function(_, super_) {
   _.init = function(ch, html) {
     super_.init.call(this, ch, '<span class="mq-nonSymbola">'+(html || ch)+'</span>');
   };
@@ -383,7 +451,7 @@ var Equality = P(Inequality, function(_, super_) {
   };
 });
 var equal = { ctrlSeq: '\\eq ', html: '==', text: ' == ',
-              ctrlSeqStrict: '=', htmlStrict: '=', textStrict: ' = ' };
+              ctrlSeqStrict: '=', htmlStrict: '=', textStrict: ' := ' };
 LatexCmds['='] = bind(Equality, equal, true);
 LatexCmds.eq = bind(Equality, equal, false);
 

@@ -418,12 +418,17 @@ var VanillaSymbol = P(Symbol, function(_, super_) {
     super_.init.call(this, ch, '<span>'+(html || ch)+'</span>', (textTemplate || ch));
   };
   _.createLeftOf = function(cursor) {
-    if((this.ctrlSeq === '.') && (cursor[L] !== 0) && (cursor[L].ctrlSeq === '.')) {// ellipses
-      cursor[L].ctrlSeq = '…';
-      cursor[L].jQ.html('<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>');
-      cursor[L].textTemplate = '..';
-    } else
-      super_.createLeftOf.call(this, cursor);
+    if(this.ctrlSeq === '.') {
+      if((cursor[L] === 0 ) || (cursor[L] instanceof BinaryOperator)) //Implicit multiplication will take care of other cases and 'make' cursor[L] a binaryoperator
+        VanillaSymbol('0').createLeftOf(cursor);
+      else if((cursor[L] !== 0) && (cursor[L].ctrlSeq === '.')) {// ellipses
+        cursor[L].ctrlSeq = '…';
+        cursor[L].jQ.html('<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>');
+        cursor[L].textTemplate = '..';
+        return;
+      } 
+    }
+    super_.createLeftOf.call(this, cursor);
   }
 });
 var BinaryOperator = P(Symbol, function(_, super_) {
@@ -460,11 +465,18 @@ var MathBlock = P(MathElement, function(_, super_) {
   _.keystroke = function(key, e, ctrlr) {
     if (ctrlr.API.__options.spaceBehavesLikeTab
         && (key === 'Spacebar' || key === 'Shift-Spacebar')) {
+      var cursor = ctrlr.cursor;
+      // Test for autocommands 
+      if(cursor[L] instanceof Letter)
+        cursor[L].autoOperator(cursor);
       e.preventDefault();
       ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
-console.log(ctrlr);
-alert('pause'); // Need to use space to also auto turn pi to (pi) etc
       return;
+    } else if(key === 'Tab') {
+      // Test for autocommands 
+      var cursor = ctrlr.cursor;
+      if(cursor[L] instanceof Letter)
+        cursor[L].autoOperator(cursor);
     }
     return super_.keystroke.apply(this, arguments);
   };
@@ -493,47 +505,39 @@ alert('pause'); // Need to use space to also auto turn pi to (pi) etc
     return node.seek(pageX, cursor);
   };
   _.write = function(cursor, ch, replacedFragment) {
-    //BRENTAN: deal with subscript issues (allow more '_' and italicize numbers automatically)
-    // Subscripts destroy auto-unitalicize!
-    // Add 0 before . if no digit present already
-    // 'e' is a special case...it is scientific notation
     var cmd;
     if (ch.match(/^[a-eg-zA-Z]$/)) //exclude f because want florin
       cmd = Letter(ch);
-    else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Letter) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (typeof cursor[L][L] !== 'undefined') && cursor[L][L].ctrlSeq.match(/^[0-9]$/)) {
-      // this should match scientific notation
+    else if((ch === 'f') && cursor.parent && (cursor.parent.parent instanceof OperatorName))
+      cmd = Letter('f');
+    else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (typeof cursor[L][L] !== 'undefined') && cursor[L][L].ctrlSeq.match(/^[0-9]$/)) // this should match scientific notation
       cmd = ScientificNotation(ch);
-      //cmd.incorporate_previous = ch;
-    } else if(ch.match(/^[0-9]$/) && (cursor[L] instanceof Letter)) // Numbers after letters are 'letters' as they are part of a var name
+    else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (cursor[L][L].ctrlSeq === '\\cdot ') && (cursor[L][L][L] !== 0) && (typeof cursor[L][L][L] !== 'undefined') && cursor[L][L][L].ctrlSeq.match(/^[0-9]$/)) {// this should match scientific notation
+      cursor[L][L].remove(); // Remove the implicit multiplication
+      cmd = ScientificNotation(ch);
+    } else if(ch.match(/^[0-9\.]$/) && ((cursor[L] instanceof Variable) || (cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')))) // Numbers after letters are 'letters' as they are part of a var name
       cmd = Letter(ch);
     else if (cmd = CharCmds[ch] || LatexCmds[ch])
       cmd = cmd(ch);
     else
       cmd = VanillaSymbol(ch);
 
-    // Test for autocommands (this does not work with 'sub' vars? should it? - BRENTAN)
-    if(!(cmd instanceof Letter) && (cursor[L] instanceof Letter)) {
-      var autoCmds = cursor.options.autoCommands;
-      // join together longest sequence of letters
-      var str = cursor[L].letter, l = cursor[L][L], i = 1;
-      while (l instanceof Letter) {
-        str = l.letter + str, l = l[L], i += 1;
-      }
-      // check for an autocommand, going thru substrings longest to shortest
-      if(str.length > 1) {
-        if (autoCmds.hasOwnProperty(str)) {
-          for (var i = 1, l = cursor[L]; i < str.length; i += 1, l = l[L]);
-          Fragment(l, cursor[L]).remove();
-          cursor[L] = l[L];
-          LatexCmds[str](str).createLeftOf(cursor);
-        }
-      }
+    // Test for autocommands 
+    if(!(cmd instanceof Variable) && (cursor[L] instanceof Letter)) 
+      cursor[L].autoOperator(cursor);
+
+    // Only allow variables (letters basically) in a operatorname
+    if(cursor.parent && (cursor.parent.parent instanceof OperatorName) && (cursor.parent === cursor.parent.parent.ends[L])) {
+      if(!((cmd instanceof Variable) || ((ch === '_') && cursor[R] === 0))) return;
+      if((cursor[L] instanceof SupSub) || ((ch === '_') && cursor[L] === 0)) return;
     }
 
     // Test for implicit multiplication
+    if((cmd instanceof Variable) && (cursor[L] instanceof VanillaSymbol) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
+      LatexCmds.cdot().createLeftOf(cursor);
+    else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === 'R'))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof ScientificNotation) || ((cursor[L] instanceof SupSub) && (cursor[L].supsub !== 'sub'))))
+      LatexCmds.cdot().createLeftOf(cursor);
 
-
-    // BRENTAN: Test if we should add a '*' before this item (45x for example!)
     if (replacedFragment) cmd.replaces(replacedFragment);
 
     cmd.createLeftOf(cursor);

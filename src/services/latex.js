@@ -90,8 +90,6 @@ Controller.open(function(_, super_) {
     var eof = Parser.eof;
 
     var block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
-    //console.log(block);
-    //alert('pause');
     if (block && !block.isEmpty()) {
       block.children().adopt(cursor.parent, cursor[L], cursor[R]);
       var jQ = block.jQize();
