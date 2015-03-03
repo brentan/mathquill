@@ -985,6 +985,11 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
           if(node instanceof OperatorName) return cursor.insRightOf(node);
           else if(node instanceof SummationNotation) return cursor.insRightOf(node);
         }
+      } else if(!brack && (this.side === R) && (this.ctrlSeq === '\\left[')) {
+        // Check if we are trying to leave a matrix
+        for(var node = cursor.parent; node !== 0; node = node.parent) {
+          if(node instanceof Matrix) return cursor.insRightOf(node);
+        }
       } else if((!brack) && 
         (this.ctrlSeq === '\\left[') &&
         (cursor[L] === 0) && 

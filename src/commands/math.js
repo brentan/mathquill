@@ -438,7 +438,8 @@ var BinaryOperator = P(Symbol, function(_, super_) {
     );
   };
 });
-
+//BRENTAN: Something with matrix operators (.^ in matlab world...how do we do that here?)
+// Get rid of the $ hot-key to make text comments.  Remove that functionality entirely
 /**
  * Children and parent of MathCommand's. Basically partitions all the
  * symbols and operators that descend (in the Math DOM tree) from
@@ -508,8 +509,6 @@ var MathBlock = P(MathElement, function(_, super_) {
     var cmd;
     if (ch.match(/^[a-eg-zA-Z]$/)) //exclude f because want florin
       cmd = Letter(ch);
-    else if((ch === 'f') && cursor.parent && (cursor.parent.parent instanceof OperatorName))
-      cmd = Letter('f');
     else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (typeof cursor[L][L] !== 'undefined') && cursor[L][L].ctrlSeq.match(/^[0-9]$/)) // this should match scientific notation
       cmd = ScientificNotation(ch);
     else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (cursor[L][L].ctrlSeq === '\\cdot ') && (cursor[L][L][L] !== 0) && (typeof cursor[L][L][L] !== 'undefined') && cursor[L][L][L].ctrlSeq.match(/^[0-9]$/)) {// this should match scientific notation
@@ -533,7 +532,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     }
 
     // Test for implicit multiplication
-    if((cmd instanceof Variable) && (cursor[L] instanceof VanillaSymbol) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
+    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && (cursor[L] instanceof VanillaSymbol) && !cursor[L].ctrlSeq.match(/^[\,…]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
       LatexCmds.cdot().createLeftOf(cursor);
     else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === 'R'))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof ScientificNotation) || ((cursor[L] instanceof SupSub) && (cursor[L].supsub !== 'sub'))))
       LatexCmds.cdot().createLeftOf(cursor);

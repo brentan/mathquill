@@ -102,7 +102,7 @@ Controller.open(function(_) {
         text = '\\text{'+text+'}';
       }
     }
-    // FIXME: this always inserts math or a TextBlock, even in a RootTextBlock
+    // FIXME: this always inserts math or a TextBlock (removed!), even in a RootTextBlock
     this.writeLatex(text).cursor.show();
   };
 });

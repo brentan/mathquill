@@ -34,6 +34,12 @@ var Variable = P(Symbol, function(_, super_) {
       // f is annoying and must be dealt with
       if(to_remove[i].ctrlSeq === 'f') 
         to_remove[i].jQ.removeClass('mq-florin').html('f');
+      if((to_remove[i] instanceof SupSub) && (to_remove[i].supsub === 'sub')) {
+        for(var node = to_remove[i].blocks[0].ends[L]; node !== 0; node = node[R]) {
+          if(node.ctrlSeq === 'f') 
+            node.jQ.removeClass('mq-florin').html('f');
+        }
+      }
       to_remove[i].disown();
       to_remove[i].adopt(block.ends[L], 0, block.ends[L].ends[L]);
       to_remove[i].jQ.prependTo(block.ends[L].jQ);
@@ -181,6 +187,16 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
         var child = blocks[0];
         return block.then(function(block) {
           block.children().adopt(child, child.ends[R], 0);
+          for(var node = block.ends[L]; node !== 0; node = node[R]) {
+            if(node.ctrlSeq === 'f') 
+              node.htmlTemplate = '<var>f</var>';
+            else if((node instanceof SupSub) && (node.supsub === 'sub')) {
+              for(var node2 = node.blocks[0].ends[L]; node2 !== 0; node2 = node2[R]) {
+                if(node2.ctrlSeq === 'f') 
+                  node2.htmlTemplate = '<var>f</var>';
+              }
+            }
+          }
           return succeed(self);
         });
       }).then(string('\\left(')).then(function() {
@@ -201,6 +217,14 @@ LatexCmds.f = P(Letter, function(_, super_) {
   _.init = function() {
     Symbol.p.init.call(this, this.letter = 'f', '<var class="mq-florin">&fnof;</var>');
   };
+  _.createLeftOf = function(cursor) {
+    if(cursor.parent && (cursor.parent.parent instanceof OperatorName) && (cursor.parent === cursor.parent.parent.blocks[0]))
+      Letter('f').createLeftOf(cursor);
+    else if(cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub') && cursor.parent.parent.parent && (cursor.parent.parent.parent.parent instanceof OperatorName) && (cursor.parent.parent.parent === cursor.parent.parent.parent.parent.blocks[0]))
+      Letter('f').createLeftOf(cursor);
+    else
+      super_.createLeftOf.call(this, cursor);
+  };
 });
 
 // VanillaSymbol's
@@ -211,7 +235,24 @@ LatexCmds["'"] = LatexCmds.prime = bind(VanillaSymbol, "'", '&prime;');
 LatexCmds.backslash = bind(VanillaSymbol,'\\backslash ','\\');
 if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
 
-LatexCmds.$ = bind(VanillaSymbol, '\\$', '$');
+//LatexCmds.$ = bind(VanillaSymbol, '\\$', '$');
+
+var Currency = P(MathCommand, function(_, super_) {
+  _.init = function(ch, text) {
+    this.htmlTemplate = '<span><span>' + text + '</span><span>&0</span></span>';
+    this.textTemplate = [' ' + text, ' ']; // BRENTAN- Determine how currency fits in to units?
+    super_.init.call(this, ch);
+  };
+  _.finalizeTree = function() {
+    this.ends[L].write = function(cursor, ch) {
+      if (!RegExp(/[0-9\.]/).test(ch)) {
+        cursor.insRightOf(this.parent);
+      }
+      MathBlock.p.write.apply(this, arguments);
+    };
+  };
+});
+LatexCmds.$ = bind(Currency,'\\$', '$');
 
 // does not use Symbola font
 var NonSymbolaSymbol = P(Variable, function(_, super_) {
