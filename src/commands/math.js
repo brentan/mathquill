@@ -163,7 +163,7 @@ var MathCommand = P(MathElement, function(_, super_) {
         (this instanceof Fraction) ||
         (this instanceof SupSub) ||
         (this instanceof SquareRoot))
-      this.bubble('workingGroupChange');
+      cursor.workingGroupChange();
   };
   _.createBlocks = function() {
     var cmd = this,
@@ -438,9 +438,6 @@ var BinaryOperator = P(Symbol, function(_, super_) {
     );
   };
 });
-// BRENTAN: Add the syntax highlighting thing currently in the swift calcs source to this instead
-// BRENTAN: Factorial is weird...(asks for a block after the !)
-// BRENTAN: Auto change of sqrt( to the latex version (also for other commands?)
 /**
  * Children and parent of MathCommand's. Basically partitions all the
  * symbols and operators that descend (in the Math DOM tree) from
@@ -523,8 +520,10 @@ var MathBlock = P(MathElement, function(_, super_) {
       cmd = VanillaSymbol(ch);
 
     // Test for autocommands 
-    if(!(cmd instanceof Variable) && (cursor[L] instanceof Letter)) 
-      cursor[L].autoOperator(cursor);
+    if(!(cmd instanceof Variable) && (cursor[L] instanceof Letter)) {
+      if(cursor[L].autoOperator(cursor) && (cmd instanceof Bracket) && (cmd.side === L))
+        return;
+    }
 
     // Only allow variables (letters basically) in a operatorname
     if(cursor.parent && (cursor.parent.parent instanceof OperatorName) && (cursor.parent === cursor.parent.parent.ends[L])) {
@@ -535,7 +534,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     // Test for implicit multiplication
     if(((cmd instanceof Variable) || (cmd instanceof Currency)) && (cursor[L] instanceof VanillaSymbol) && !cursor[L].ctrlSeq.match(/^[\,…]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
       LatexCmds.cdot().createLeftOf(cursor);
-    else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === 'R'))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof ScientificNotation) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket))))
+    else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof ScientificNotation) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket))))
       LatexCmds.cdot().createLeftOf(cursor);
 
     if (replacedFragment) cmd.replaces(replacedFragment);

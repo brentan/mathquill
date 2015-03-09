@@ -11,9 +11,10 @@ JS environment could actually contain many instances. */
 
 //A fake cursor in the fake textbox that the math is rendered in.
 var Cursor = P(Point, function(_) {
-  _.init = function(initParent, options) {
+  _.init = function(initParent, options, container) {
     this.parent = initParent;
     this.options = options;
+    this.container = container;
 
     var jQ = this.jQ = this._jQ = $('<span class="mq-cursor">&#8203;</span>');
     //closured for setInterval
@@ -153,6 +154,32 @@ var Cursor = P(Point, function(_) {
     if (gramp[L].siblingDeleted) gramp[L].siblingDeleted(cursor.options, R);
     if (gramp[R].siblingDeleted) gramp[R].siblingDeleted(cursor.options, L);
   };
+
+  // This is active block highlighting.  It will highlight the active block in the element
+  _.workingGroupChange = function() {
+    var mathField = this.container;
+    var suppress = false;
+    mathField.find(".active_block").replaceWith(function() {
+      return $( this ).contents();
+    });
+    mathField.find(".hasCursor_highlighting").removeClass("hasCursor_highlighting");
+    var cursor = this.jQ;
+    cursor.addClass('hasCursor_highlighting');
+    var suppress = false;
+    cursor.prevAll().each(function() {
+      var _this = $(this);
+      if(_this.hasClass('mq-binary-operator')) suppress = true;
+      if(!suppress) _this.addClass('hasCursor_highlighting');
+    });
+    suppress = false;
+    cursor.nextAll().each(function() {
+      var _this = $(this);
+      if(_this.hasClass('mq-binary-operator')) suppress = true;
+      if(!suppress) _this.addClass('hasCursor_highlighting');
+    });
+    mathField.find(".mq-hasCursor").first().children(".hasCursor_highlighting").wrapAll("<span class='active_block'></span>");
+  };
+
   _.startSelection = function() {
     var anticursor = this.anticursor = Point.copy(this);
     var ancestors = anticursor.ancestors = {}; // a map from each ancestor of

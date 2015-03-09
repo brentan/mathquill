@@ -14,7 +14,7 @@ var Controller = P(function(_) {
 
     API.__controller = root.controller = this;
 
-    this.cursor = root.cursor = Cursor(root, API.__options);
+    this.cursor = root.cursor = Cursor(root, API.__options, container);
     // TODO: stop depending on root.cursor, and rm it
   };
 

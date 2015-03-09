@@ -85,8 +85,10 @@ var Letter = P(Variable, function(_, super_) {
         Fragment(l, cursor[L]).remove();
         cursor[L] = l[L];
         LatexCmds[str](str).createLeftOf(cursor);
+        return true;
       }
     }
+    return false;
   };
 });
 var BuiltInOpNames = {}; // http://latex.wikia.com/wiki/List_of_LaTeX_symbols#Named_operators:_sin.2C_cos.2C_etc.

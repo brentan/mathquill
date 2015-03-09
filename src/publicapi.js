@@ -174,7 +174,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
 });
 
 function RootBlockMixin(_) {
-  var names = 'workingGroupChange moveOutOf deleteOutOf selectOutOf upOutOf downOutOf reflow'.split(' ');
+  var names = 'moveOutOf deleteOutOf selectOutOf upOutOf downOutOf reflow'.split(' ');
   for (var i = 0; i < names.length; i += 1) (function(name) {
     _[name] = function(dir) { this.controller.handle(name, dir); };
   }(names[i]));

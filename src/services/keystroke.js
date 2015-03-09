@@ -166,7 +166,7 @@ Controller.open(function(_) {
     if (cursor.parent === this.root) return;
 
     cursor.parent.moveOutOf(dir, cursor);
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
     return this.notify('move');
   };
 
@@ -187,7 +187,7 @@ Controller.open(function(_) {
     else if (cursor[dir]) cursor[dir].moveTowards(dir, cursor, updown);
     else cursor.parent.moveOutOf(dir, cursor, updown);
 
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
     return this.notify('move');
   };
   _.moveLeft = function() { return this.moveDir(L); };
@@ -222,7 +222,7 @@ Controller.open(function(_) {
         }
       });
     }
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
     return self;
   }
   this.onNotify(function(e) { if (e !== 'upDown') this.upDownCache = {}; });
@@ -242,7 +242,7 @@ Controller.open(function(_) {
     if (cursor[L].siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
     if (cursor[R].siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
     cursor.parent.bubble('reflow');
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
 
     return this;
   };

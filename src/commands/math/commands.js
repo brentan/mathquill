@@ -163,7 +163,7 @@ var SupSub = P(MathCommand, function(_, super_) {
         this.elementWise = true;
         cursor.insRightOf(ins);
       }
-      if((cursor[L] instanceof Fraction) || (cursor[L] instanceof ScientificNotation)) {
+      if((cursor[L] instanceof Fraction) || (cursor[L] instanceof ScientificNotation) || (cursor[L] instanceof SummationNotation)) {
         // Some items should be wrapped in brackets before we add the exponent
         var bracket = CharCmds['(']();
         var to_move = cursor[L];
@@ -175,6 +175,22 @@ var SupSub = P(MathCommand, function(_, super_) {
         close_it.createLeftOf(cursor);
         bracket.reflow();
       }
+      if((cursor[L] instanceof SupSub) && (cursor[L].supsub === 'sup')) {
+        // Also wrap, but SupSub does not 'have' its operand as part of it, so we have to march backwards to find what we need to wrap
+        var bracket = CharCmds['(']();
+        var to_move = [cursor[L]];
+        for(var el = cursor[L]; !(el instanceof BinaryOperator) && (el !== 0); el = el[L])
+          to_move.push(el);
+        bracket.createLeftOf(cursor);
+        for(var i=0; i < to_move.length; i++) {
+          to_move[i].disown();
+          to_move[i].adopt(bracket.ends[L], 0, bracket.ends[L].ends[L]);
+          to_move[i].jQ.prependTo(bracket.ends[L].jQ);
+        }
+        var close_it = CharCmds[')']();
+        close_it.createLeftOf(cursor);
+        bracket.reflow();
+      }
     }
     return super_.createLeftOf.call(this, cursor);
   };
@@ -182,7 +198,7 @@ var SupSub = P(MathCommand, function(_, super_) {
   _.finalizeTree = function() {
     var supsub = this.supsub;
     this.ends[L].write = function(cursor, ch) {
-      if(ch === '_') return;
+      if((supsub == 'sub') && (ch === '_')) return;
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
         cursor.insRightOf(this.parent);
       }
@@ -799,7 +815,7 @@ var Matrix =
         this.finalizeTree();
         cursor.insAtLeftEnd(this.blocks[(cell.row > 0) ? ((cell.row-1)*this.col + cell.col) : cell.col]);
         this.reflow();
-        this.bubble('workingGroupChange');
+        cursor.workingGroupChange();
       }
       _.deleteColumn = function(cursor) {
         if(this.col == 1) return;
@@ -821,7 +837,7 @@ var Matrix =
         this.finalizeTree();
         cursor.insAtLeftEnd(this.blocks[(cell.col < this.col) ? (cell.row*this.col + cell.col) : (cell.row*this.col + cell.col - 1)]);
         this.reflow();
-        this.bubble('workingGroupChange');
+        cursor.workingGroupChange();
       }
       _.insertRow = function(cursor, dir) {
         //Insert a row into the matrix immediately after the cell the cursor is in, then move cursor.
@@ -856,7 +872,7 @@ var Matrix =
         this.finalizeTree();
         cursor.insAtLeftEnd(this.blocks[startIndex]);
         this.reflow();
-        this.bubble('workingGroupChange');
+        cursor.workingGroupChange();
       }
       _.insertColumn = function(cursor, dir) {
         //Insert a column into the matrix immediately after the cell the cursor is in, then move cursor.
@@ -896,13 +912,13 @@ var Matrix =
         this.finalizeTree();
         cursor.insAtLeftEnd(cursor.parent[insertBefore ? L : R]);
         this.reflow();
-        this.bubble('workingGroupChange');
+        cursor.workingGroupChange();
       }
       _.moveOrInsertColumn = function(cursor) {
         var cell = this.cursorRowCol(cursor);
         if((cell.col + 1) == this.col) return this.insertColumn(cursor);
         cursor.insAtLeftEnd(cursor.parent[R]);
-        this.bubble('workingGroupChange');
+        cursor.workingGroupChange();
       }
     });
 LatexCmds.matrix = bind(Matrix, '\\matrix', 1, 1);
@@ -1045,7 +1061,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     }
     if (side === L) cursor.insAtLeftEnd(brack.ends[L]);
     else cursor.insRightOf(brack);
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
   };
   _.placeCursor = noop;
   _.unwrap = function() {

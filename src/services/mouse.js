@@ -96,7 +96,7 @@ Controller.open(function(_) {
     node.seek(pageX, cursor);
     this.scrollHoriz(); // before .selectFrom when mouse-selecting, so
                         // always hits no-selection case in scrollHoriz and scrolls slower
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
     return this;
   };
 });
