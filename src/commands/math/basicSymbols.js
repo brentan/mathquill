@@ -235,8 +235,6 @@ LatexCmds["'"] = LatexCmds.prime = bind(VanillaSymbol, "'", '&prime;');
 LatexCmds.backslash = bind(VanillaSymbol,'\\backslash ','\\');
 if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
 
-//LatexCmds.$ = bind(VanillaSymbol, '\\$', '$');
-
 var Currency = P(MathCommand, function(_, super_) {
   _.init = function(ch, text) {
     this.htmlTemplate = '<span><span>' + text + '</span><span>&0</span></span>';
@@ -428,6 +426,24 @@ var PlusMinus = P(BinaryOperator, function(_) {
     return this;
   };
 });
+var Multiplication = P(BinaryOperator, function(_, super_) {
+  _.finalizeTree = function() {
+    if(this[L] && (this[L].ctrlSeq === '.')) {
+      var to_remove = [this[L]];
+      if(this[L][L] && this[L][L][L] && (this[L][L].ctrlSeq === '0') && (this[L][L][L].ctrlSeq === '\\cdot ')) {
+        // Deal with added 0 and implicit multiplication
+        to_remove.push(this[L][L]);
+        to_remove.push(this[L][L][L]);
+      }
+      for(var i=0; i < to_remove.length; i++)
+        to_remove[i].remove();
+      this.jQ.html("&#8857;");
+      this.jQ.addClass("mq-multiply-elementWise");
+      this.ctrlSeq = '.' + this.ctrlSeq;
+      this.textTemplate = '.' + this.textTemplate;
+    }
+  }
+});
 
 LatexCmds['+'] = bind(PlusMinus, '+', '+');
 //yes, these are different dashes, I think one is an en dash and the other is a hyphen
@@ -438,7 +454,7 @@ LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus =
   bind(PlusMinus,'\\mp ','&#8723;');
 
 CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot =
-  bind(BinaryOperator, '\\cdot ', '&middot;', '*');
+  bind(Multiplication, '\\cdot ', '&middot;', '*');
 //semantically should be &sdot;, but &middot; looks better
 
 var Inequality = P(BinaryOperator, function(_, super_) {

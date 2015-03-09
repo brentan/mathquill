@@ -148,6 +148,21 @@ var SupSub = P(MathCommand, function(_, super_) {
     } else {
       // Only add superscript to actual math stuff (digits, variables, brackets, etc)
       if((cursor[L] === 0) || (cursor[L] instanceof BinaryOperator)) return;
+      // Test for elementwise operator .^
+      if((cursor[L].ctrlSeq === '.') && (cursor[L][L])) {
+        var to_remove = [cursor[L]];
+        if(cursor[L][L] && cursor[L][L][L] && cursor[L][L][L][L] && (cursor[L][L].ctrlSeq === '0') && (cursor[L][L][L].ctrlSeq === '\\cdot ')) {
+          // Deal with added 0 and implicit multiplication
+          to_remove.push(cursor[L][L]);
+          to_remove.push(cursor[L][L][L]);
+          var ins = cursor[L][L][L][L];
+        } else
+          var ins = cursor[L][L];
+        for(var i=0; i < to_remove.length; i++)
+          to_remove[i].remove();
+        this.elementWise = true;
+        cursor.insRightOf(ins);
+      }
       if((cursor[L] instanceof Fraction) || (cursor[L] instanceof ScientificNotation)) {
         // Some items should be wrapped in brackets before we add the exponent
         var bracket = CharCmds['(']();
@@ -161,49 +176,7 @@ var SupSub = P(MathCommand, function(_, super_) {
         bracket.reflow();
       }
     }
-    return super_.createLeftOf.apply(this, arguments);
-  };
-  _.contactWeld = function(cursor) {
-    // Look on either side for a SupSub, if one is found compare my
-    // .sub, .sup with its .sub, .sup. If I have one that it doesn't,
-    // then call .addBlock() on it with my block; if I have one that
-    // it also has, then insert my block's children into its block,
-    // unless my block has none, in which case insert the cursor into
-    // its block (and not mine, I'm about to remove myself) in the case
-    // I was just typed.
-    // TODO: simplify
-
-    // equiv. to [L, R].forEach(function(dir) { ... });
-    for (var dir = L; dir; dir = (dir === L ? R : false)) {
-      if (this[dir] instanceof SupSub) {
-        // equiv. to 'sub sup'.split(' ').forEach(function(supsub) { ... });
-        for (var supsub = 'sub'; supsub; supsub = (supsub === 'sub' ? 'sup' : false)) {
-          var src = this[supsub], dest = this[dir][supsub];
-          if (!src) continue;
-          if (!dest) this[dir].addBlock(src.disown());
-          else if (!src.isEmpty()) { // ins src children at -dir end of dest
-            src.jQ.children().insAtDirEnd(-dir, dest.jQ);
-            var children = src.children().disown();
-            var pt = Point(dest, children.ends[R], dest.ends[L]);
-            if (dir === L) children.adopt(dest, dest.ends[R], 0);
-            else children.adopt(dest, 0, dest.ends[L]);
-          }
-          else var pt = Point(dest, 0, dest.ends[L]);
-          this.placeCursor = (function(dest, src) { // TODO: don't monkey-patch
-            return function(cursor) { cursor.insAtDirEnd(-dir, dest || src); };
-          }(dest, src));
-        }
-        this.remove();
-        if (cursor && cursor[L] === this) {
-          if (dir === R && pt) {
-            pt[L] ? cursor.insRightOf(pt[L]) : cursor.insAtLeftEnd(pt.parent);
-          }
-          else cursor.insRightOf(this[dir]);
-        }
-        break;
-      }
-    }
-    this.respace();
+    return super_.createLeftOf.call(this, cursor);
   };
   Options.p.charsThatBreakOutOfSupSub = '';
   _.finalizeTree = function() {
@@ -218,11 +191,19 @@ var SupSub = P(MathCommand, function(_, super_) {
       }
       MathBlock.p.write.apply(this, arguments);
     };
+    if(this.sup && (this.sup.ends[L] && this.sup.ends[L].ctrlSeq === '.')) {
+      // There is no latex elementWise operator...so we just add a '.' to the front to represent it.  Note since we auto-add a '0' before '.' in numbers, it means a leading '.' should only indicate elementwise math
+      this.sup.ends[L].remove();
+      this.elementWise = true;
+    }
+    if(this.elementWise)
+      this.jQ.addClass('mq-elementwise');
   };
   _.latex = function() {
+    var elementWise = this.elementWise;
     function latex(prefix, block) {
       var l = block && block.latex();
-      return block ? prefix + (l.length === 1 ? l : '{' + (l || ' ') + '}') : '';
+      return block ? prefix + (l.length === 1 ? l : '{' + (elementWise ? '.' : '') + (l || ' ') + '}') : '';
     }
     return latex('_', this.sub) + latex('^', this.sup);
   };
@@ -238,6 +219,7 @@ var SupSub = P(MathCommand, function(_, super_) {
           }));
     }
     if(this.sup) {
+      if(this.elementWise) tex += '.';
       tex += '^' + (this.sup && this.sup.ends[L] === this.sup.ends[R] ?
           this.sup.ends[L].text(opts) :
       '(' + this.sup.foldChildren('', function (text, child) {
@@ -519,7 +501,22 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
   _.finalizeTree = function() {
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];
+    if(this.blocks[1].ends[L] && (this.blocks[1].ends[L].ctrlSeq === '.')) {
+      // There is no latex elementWise operator...so we just add a '.' to the front of the numerator to represent it.  Note since we auto-add a '0' before '.' in numbers, it means a leading '.' should only indicate elementwise math
+      this.blocks[1].ends[L].remove();
+      this.elementWise = true;
+    }
+    if(this.elementWise) {
+      this.jQ.wrap("<span class='mq-fraction-elementwise'></span>");
+      this.jQ = this.jQ.parent();
+    }
   };
+  _.text = function(opts) {
+    return '((' + this.blocks[0].text(opts) + ')' + (this.elementWise ? '.' : '') + '/(' + this.blocks[1].text(opts) + '))';
+  }
+  _.latex = function() {
+    return this.ctrlSeq + '{' + this.blocks[0].latex() + '}{' + (this.elementWise ? '.' : '') + this.blocks[1].latex() + '}';
+  }
 });
 
 var LiveFraction =
@@ -527,6 +524,21 @@ LatexCmds.over =
 CharCmds['/'] = P(Fraction, function(_, super_) {
   _.createLeftOf = function(cursor) {
     if (!this.replacedFragment) {
+      // Test for elementwise operator .^
+      if(cursor[L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L])) {
+        var to_remove = [cursor[L]];
+        if(cursor[L][L] && cursor[L][L][L] && cursor[L][L][L][L] && (cursor[L][L].ctrlSeq === '0') && (cursor[L][L][L].ctrlSeq === '\\cdot ')) {
+          // Deal with added 0 and implicit multiplication
+          to_remove.push(cursor[L][L]);
+          to_remove.push(cursor[L][L][L]);
+          var ins = cursor[L][L][L][L];
+        } else
+          var ins = cursor[L][L];
+        for(var i=0; i < to_remove.length; i++)
+          to_remove[i].remove();
+        this.elementWise = true;
+        cursor.insRightOf(ins);
+      }
       var leftward = cursor[L];
       while (leftward &&
         !(

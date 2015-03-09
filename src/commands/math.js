@@ -438,8 +438,9 @@ var BinaryOperator = P(Symbol, function(_, super_) {
     );
   };
 });
-//BRENTAN: Something with matrix operators (.^ in matlab world...how do we do that here?)
-// Get rid of the $ hot-key to make text comments.  Remove that functionality entirely
+// BRENTAN: Add the syntax highlighting thing currently in the swift calcs source to this instead
+// BRENTAN: Factorial is weird...(asks for a block after the !)
+// BRENTAN: Auto change of sqrt( to the latex version (also for other commands?)
 /**
  * Children and parent of MathCommand's. Basically partitions all the
  * symbols and operators that descend (in the Math DOM tree) from
@@ -534,7 +535,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     // Test for implicit multiplication
     if(((cmd instanceof Variable) || (cmd instanceof Currency)) && (cursor[L] instanceof VanillaSymbol) && !cursor[L].ctrlSeq.match(/^[\,…]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
       LatexCmds.cdot().createLeftOf(cursor);
-    else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === 'R'))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof ScientificNotation) || ((cursor[L] instanceof SupSub) && (cursor[L].supsub !== 'sub'))))
+    else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === 'R'))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof ScientificNotation) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket))))
       LatexCmds.cdot().createLeftOf(cursor);
 
     if (replacedFragment) cmd.replaces(replacedFragment);
