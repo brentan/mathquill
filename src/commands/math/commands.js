@@ -214,6 +214,14 @@ var SupSub = P(MathCommand, function(_, super_) {
     }
     if(this.elementWise)
       this.jQ.addClass('mq-elementwise');
+    if(this.sub) {
+      var el = this.jQ.closest('.mq-editable-field').children('.mq-autocomplete').first();
+      if(el.length > 0) {
+        var topBlock = this.jQ;
+        var topOffset = topBlock.position();
+        el.css({top: Math.ceil(topOffset.top + topBlock.height()) + 'px'});
+      }
+    }
   };
   _.latex = function() {
     var elementWise = this.elementWise;
@@ -515,6 +523,7 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
   ;
   _.textTemplate = ['((', ')/(', '))'];
   _.finalizeTree = function() {
+    this.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];
     if(this.blocks[1].ends[L] && (this.blocks[1].ends[L].ctrlSeq === '.')) {

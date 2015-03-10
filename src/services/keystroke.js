@@ -26,9 +26,24 @@ Node.open(function(_) {
       ctrlr.backspace();
       break;
 
+    case 'Enter':
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Find the element that is currently selected
+        el.find('li.mq-popup-selected').click();
+        break;
+      }
+      return;
+
     // Tab or Esc -> go one block right if it exists, else escape right.
     case 'Esc':
     case 'Tab':
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Find the element that is currently selected
+        el.find('li.mq-popup-selected').click();
+        break;
+      }
       ctrlr.escapeDir(R, key, e);
       return;
 
@@ -155,6 +170,7 @@ Controller.open(function(_) {
     if (e === 'move' || e === 'upDown') this.show().clearSelection();
   });
   _.escapeDir = function(dir, key, e) {
+
     prayDirection(dir);
     var cursor = this.cursor;
 
@@ -186,6 +202,13 @@ Controller.open(function(_) {
     }
     else if (cursor[dir]) cursor[dir].moveTowards(dir, cursor, updown);
     else cursor.parent.moveOutOf(dir, cursor, updown);
+    
+    if(this.container.children('.mq-autocomplete').length > 0) {
+      if(cursor[L] instanceof Variable) cursor[L].autoComplete();
+      else if(cursor[R] instanceof Variable) cursor[R].autoComplete();
+      else if((cursor[L] instanceof SupSub) && (cursor[L].supsub == 'sub') && (cursor[L].sub.ends[R])) cursor[L].sub.ends[R].autoComplete();
+      else this.container.children('.mq-autocomplete').remove();
+    }
 
     cursor.workingGroupChange();
     return this.notify('move');
@@ -208,6 +231,18 @@ Controller.open(function(_) {
   _.moveUp = function() { return moveUpDown(this, 'up'); };
   _.moveDown = function() { return moveUpDown(this, 'down'); };
   function moveUpDown(self, dir) {
+    // Test if a popup menu (autocomplete or units menu) is currently active
+    var el = self.container.children('.mq-popup');
+    if(el.length > 0) {
+      //Find the element that is currently selected
+      var current_selection = el.find('li.mq-popup-selected');
+      var to_select = dir === 'up' ? current_selection.prev('li') : current_selection.next('li');
+      if(to_select.length == 0) return self;
+      current_selection.removeClass('mq-popup-selected');
+      to_select.addClass('mq-popup-selected');
+      return self;
+    }
+
     var cursor = self.notify('upDown').cursor;
     var dirInto = dir+'Into', dirOutOf = dir+'OutOf';
     if (cursor[R][dirInto]) cursor.insAtLeftEnd(cursor[R][dirInto]);

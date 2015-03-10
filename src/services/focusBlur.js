@@ -30,6 +30,7 @@ Controller.open(function(_) {
     }
     function blur() { // not directly in the textarea blur handler so as to be
       cursor.hide().parent.blur(); // synchronous with/in the same frame as
+      ctrlr.container.children('.mq-popup').remove();
       ctrlr.container.removeClass('mq-focused'); // clearing/blurring selection
       $(window).off('blur', windowBlur);
     }

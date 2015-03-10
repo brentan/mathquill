@@ -29,6 +29,7 @@ Controller.open(function(_) {
       var root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
       var ctrlr = root.controller, cursor = ctrlr.cursor, blink = cursor.blink;
       var textareaSpan = ctrlr.textareaSpan, textarea = ctrlr.textarea;
+      rootjQ.closest('.mq-editable-field').children('.mq-popup').remove();
 
       var target;
       function mousemove(e) { target = $(e.target); }

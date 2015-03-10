@@ -126,6 +126,15 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
     return this;
   };
+  _.setAutocomplete = function(list) {
+    this.__options.autocomplete = list.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
+    return this;
+  }
+  _.addAutocomplete = function(item) {
+    if(typeof this.__options.autocomplete === 'undefined') this.__options.autocomplete = [item];
+    else this.__options.autocomplete.push(item);
+    return this;
+  }
   _.cmd = function(cmd) {
     var ctrlr = this.__controller.notify(), cursor = ctrlr.cursor.show();
     if (/^\\[a-z]+$/i.test(cmd)) {

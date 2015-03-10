@@ -1,8 +1,42 @@
 
-  .ui-menu { 
-  	width: 180px; 
-  }
-   #mq-popup-menu { 
-   	position:absolute; 
-   	display:none; 
-   }
+.ui-menu { 
+	width: 180px; 
+}
+#mq-popup-menu { 
+	position:absolute; 
+	display:none; 
+}
+.mq-popup {
+	display: block;
+	position: absolute;
+	min-width: 200px;
+	max-height: 200px;
+	overflow-y: scroll;
+	background-color: white;
+	border: 1px solid black;
+	ul {
+		list-style-type: none;
+		margin: 0px;
+		padding: 0px;
+		li {
+		  list-style-type: none;
+		  padding: 5px 2px;
+		  cursor: pointer;
+		  &.mq-popup-selected {
+		    background-color: #d7efed;
+		  }
+		}
+	}
+	.mq-inline-box {
+		display: inline-block;
+		border-width: 0px;
+		background-color: #cccccc;
+		width: 10px;
+		height: 10px;
+		padding: 0px;
+		margin: 0px 2px;
+	}
+}
+.mq-editable_field {
+	position: relative;
+}

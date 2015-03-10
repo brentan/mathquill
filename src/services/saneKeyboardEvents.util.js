@@ -79,7 +79,6 @@ var saneKeyboardEvents = (function() {
     if (evt.shiftKey) modifiers.push('Shift');
 
     key = keyVal || String.fromCharCode(which);
-
     if (!modifiers.length && !keyVal) return key;
 
     modifiers.push(key);

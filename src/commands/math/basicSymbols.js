@@ -3,7 +3,7 @@
  ********************************/
 
 var Variable = P(Symbol, function(_, super_) {
-  _.init = function(ch, html) {
+  _.init = function(ch, html, text) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
   };
   _.text = function(opts) {
@@ -46,6 +46,103 @@ var Variable = P(Symbol, function(_, super_) {
     }
     block.ends[L].jQ.removeClass('mq-empty');
   };
+  _.fullWord = function() {
+    var word = this.text()+'';
+    var letters = [this];
+    // Move to the left
+    for (var l = this[L]; l instanceof Variable; l = l[L]) {
+      letters.unshift(l);
+      word = l.text() + word;
+    }
+    // Are we in a substring?
+    if(this.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub === 'sub')) {
+      word = '_' + word;
+      letters = [this.parent.parent];
+      for (var l = this.parent.parent[L]; l instanceof Variable; l = l[L]) {
+        letters.unshift(l);
+        word = l.text() + word;
+      }
+    }
+    // Move to the right
+    for (var l = this[R]; l instanceof Variable; l = l[R]) {
+      letters.push(l);
+      word += l.text();
+    }
+    // Did we hit a substring section?
+    if((l instanceof SupSub) && (l.supsub === 'sub')) {
+      word += '_';
+      letters.push(l);
+      for (var l = l.sub.ends[L]; l instanceof Variable; l = l[R]) 
+        word += l.text();
+    }
+    return [word, letters];
+  };
+  _.finalizeTree = function() {
+    this.autoComplete();
+  }
+  _.autoComplete = function() {
+    // Autocomplete functionality.  Look for autocomplete options and, if found, show in popup that can be navigated
+    var output = this.fullWord();
+    var word = output[0];
+    var letters = output[1];
+    if(word.length > 2) {
+      var formatter = function(text, self) {
+        var autoCommands = Object.keys(self.controller.API.__options.autoCommands);
+        for(var i = 0; i < autoCommands.length; i++) {
+          if(text === autoCommands[i]) {
+            text = LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate;
+            break;
+          } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_');
+
+        }
+        return (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
+      }
+      if(!this.controller) this.getController();
+      var wordList = this.controller.API.__options.autocomplete || [];
+      var commandList = this.controller.API.__options.staticAutocomplete || [];
+      //Find all matches
+      var matchList = [];
+      var regex = new RegExp("^" + word + ".*$", "i");
+      for(var i = 0; i < wordList.length; i++)
+        if(wordList[i].match(regex)) matchList.push("<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + formatter(wordList[i], this) + "</i></span></li>");
+      for(var i = 0; i < commandList.length; i++)
+        if(commandList[i].match(regex)) matchList.push("<li data-word='" + commandList[i] + "('><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>");
+      if(matchList.length > 0) {
+        var el = this.jQ.closest('.mq-editable-field').children('.mq-popup').first();
+        if(el.length == 0) {
+          el = $("<div class='mq-popup mq-autocomplete'></div>");
+          this.jQ.closest('.mq-editable-field').append(el);
+        }
+        matchList[0] = matchList[0].replace('<li', '<li class="mq-popup-selected"');
+        var leftBlock = letters[0].jQ;
+        var topBlock = letters[letters.length - 1].jQ;
+        var leftOffset = leftBlock.position();
+        var topOffset = topBlock.position();
+        el.css({top: Math.ceil(topOffset.top + topBlock.height()) + 'px', left: Math.floor(leftOffset.left) + 'px'});
+        el.html('<ul>' + matchList.join('\n') + '</ul>');
+        var _this = this;
+        el.find('li').mouseenter(function() {  // We dont use CSS hover because the class is how we keep track of which item is 'active'
+          $(this).closest('ul').find('li').removeClass('mq-popup-selected');
+          $(this).addClass('mq-popup-selected');
+        }).click(function() {
+          var word = $(this).attr('data-word');
+          var to_replace = _this.fullWord()[1];
+          var right_of = to_replace[0][L];
+          var right_end_of = to_replace[0].parent;
+          for(var i = 0; i < to_replace.length; i++) to_replace[i].remove();
+          if(right_of) _this.controller.cursor.insRightOf(right_of);
+          else _this.controller.cursor.insAtRightEnd(right_end_of);
+          _this.controller.API.typedText(word);
+          _this.controller.container.children('.mq-popup').remove();
+          if((word[word.length - 1] !== '(') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
+            _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
+          _this.controller.cursor.workingGroupChange();
+        });
+      } else
+        this.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
+    } else
+      this.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
+  };
 });
 
 Options.p.autoCommands = { _maxLength: 0 };
@@ -65,7 +162,7 @@ optionProcessors.autoCommands = function(cmds) {
     dict[cmd] = 1;
     maxLength = max(maxLength, cmd.length);
   }
-  dict._maxLength = maxLength;
+  //dict._maxLength = maxLength;
   return dict;
 };
 

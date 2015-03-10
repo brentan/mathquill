@@ -113,6 +113,9 @@ var MathCommand = P(MathElement, function(_, super_) {
   _.createLeftOf = function(cursor) {
     var cmd = this;
 
+    if(!(this instanceof Variable) && (this.supsub !== 'sub'))
+      cursor.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
+
     // Test for matrix specific commands
     if((typeof cursor.parent !== 'undefined') &&
         (cursor.parent.parent instanceof Matrix)) {
@@ -379,7 +382,7 @@ var MathCommand = P(MathElement, function(_, super_) {
  */
 var Symbol = P(MathCommand, function(_, super_) {
   _.init = function(ctrlSeq, html, text) {
-    if (!text) text = ctrlSeq && ctrlSeq.length > 1 ? ctrlSeq.slice(1) : ctrlSeq;
+    if (!text) text = (ctrlSeq && ctrlSeq.length > 1 ? ctrlSeq.slice(1) : ctrlSeq).trim();
 
     super_.init.call(this, ctrlSeq, html, [ text ]);
   };
@@ -464,18 +467,34 @@ var MathBlock = P(MathElement, function(_, super_) {
   _.keystroke = function(key, e, ctrlr) {
     if (ctrlr.API.__options.spaceBehavesLikeTab
         && (key === 'Spacebar' || key === 'Shift-Spacebar')) {
-      var cursor = ctrlr.cursor;
-      // Test for autocommands 
-      if(cursor[L] instanceof Letter)
-        cursor[L].autoOperator(cursor);
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Find the element that is currently selected
+        el.find('li.mq-popup-selected').click();
+      } else {
+        var cursor = ctrlr.cursor;
+        // Test for autocommands 
+        if(cursor[L] instanceof Letter)
+          cursor[L].autoOperator(cursor);
+        ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
+      }
       e.preventDefault();
-      ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
       return;
     } else if(key === 'Tab') {
       // Test for autocommands 
       var cursor = ctrlr.cursor;
       if(cursor[L] instanceof Letter)
         cursor[L].autoOperator(cursor);
+    } else if((key === 'Backspace') || (key === 'Del')) {
+      var out = super_.keystroke.apply(this, arguments);
+      var cursor = ctrlr.cursor;
+      if(cursor[L] && (cursor[L] instanceof Variable))
+        cursor[L].autoComplete();
+      else if((cursor[L] === 0) && cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub') && cursor.parent.parent[L])
+        cursor.parent.parent[L].autoComplete();
+      else
+        cursor.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
+      return out;
     }
     return super_.keystroke.apply(this, arguments);
   };
