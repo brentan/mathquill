@@ -82,6 +82,7 @@ var Variable = P(Symbol, function(_, super_) {
   }
   _.autoComplete = function() {
     // Autocomplete functionality.  Look for autocomplete options and, if found, show in popup that can be navigated
+    if(!this.controller) this.getController();
     var output = this.fullWord();
     var word = output[0];
     var letters = output[1];
@@ -97,7 +98,6 @@ var Variable = P(Symbol, function(_, super_) {
         }
         return (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
       }
-      if(!this.controller) this.getController();
       var wordList = this.controller.API.__options.autocomplete || [];
       var commandList = this.controller.API.__options.staticAutocomplete || [];
       //Find all matches
@@ -108,23 +108,13 @@ var Variable = P(Symbol, function(_, super_) {
       for(var i = 0; i < commandList.length; i++)
         if(commandList[i].match(regex)) matchList.push("<li data-word='" + commandList[i] + "('><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>");
       if(matchList.length > 0) {
-        var el = this.jQ.closest('.mq-editable-field').children('.mq-popup').first();
-        if(el.length == 0) {
-          el = $("<div class='mq-popup mq-autocomplete'></div>");
-          this.jQ.closest('.mq-editable-field').append(el);
-        }
         matchList[0] = matchList[0].replace('<li', '<li class="mq-popup-selected"');
         var leftBlock = letters[0].jQ;
         var topBlock = letters[letters.length - 1].jQ;
         var leftOffset = leftBlock.position();
         var topOffset = topBlock.position();
-        el.css({top: Math.ceil(topOffset.top + topBlock.height()) + 'px', left: Math.floor(leftOffset.left) + 'px'});
-        el.html('<ul>' + matchList.join('\n') + '</ul>');
         var _this = this;
-        el.find('li').mouseenter(function() {  // We dont use CSS hover because the class is how we keep track of which item is 'active'
-          $(this).closest('ul').find('li').removeClass('mq-popup-selected');
-          $(this).addClass('mq-popup-selected');
-        }).click(function() {
+        var onclick = function() {
           var word = $(this).attr('data-word');
           var to_replace = _this.fullWord()[1];
           var right_of = to_replace[0][L];
@@ -133,15 +123,16 @@ var Variable = P(Symbol, function(_, super_) {
           if(right_of) _this.controller.cursor.insRightOf(right_of);
           else _this.controller.cursor.insAtRightEnd(right_end_of);
           _this.controller.API.typedText(word);
-          _this.controller.container.children('.mq-popup').remove();
+          _this.controller.closePopup();
           if((word[word.length - 1] !== '(') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
             _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
           _this.controller.cursor.workingGroupChange();
-        });
+        };
+        this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset.top + topBlock.height(), leftOffset.left, onclick);
       } else
-        this.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
+        this.controller.closePopup();
     } else
-      this.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
+      this.controller.closePopup();
   };
 });
 

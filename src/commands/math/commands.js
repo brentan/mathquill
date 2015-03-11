@@ -693,7 +693,8 @@ var Matrix =
         delimjQs.css('position','relative');
         delimjQs.css('top',Math.round(height*0.6) + 'px');
       };
-      _.contextMenu = function(cursor, event) {
+      //BRENTAN: Need to move the below out of a context menu and into a toolbar
+      _.contextMenuOLD = function(cursor, event) {
         var self = this;
         var menu = [
           { text: "Insert Column Before", handler: function() { self.insertColumn(cursor, L)}},
@@ -1019,13 +1020,13 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
       else if(!brack && (this.side === R) && (this.ctrlSeq === '\\left(')) {
         // Some objects have 'built in' brackets that to the user look (and should operate) like normal brackets.  If so, escape out of them
         for(var node = cursor.parent; node !== 0; node = node.parent) {
-          if(node instanceof OperatorName) return cursor.insRightOf(node);
-          else if(node instanceof SummationNotation) return cursor.insRightOf(node);
+          if(node instanceof OperatorName) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
+          else if(node instanceof SummationNotation) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
         }
       } else if(!brack && (this.side === R) && (this.ctrlSeq === '\\left[')) {
         // Check if we are trying to leave a matrix
         for(var node = cursor.parent; node !== 0; node = node.parent) {
-          if(node instanceof Matrix) return cursor.insRightOf(node);
+          if(node instanceof Matrix) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
         }
       } else if((!brack) && 
         (this.ctrlSeq === '\\left[') &&

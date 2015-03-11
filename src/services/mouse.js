@@ -19,7 +19,7 @@ Controller.open(function(_) {
           break;
         };
       }
-	    target_node.contextMenu(cursor,e);
+      target_node.contextMenu(cursor,e);
       e.preventDefault(); // doesn't work in IE\u22648, but it's a one-line fix:
       return false;
     });
@@ -29,7 +29,7 @@ Controller.open(function(_) {
       var root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
       var ctrlr = root.controller, cursor = ctrlr.cursor, blink = cursor.blink;
       var textareaSpan = ctrlr.textareaSpan, textarea = ctrlr.textarea;
-      rootjQ.closest('.mq-editable-field').children('.mq-popup').remove();
+      ctrlr.closePopup();
 
       var target;
       function mousemove(e) { target = $(e.target); }

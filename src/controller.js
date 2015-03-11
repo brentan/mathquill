@@ -34,4 +34,21 @@ var Controller = P(function(_) {
     }
     return this;
   };
+
+  _.createPopup = function(html, top, left, onclick) {
+    var el = this.container.children('.mq-popup').first();
+    if(el.length == 0) {
+      el = $("<div class='mq-popup mq-autocomplete'></div>");
+      this.container.append(el);
+    }
+    el.css({top: Math.ceil(top) + 'px', left: Math.floor(left) + 'px'});
+    el.html(html);
+    el.find('li').mouseenter(function() {  // We dont use CSS hover because the class is how we keep track of which item is 'active'
+      $(this).closest('ul').find('li').removeClass('mq-popup-selected');
+      $(this).addClass('mq-popup-selected');
+    }).click(onclick);
+  };
+  _.closePopup = function() {
+    this.container.children('.mq-popup').remove();
+  };
 });
