@@ -33,6 +33,7 @@ Controller.open(function(_) {
       ctrlr.closePopup();
       ctrlr.container.removeClass('mq-focused'); // clearing/blurring selection
       $(window).off('blur', windowBlur);
+      ctrlr.handle('enter');
     }
     ctrlr.blurred = true;
     cursor.hide().parent.blur();

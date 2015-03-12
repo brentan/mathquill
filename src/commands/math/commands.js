@@ -132,7 +132,7 @@ var Class = LatexCmds['class'] = P(MathCommand, function(_, super_) {
     ;
   };
 });
-
+// BRENTAN: The exponent is not always high enough.  Something like ( cos(1+3)/4 / (4 + cos(1) / 2) ) will produce the low exponent.  Should eventually be fixed.
 var SupSub = P(MathCommand, function(_, super_) {
   _.ctrlSeq = '_{...}^{...}';
   _.createLeftOf = function(cursor) {
@@ -1007,8 +1007,15 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     if (!this.replacedFragment) { // unless wrapping seln in brackets,
         // check if next to or inside an opposing one-sided bracket
       var brack = this.oppBrack(cursor[L], L) || this.oppBrack(cursor[R], R);
-      for(var node = cursor.parent.parent; (node !== 0) && !brack; node = node.parent) 
-        brack = this.oppBrack(node);
+      var not_first = false;
+      for(var node = cursor.parent; (node !== 0) && !brack; node = node.parent) {
+        if(not_first) brack = this.oppBrack(node);
+        not_first = true;
+        if((this.side === R) && (this.ctrlSeq === '\\left(')) {
+          // Some objects have 'built in' brackets that to the user look (and should operate) like normal brackets.  If so, escape out of them
+          if((node instanceof OperatorName) || (node instanceof SummationNotation)) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
+        } else if((this.side === R) && (this.ctrlSeq === '\\left[') && (node instanceof Matrix)) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
+      }
 
       // Upon '(', we check if we should un-italicize a variable name (as its now a function handle).  
       if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof Variable) && (this.side === L)) 
@@ -1017,18 +1024,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
         cursor.insAtRightEnd(cursor[L]['sub'])
         return cursor[L].autoUnItalicize(cursor); 
       }
-      else if(!brack && (this.side === R) && (this.ctrlSeq === '\\left(')) {
-        // Some objects have 'built in' brackets that to the user look (and should operate) like normal brackets.  If so, escape out of them
-        for(var node = cursor.parent; node !== 0; node = node.parent) {
-          if(node instanceof OperatorName) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
-          else if(node instanceof SummationNotation) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
-        }
-      } else if(!brack && (this.side === R) && (this.ctrlSeq === '\\left[')) {
-        // Check if we are trying to leave a matrix
-        for(var node = cursor.parent; node !== 0; node = node.parent) {
-          if(node instanceof Matrix) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
-        }
-      } else if((!brack) && 
+      else if((!brack) && 
         (this.ctrlSeq === '\\left[') &&
         (cursor[L] === 0) && 
         (cursor[R] === 0) && 

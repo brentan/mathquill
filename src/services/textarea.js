@@ -83,7 +83,7 @@ Controller.open(function(_) {
     this.focusBlurEvents();
   };
   _.typedText = function(ch) {
-    if (ch === '\n') return this.handle('enter');
+    if (ch === '\n') return this.API.blur();
     var cursor = this.notify().cursor;
     cursor.parent.write(cursor, ch, cursor.show().replaceSelection());
     this.scrollHoriz();

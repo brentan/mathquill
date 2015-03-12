@@ -240,7 +240,10 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
     scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
   };
   _.text = function(opts) {
-    return this.blocks[0].text(opts) + '(' + this.blocks[1].text(opts) + ')';
+    if(typeof opts.operatorNameTextOutput !== 'undefined')
+      return opts.operatorNameTextOutput(this, this.blocks[0].text(opts), this.blocks[1].text(opts));
+    else
+      return this.blocks[0].text(opts) + '(' + this.blocks[1].text(opts) + ')';
   };
   _.latex = function() {
     if(BuiltInOpNames.hasOwnProperty(this.blocks[0].text())) //This is a built-in latex command
