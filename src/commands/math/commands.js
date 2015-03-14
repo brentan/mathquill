@@ -163,7 +163,7 @@ var SupSub = P(MathCommand, function(_, super_) {
         this.elementWise = true;
         cursor.insRightOf(ins);
       }
-      if((cursor[L] instanceof Fraction) || (cursor[L] instanceof ScientificNotation) || (cursor[L] instanceof SummationNotation)) {
+      if((cursor[L] instanceof Fraction) || (cursor[L] instanceof ScientificNotation) || (cursor[L] instanceof SummationNotation) || (cursor[L] instanceof Unit)) {
         // Some items should be wrapped in brackets before we add the exponent
         var bracket = CharCmds['(']();
         var to_move = cursor[L];
@@ -197,8 +197,10 @@ var SupSub = P(MathCommand, function(_, super_) {
   Options.p.charsThatBreakOutOfSupSub = '';
   _.finalizeTree = function() {
     var supsub = this.supsub;
+    this.setUnit();
+    this.unitsup = false;
     this.ends[L].write = function(cursor, ch) {
-      if((supsub == 'sub') && (ch === '_')) return;
+      if((supsub == 'sub') && (ch === '_')) return this.flash();
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
         cursor.insRightOf(this.parent);
       }
@@ -523,6 +525,7 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
   ;
   _.textTemplate = ['((', ')/(', '))'];
   _.finalizeTree = function() {
+    this.setUnit();
     this.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];
@@ -646,7 +649,6 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
     return ' ' + this.ends[R].text(opts) + '^(1/' + this.ends[L].text(opts) + ')';
   }
 });
-
 var Matrix =
     LatexCmds.begin = P(MathCommand, function (_, _super) {
       _.numBlocks = function () {
@@ -747,10 +749,7 @@ var Matrix =
         return (this.row > 1) ? ('[[' + out + ']]') : ('[' + out + ']')
       };
       _.parser = function () {
-        var block = latexMathParser.block;
-        var string = Parser.string;
         var regex = Parser.regex;
-        var optWhitespace = Parser.optWhitespace;
         return regex(/^\{[pbvBV]?matrix\}[\s\S]*?\\end\{[pbvBV]?matrix\}/).map(function (body) {
           if(body.substring(7,1) == '}') {
             var command = body.substring(1,7);
@@ -775,6 +774,7 @@ var Matrix =
           var blocks = matrix.blocks = Array(matrix.numBlocks());
           for (var i = 0; i < blocks.length; i++) {
             var newBlock = blocks[i] = latexMathParser.parse(cells[i]);
+            newBlock.deleteOutOf = MatrixMathBlock().deleteOutOf;
             newBlock.adopt(matrix, matrix.ends[R], 0);
           }
           return matrix;
@@ -849,6 +849,16 @@ var Matrix =
         this.reflow();
         cursor.workingGroupChange();
       }
+      _.createBlocks = function() {
+        var cmd = this,
+          numBlocks = cmd.numBlocks(),
+          blocks = cmd.blocks = Array(numBlocks);
+
+        for (var i = 0; i < numBlocks; i += 1) {
+          var newBlock = blocks[i] = MatrixMathBlock();
+          newBlock.adopt(cmd, cmd.ends[R], 0);
+        }
+      };
       _.insertRow = function(cursor, dir) {
         //Insert a row into the matrix immediately after the cell the cursor is in, then move cursor.
         //If the comma is inserted at the beginning of a cell with content, insert BEFORE the cell.
@@ -864,7 +874,7 @@ var Matrix =
         else
           this.jQ.children(".mq-matrix").first().children(".mq-row").eq(cell.row).after('<span class="mq-row"></span>');
         for(var i=0; i<this.col; i++) {
-          var newCell = MathBlock();
+          var newCell = MatrixMathBlock();
           newCell.adopt(this,
               (startIndex + i) > 0 ? this.blocks[startIndex + i - 1] : 0,
               (startIndex + i) > 0 ? this.blocks[startIndex + i - 1][R] : this.ends[L] );
@@ -895,7 +905,7 @@ var Matrix =
 
         // Add in the new column
         for(var i=(this.row - 1); i >= 0; i--) {  //Increment backwards so that block element indexes dont shift as we go
-          var newCell = MathBlock();
+          var newCell = MatrixMathBlock();
           if(insertBefore) {
             newCell.adopt(this,
                 ((i*this.col + cell.col - 1) >= 0) ? this.blocks[i*this.col + cell.col - 1] : 0,
@@ -937,7 +947,46 @@ LatexCmds.Bmatrix = bind(Matrix, '\\Bmatrix', 1, 1);
 LatexCmds.vmatrix = bind(Matrix, '\\vmatrix', 1, 1);
 LatexCmds.Vmatrix = bind(Matrix, '\\Vmatrix', 1, 1);
 LatexCmds.pmatrix = bind(Matrix, '\\pmatrix', 1, 1);
-
+var MatrixMathBlock = P(MathBlock, function(_, super_) {
+  _.deleteOutOf = function(dir, cursor) {
+    if(this.ends[L] === 0) {
+      if (dir === L)
+        var to_place_cursor = this[L];
+      else
+        var to_place_cursor = this[R];
+      this.parent.deleteColumn(cursor);
+      if(dir === L)
+        if(to_place_cursor) cursor.insAtRightEnd(to_place_cursor);
+      else
+        if(to_place_cursor) cursor.insAtLeftEnd(to_place_cursor);
+    } else {
+      var to_remove = this[dir];
+      var location = this.parent.cursorRowCol(cursor);
+      if((dir === L) && (location.col === 0)) to_remove = 0;
+      if((dir === R) && ((location.col + 1) === this.parent.col)) to_remove = 0;
+      if(to_remove === 0) {
+        if(this.parent[L]) {
+          var cursor_target = this.parent[L];
+          this.parent.remove();
+          cursor.insRightOf(cursor_target);
+        } else {
+          var cursor_target = this.parent.parent;
+          this.parent.remove();
+          cursor.insAtLeftEnd(cursor_target);
+        }
+      } else {
+        for(var el= to_remove.ends[L]; el !== 0; el = el[R])
+          el.remove();
+        cursor.insAtRightEnd(to_remove);
+        this.parent.deleteColumn(cursor);
+        if(dir === L)
+          cursor.insAtLeftEnd(this);
+        else
+          cursor.insAtRightEnd(this);
+      }
+    }
+  };
+});
 
 
 function DelimsMixin(_, super_) {
@@ -1120,6 +1169,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     this.deleteSide(-dir, false, cursor);
   };
   _.finalizeTree = function(opts) {
+    this.setUnit();
     this.ends[L].deleteOutOf = function(dir, cursor) {
       this.parent.deleteSide(dir, true, cursor);
     };

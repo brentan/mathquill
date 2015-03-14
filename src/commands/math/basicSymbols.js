@@ -323,8 +323,6 @@ LatexCmds.f = P(Letter, function(_, super_) {
 // VanillaSymbol's
 LatexCmds[' '] = LatexCmds.space = bind(VanillaSymbol, '\\ ', ' ');
 
-LatexCmds["'"] = LatexCmds.prime = bind(VanillaSymbol, "'", '&prime;');
-
 LatexCmds.backslash = bind(VanillaSymbol,'\\backslash ','\\');
 if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
 

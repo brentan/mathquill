@@ -96,6 +96,7 @@ CharCmds['\\'] = P(MathCommand, function(_, super_) {
         Letter(latex[i]).createLeftOf(cursor);
       cursor.insAtRightEnd(cmd.blocks[1]);
     }
+    cursor.workingGroupChange();
   };
 });
 

@@ -338,6 +338,21 @@ var MathCommand = P(MathElement, function(_, super_) {
       return text + child.text(opts) + (cmd.textTemplate[i] || '');
     });
   };
+  _.setUnit = function() {
+    // determine if I'm in a unit, and do the same to all my children
+    if(this.parent.unit) {
+      this.unit = this.parent.unit;
+      if((this.parent instanceof SupSub) || (this.parent.unitsup)) this.unitsup = true;
+    }
+    if(this.parent.parent && this.parent.parent.unit) {
+      this.unit = this.parent.parent.unit;
+      if((this.parent.parent instanceof SupSub) || (this.parent.parent.unitsup)) this.unitsup = true;
+    }
+  }
+  _.recursiveSetUnit = function() {
+    this.setUnit();
+    this.eachChild(function (child) { if(child.recursiveSetUnit) child.recursiveSetUnit(); });
+  };
 });
 
 /**
@@ -485,6 +500,11 @@ var MathBlock = P(MathElement, function(_, super_) {
     while (pageX < node.jQ.offset().left) node = node[L];
     return node.seek(pageX, cursor);
   };
+  _.flash = function() {
+    var el = this.jQ.closest('.mq-root-block');
+    el.css('background-color','#ffe0e0');
+    window.setTimeout(function() { el.css('background-color','#ffffff'); }, 100);
+  }
   _.write = function(cursor, ch, replacedFragment) {
     var cmd;
     if (ch.match(/^[a-eg-zA-Z]$/)) //exclude f because want florin
@@ -501,6 +521,23 @@ var MathBlock = P(MathElement, function(_, super_) {
     else
       cmd = VanillaSymbol(ch);
 
+    // Units...if we are in a unit box, drastically reduce what we are allowed to type (other things will push us out of the box)
+    if(cursor.parent && cursor.parent.parent && cursor.parent.parent.unitsup) {
+      // We are in a deep fraction in a unit
+      if(!ch.match(/^[0-9\.\+\-\*\^\/\(\)]$/)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+    } else if(cursor.parent && cursor.parent.parent && cursor.parent.parent.unit) {
+      // We are in a supsub or first level fraction
+      if(cursor.parent.parent instanceof SupSub) {
+        if(!ch.match(/^[0-9\.\+\-\*\^\/\(\)]$/)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+        else if(((ch === '/') || (ch === '^')) && !(cursor[L] instanceof VanillaSymbol) && !(cursor[L] instanceof Variable)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+      } else {
+        if(!ch.match(/^[a-z\^\*\/\(\)]$/i)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+        else if(((ch === '/') || (ch === '^')) && !(cursor[L] instanceof VanillaSymbol) && !(cursor[L] instanceof Variable)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+      }
+    } 
+
+    if (replacedFragment) cmd.replaces(replacedFragment);
+
     // Test for autocommands 
     if(!(cmd instanceof Variable) && (cursor[L] instanceof Letter)) {
       if(cursor[L].autoOperator(cursor) && (cmd instanceof Bracket) && (cmd.side === L))
@@ -509,24 +546,24 @@ var MathBlock = P(MathElement, function(_, super_) {
 
     // Only allow variables (letters basically) in a operatorname
     if(cursor.parent && (cursor.parent.parent instanceof OperatorName) && (cursor.parent === cursor.parent.parent.ends[L])) {
-      if(!((cmd instanceof Variable) || ((ch === '_') && cursor[R] === 0))) return;
-      if((cursor[L] instanceof SupSub) || ((ch === '_') && cursor[L] === 0)) return;
+      if(!((cmd instanceof Variable) || ((ch === '_') && cursor[R] === 0))) return this.flash(); 
+      if((cursor[L] instanceof SupSub) || ((ch === '_') && cursor[L] === 0)) return this.flash(); 
     }
 
     // Test for implicit multiplication
-    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && (cursor[L] instanceof VanillaSymbol) && !cursor[L].ctrlSeq.match(/^[\,…]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
+    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof Unit) || (cursor[L] instanceof Currency)) && !cursor[L].ctrlSeq.match(/^[\,…]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
       LatexCmds.cdot().createLeftOf(cursor);
-    else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof ScientificNotation) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket))))
+    else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof Unit || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof ScientificNotation) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket))))
       LatexCmds.cdot().createLeftOf(cursor);
-
-    if (replacedFragment) cmd.replaces(replacedFragment);
-
+    
     cmd.createLeftOf(cursor);
   };
 
   _.focus = function() {
     this.jQ.addClass('mq-hasCursor');
     this.jQ.removeClass('mq-empty');
+    if(this.unit) this.unit.focus();
+    if(this.parent && this.parent.unit) this.parent.unit.focus();
 
     return this;
   };
@@ -534,8 +571,13 @@ var MathBlock = P(MathElement, function(_, super_) {
     this.jQ.removeClass('mq-hasCursor');
     if (this.isEmpty())
       this.jQ.addClass('mq-empty');
+    if(this.unit) this.unit.blur();
+    if(this.parent && this.parent.unit) this.parent.unit.blur();
 
     return this;
+  };
+  _.recursiveSetUnit = function() {
+    this.eachChild(function (child) { if(child.recursiveSetUnit) child.recursiveSetUnit(); });
   };
 });
 

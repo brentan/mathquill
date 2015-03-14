@@ -16,7 +16,6 @@ var jQuery = window.jQuery,
   mqBlockId = 'mathquill-block-id',
   min = Math.min,
   max = Math.max;
-
 function noop() {}
 
 /**

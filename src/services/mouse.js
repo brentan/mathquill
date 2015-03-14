@@ -28,6 +28,7 @@ Controller.open(function(_) {
       var rootjQ = $(e.target).closest('.mq-root-block');
       var root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
       var ctrlr = root.controller, cursor = ctrlr.cursor, blink = cursor.blink;
+      var orig_block = cursor.parent;
       var textareaSpan = ctrlr.textareaSpan, textarea = ctrlr.textarea;
       ctrlr.closePopup();
 
@@ -45,7 +46,9 @@ Controller.open(function(_) {
         cursor.blink = blink;
         if (!cursor.selection) {
           if (ctrlr.editable) {
+            if(orig_block) orig_block.blur();
             cursor.show();
+            cursor.parent.focus();
           }
           else {
             textareaSpan.detach();
