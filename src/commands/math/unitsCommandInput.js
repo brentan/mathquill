@@ -2,11 +2,8 @@
  * Input box to type units commands
  **********************************/
 
- // BRENTAN: Need to now start doing the autocomplete.  This is already there in 'variable' but
- // we need to hijack it since it should know we are actually a unit, and so the autocomplete form
- // and the options in it will be different.  Get the list based on giac unit list in the C code (the
- // location is mentioned in an email with the french dude).  
- // Once that is done, we need to work on the text output function, which needs to add a '_' before each unit name
+ // BRENTAN: Far future: giac has an '8th' unit type, which is currency.  Consider adding more currency to giac if we have a way to set exchange rates programmatically
+ // BRENTAN: Temperature is not well handled by giac, due to confusion over absolute or relative.  Add something in 'text' that converts C -> K and F -> R, and add a warning to the output box or something
 
 var Unit = LatexCmds.Unit = 
 CharCmds["'"] = P(MathCommand, function(_, super_) {
@@ -39,12 +36,12 @@ CharCmds["'"] = P(MathCommand, function(_, super_) {
         cmd = cmd(ch);
       else
         cmd = VanillaSymbol(ch);
-      if(!ch.match(/^[a-z\^\*\/\(\)]$/i)) { 
+      if(!ch.match(/^[a-zµ\^\*\/\(\)]$/i)) { 
         if (replacedFragment) 
           replacedFragment.remove();
         this.flash();
         return; 
-       }
+      }
 
       if (replacedFragment) cmd.replaces(replacedFragment);
       cmd.createLeftOf(cursor);
@@ -52,6 +49,13 @@ CharCmds["'"] = P(MathCommand, function(_, super_) {
     this.ends[R].unit = this.ends[R];
     this.ends[R].eachChild(function (child) {
       if(child.recursiveSetUnit) child.recursiveSetUnit();
+      if((child instanceof VanillaSymbol) && (child.ctrlSeq == 'µ')) { 
+        var newnode = Letter('µ');
+        newnode.jQize();
+        newnode.jQ.insDirOf(R, child.jQ);
+        child[R] = newnode.adopt(child.parent, child, child[R]);
+        child.remove();
+      } 
     });
     this.ends[R].deleteOutOf = function(dir, cursor) {
       for(var el= this.ends[L]; el !== 0; el = el[R])
@@ -124,7 +128,7 @@ CharCmds["'"] = P(MathCommand, function(_, super_) {
   _.latex = function() {
     return '\\Unit{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
   }
-  _.text = function(opts) { //BRENTAN: Update me
-    return 'UNIT(' + this.blocks[0].text(opts) + ',' + this.blocks[1].text(opts) + ')';
+  _.text = function(opts) { 
+    return this.blocks[0].text(opts) + '*(' + this.blocks[1].text(jQuery.extend({unit: true}, opts)) + ')';
   }
 });

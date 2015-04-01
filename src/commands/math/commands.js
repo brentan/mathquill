@@ -202,9 +202,11 @@ var SupSub = P(MathCommand, function(_, super_) {
     this.ends[L].write = function(cursor, ch) {
       if((supsub == 'sub') && (ch === '_')) return this.flash();
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
+        if(cursor[L] instanceof Variable) cursor[L].autoOperator(cursor);
         cursor.insRightOf(this.parent);
       }
       if ((supsub == 'sub') && !RegExp(/[A-Za-z0-9]/).test(ch)) {
+        if(cursor[L] instanceof Variable) cursor[L].autoOperator(cursor);
         cursor.insRightOf(this.parent);
       }
       MathBlock.p.write.apply(this, arguments);
@@ -1210,7 +1212,7 @@ bindCharBracketPair('(');
 bindCharBracketPair('[');
 LatexCmds.langle = bind(Bracket, L, '&lang;', '&rang;', '\\langle ', '\\rangle ', '(', ')');
 LatexCmds.rangle = bind(Bracket, R, '&lang;', '&rang;', '\\langle ', '\\rangle ', '(', ')');
-CharCmds['|'] = bind(Bracket, L, '|', '|', '|', '|', 'abs(', ')');
+CharCmds['|'] = LatexCmds.abs = bind(Bracket, L, '|', '|', '|', '|', 'abs(', ')');
 CharCmds['{'] = bind(Bracket, L, '{', '}', '\\{', '\\}', '(', ')');
 CharCmds['}'] = bind(Bracket, R, '{', '}', '\\{', '\\}', '(', ')');
 

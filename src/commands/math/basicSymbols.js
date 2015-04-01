@@ -7,6 +7,7 @@ var Variable = P(Symbol, function(_, super_) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
   };
   _.text = function(opts) {
+    if(opts && opts.unit && !(this[L] instanceof Variable) && !(this[L] && this[L].ctrlSeq == 'µ')) return "_" + this.textTemplate;
     return this.textTemplate;
   };
   _.autoUnItalicize = function(cursor) {
@@ -47,12 +48,12 @@ var Variable = P(Symbol, function(_, super_) {
     block.ends[L].jQ.removeClass('mq-empty');
   };
   _.fullWord = function() {
-    var word = this.text()+'';
+    var word = this.text({})+'';
     var letters = [this];
     // Move to the left
     for (var l = this[L]; l instanceof Variable; l = l[L]) {
       letters.unshift(l);
-      word = l.text() + word;
+      word = l.text({}) + word;
     }
     // Are we in a substring?
     if(this.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub === 'sub')) {
@@ -60,20 +61,20 @@ var Variable = P(Symbol, function(_, super_) {
       letters = [this.parent.parent];
       for (var l = this.parent.parent[L]; l instanceof Variable; l = l[L]) {
         letters.unshift(l);
-        word = l.text() + word;
+        word = l.text({}) + word;
       }
     }
     // Move to the right
     for (var l = this[R]; l instanceof Variable; l = l[R]) {
       letters.push(l);
-      word += l.text();
+      word += l.text({});
     }
     // Did we hit a substring section?
     if((l instanceof SupSub) && (l.supsub === 'sub')) {
       word += '_';
       letters.push(l);
       for (var l = l.sub.ends[L]; l instanceof Variable; l = l[R]) 
-        word += l.text();
+        word += l.text({});
     }
     return [word, letters];
   };
@@ -86,51 +87,76 @@ var Variable = P(Symbol, function(_, super_) {
     var output = this.fullWord();
     var word = output[0];
     var letters = output[1];
-    if(word.length > 2) {
-      var formatter = function(text, self) {
-        var autoCommands = Object.keys(self.controller.API.__options.autoCommands);
-        for(var i = 0; i < autoCommands.length; i++) {
-          if(text === autoCommands[i]) {
-            text = LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate;
-            break;
-          } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_');
-
-        }
-        return (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
-      }
-      var wordList = this.controller.API.__options.autocomplete || [];
-      var commandList = this.controller.API.__options.staticAutocomplete || [];
-      //Find all matches
-      var matchList = [];
-      var regex = new RegExp("^" + word + ".*$", "i");
-      for(var i = 0; i < wordList.length; i++)
-        if(wordList[i].match(regex)) matchList.push("<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + formatter(wordList[i], this) + "</i></span></li>");
-      for(var i = 0; i < commandList.length; i++)
-        if(commandList[i].match(regex)) matchList.push("<li data-word='" + commandList[i] + "('><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>");
-      if(matchList.length > 0) {
-        matchList[0] = matchList[0].replace('<li', '<li class="mq-popup-selected"');
-        var leftBlock = letters[0].jQ;
-        var topBlock = letters[letters.length - 1].jQ;
-        var leftOffset = leftBlock.position();
-        var topOffset = topBlock.position();
-        var _this = this;
-        var onclick = function() {
-          var word = $(this).attr('data-word');
-          var to_replace = _this.fullWord()[1];
-          var right_of = to_replace[0][L];
-          var right_end_of = to_replace[0].parent;
-          for(var i = 0; i < to_replace.length; i++) to_replace[i].remove();
-          if(right_of) _this.controller.cursor.insRightOf(right_of);
-          else _this.controller.cursor.insAtRightEnd(right_end_of);
-          _this.controller.API.typedText(word);
-          _this.controller.closePopup();
-          if((word[word.length - 1] !== '(') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
-            _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
-          _this.controller.cursor.workingGroupChange();
+    var matchList = [];
+    var regex = new RegExp("^" + word + ".*$", "i");
+    if((this.parent.unit) || (this.parent.parent && this.parent.parent.unit)) {
+      // Units
+      if(word.length == 1) regex = new RegExp("^" + word + "$", ""); // Exact match for 1 letter autocomplete (for things like 'm' -> meter)
+      if(word.length > 0) {
+        prefix_to_ignore = ['micro', 'yocto', 'zepto', 'atto', 'femto', 'pico', 'nano', 'milli', 'centi', 'deci', 'deca', 'hecto', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa', 'zetta', 'yotta'];
+        skip_this = false;
+        var capitalize = function(s) {
+          return s[0].toUpperCase() + s.slice(1);
         };
-        this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset.top + topBlock.height(), leftOffset.left, onclick);
-      } else
-        this.controller.closePopup();
+        for(var i = 0; i < prefix_to_ignore.length; i++) 
+          if(prefix_to_ignore[i].match(regex)) { skip_this = true; break; }
+        if(!skip_this) {
+          var unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
+          var already_added = {};
+          for(var i = 0; i < unitList.symbols.length; i++)
+            if(unitList.symbols[i].match(regex)) {
+              matchList.push("<li data-word='" + unitList.symbols[i] + "'><span class='mq-operator-name'>" + unitList.symbols[i] + " (" + capitalize(unitList.symbol_to_name[unitList.symbols[i]]) + ")</span></li>");
+              already_added[unitList.symbols[i]] = true;
+            }
+          for(var i = 0; i < unitList.names.length; i++)
+            if(unitList.names[i].match(regex) && !already_added[unitList.name_to_symbol[unitList.names[i]]]) matchList.push("<li data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]) + ")</span></li>");
+        }
+      }
+    } else {
+      // Variable or Function name
+      if(word.length > 2) {
+        var formatter = function(text, self) {
+          var autoCommands = Object.keys(self.controller.API.__options.autoCommands);
+          for(var i = 0; i < autoCommands.length; i++) {
+            if(text === autoCommands[i]) {
+              text = LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate;
+              break;
+            } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_');
+
+          }
+          return (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
+        }
+        var wordList = this.controller.API.__options.autocomplete || [];
+        var commandList = this.controller.API.__options.staticAutocomplete || [];
+        //Find all matches
+        for(var i = 0; i < wordList.length; i++)
+          if(wordList[i].match(regex)) matchList.push("<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + formatter(wordList[i], this) + "</i></span></li>");
+        for(var i = 0; i < commandList.length; i++)
+          if(commandList[i].match(regex)) matchList.push("<li data-word='" + commandList[i] + "('><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>");
+      }
+    }
+    if(matchList.length > 0) {
+      matchList[0] = matchList[0].replace('<li', '<li class="mq-popup-selected"');
+      var leftBlock = letters[0].jQ;
+      var topBlock = letters[letters.length - 1].jQ;
+      var leftOffset = leftBlock.position();
+      var topOffset = topBlock.position();
+      var _this = this;
+      var onclick = function() {
+        var word = $(this).attr('data-word');
+        var to_replace = _this.fullWord()[1];
+        var right_of = to_replace[0][L];
+        var right_end_of = to_replace[0].parent;
+        for(var i = 0; i < to_replace.length; i++) to_replace[i].remove();
+        if(right_of) _this.controller.cursor.insRightOf(right_of);
+        else _this.controller.cursor.insAtRightEnd(right_end_of);
+        _this.controller.API.typedText(word);
+        _this.controller.closePopup();
+        if((word[word.length - 1] !== '(') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
+          _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
+        _this.controller.cursor.workingGroupChange();
+      };
+      this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset.top + topBlock.height(), leftOffset.left, onclick);
     } else
       this.controller.closePopup();
   };
@@ -158,7 +184,9 @@ optionProcessors.autoCommands = function(cmds) {
 };
 
 var Letter = P(Variable, function(_, super_) {
-  _.init = function(ch) { return super_.init.call(this, this.letter = ch); };
+  _.init = function(ch) { 
+    return super_.init.call(this, this.letter = ch); 
+  };
   _.autoOperator = function(cursor) {
     var autoCmds = cursor.options.autoCommands;
     // join together longest sequence of letters
@@ -178,6 +206,12 @@ var Letter = P(Variable, function(_, super_) {
     }
     return false;
   };
+  _.createLeftOf = function(cursor) {
+    if((this.ctrlSeq == 'u') && (cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) && !(cursor[L] instanceof Variable) && !(cursor[L] && (cursor[L].ctrlSeq == 'µ'))) 
+      Letter('µ').createLeftOf(cursor);
+    else
+      super_.createLeftOf.apply(this, arguments);
+  }
 });
 var BuiltInOpNames = {}; // http://latex.wikia.com/wiki/List_of_LaTeX_symbols#Named_operators:_sin.2C_cos.2C_etc.
 (function() {
@@ -219,6 +253,31 @@ optionProcessors.autoOperatorNames = function(cmds) {
   dict._maxLength = maxLength;
   return dict;
 };
+optionProcessors.unitList = function(units) {
+  var by_name = {};
+  var by_symbol = {};
+  var names = [];
+  var symbols = [];
+  var prefix = {micro: 'µ', yocto: 'y', zepto: 'z', atto: 'a', femto: 'f', pico: 'p', nano: 'n', milli: 'm', centi: 'c', deci: 'd', deca: 'D', hecto: 'h', kilo: 'k', mega: 'M', giga: 'G', tera: 'T', peta: 'P', exa: 'E', zetta: 'Z', yotta: 'Y' };
+  for(var i = 0; i < units.length; i++) {
+    names.push(units[i].name);
+    symbols.push(units[i].symbol);
+    by_name[units[i].name] = units[i].symbol;
+    by_symbol[units[i].symbol] = units[i].name;
+    if(units[i].prefix) {
+      for(var key in prefix) {
+        names.push(key + units[i].name);
+        symbols.push(prefix[key] + units[i].symbol);
+        by_name[key + units[i].name] = prefix[key] + units[i].symbol;
+        by_symbol[prefix[key] + units[i].symbol] = key + units[i].name;
+      }
+    }
+  }
+  var sortFunction = function (a, b) {
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+  };
+  return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.sort(sortFunction) }
+}
 var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
   _.htmlTemplate = '<span><span class="mq-operator-name">&0</span>'
         + '<span class="mq-non-leaf">'
@@ -306,6 +365,18 @@ for (var fn in BuiltInOpNames) if (BuiltInOpNames.hasOwnProperty(fn)) {
   LatexCmds[fn] = OperatorName;
 }
 
+LatexCmds.µ = P(VanillaSymbol, function(_, super_) {  //Do this for units, so that mu becomes a letter in the unit box
+  _.init = function() {
+    super_.init.call(this, 'µ');
+  }
+  _.createLeftOf = function(cursor) {
+    if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit))
+      Letter('µ').createLeftOf(cursor);
+    else
+      super_.createLeftOf.call(this, cursor);
+  };
+});
+
 LatexCmds.f = P(Letter, function(_, super_) {
   _.init = function() {
     Symbol.p.init.call(this, this.letter = 'f', '<var class="mq-florin">&fnof;</var>');
@@ -314,6 +385,8 @@ LatexCmds.f = P(Letter, function(_, super_) {
     if(cursor.parent && (cursor.parent.parent instanceof OperatorName) && (cursor.parent === cursor.parent.parent.blocks[0]))
       Letter('f').createLeftOf(cursor);
     else if(cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub') && cursor.parent.parent.parent && (cursor.parent.parent.parent.parent instanceof OperatorName) && (cursor.parent.parent.parent === cursor.parent.parent.parent.parent.blocks[0]))
+      Letter('f').createLeftOf(cursor);
+    else if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit))
       Letter('f').createLeftOf(cursor);
     else
       super_.createLeftOf.call(this, cursor);
