@@ -531,7 +531,7 @@ var MathBlock = P(MathElement, function(_, super_) {
         if(!ch.match(/^[0-9\.\+\-\*\^\/\(\)]$/)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
         else if(((ch === '/') || (ch === '^')) && !(cursor[L] instanceof VanillaSymbol) && !(cursor[L] instanceof Variable)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
       } else {
-        if(!ch.match(/^[a-zµ\^\*\/\(\)]$/i)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+        if(!ch.match(/^[a-zµ2\^\*\/\(\)]$/i)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
         else if(((ch === '/') || (ch === '^')) && !(cursor[L] instanceof VanillaSymbol) && !(cursor[L] instanceof Variable)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
       }
     } 
@@ -579,8 +579,8 @@ var MathBlock = P(MathElement, function(_, super_) {
   _.recursiveSetUnit = function() {
     this.eachChild(function (child) { if(child.recursiveSetUnit) child.recursiveSetUnit(); });
     this.eachChild(function (child) { 
-      if((child instanceof VanillaSymbol) && (child.ctrlSeq == 'µ')) { 
-        var newnode = Letter('µ');
+      if((child instanceof VanillaSymbol) && ((child.ctrlSeq == 'µ') || (child.ctrlSeq == '2'))) { 
+        var newnode = Letter(child.ctrlSeq);
         newnode.jQize();
         newnode.jQ.insDirOf(R, child.jQ);
         child[R] = newnode.adopt(child.parent, child, child[R]);

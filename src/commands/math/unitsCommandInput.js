@@ -36,7 +36,7 @@ CharCmds["'"] = P(MathCommand, function(_, super_) {
         cmd = cmd(ch);
       else
         cmd = VanillaSymbol(ch);
-      if(!ch.match(/^[a-zµ\^\*\/\(\)]$/i)) { 
+      if(!ch.match(/^[a-zµ2\^\*\/\(\)]$/i)) { 
         if (replacedFragment) 
           replacedFragment.remove();
         this.flash();
@@ -49,8 +49,8 @@ CharCmds["'"] = P(MathCommand, function(_, super_) {
     this.ends[R].unit = this.ends[R];
     this.ends[R].eachChild(function (child) {
       if(child.recursiveSetUnit) child.recursiveSetUnit();
-      if((child instanceof VanillaSymbol) && (child.ctrlSeq == 'µ')) { 
-        var newnode = Letter('µ');
+      if((child instanceof VanillaSymbol) && ((child.ctrlSeq == 'µ') || (child.ctrlSeq == '2'))) { 
+        var newnode = Letter(child.ctrlSeq);
         newnode.jQize();
         newnode.jQ.insDirOf(R, child.jQ);
         child[R] = newnode.adopt(child.parent, child, child[R]);

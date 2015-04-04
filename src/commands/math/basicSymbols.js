@@ -73,7 +73,7 @@ var Variable = P(Symbol, function(_, super_) {
     if((l instanceof SupSub) && (l.supsub === 'sub')) {
       word += '_';
       letters.push(l);
-      for (var l = l.sub.ends[L]; l instanceof Variable; l = l[R]) 
+      for (var l = l.ends[L].ends[L]; l instanceof Variable; l = l[R]) 
         word += l.text({});
     }
     return [word, letters];
@@ -372,6 +372,21 @@ LatexCmds.µ = P(VanillaSymbol, function(_, super_) {  //Do this for units, so t
   _.createLeftOf = function(cursor) {
     if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit))
       Letter('µ').createLeftOf(cursor);
+    else
+      super_.createLeftOf.call(this, cursor);
+  };
+});
+LatexCmds['2'] = P(VanillaSymbol, function(_, super_) {  //Do this for units, so that 2 becomes a letter in the unit box (inH2O)
+  _.init = function() {
+    super_.init.call(this, '2');
+  }
+  _.createLeftOf = function(cursor) {
+    if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) {
+      if(cursor[L] && (cursor[L].ctrlSeq === 'H'))
+        Letter('2').createLeftOf(cursor);
+      else
+        cursor.parent.flash();
+    }
     else
       super_.createLeftOf.call(this, cursor);
   };
