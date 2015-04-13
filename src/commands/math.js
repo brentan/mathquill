@@ -514,7 +514,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (cursor[L][L].ctrlSeq === '\\cdot ') && (cursor[L][L][L] !== 0) && (typeof cursor[L][L][L] !== 'undefined') && cursor[L][L][L].ctrlSeq.match(/^[0-9]$/)) {// this should match scientific notation
       cursor[L][L].remove(); // Remove the implicit multiplication
       cmd = ScientificNotation(ch);
-    } else if(ch.match(/^[0-9\.]$/) && ((cursor[L] instanceof Variable) || (cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')))) // Numbers after letters are 'letters' as they are part of a var name
+    } else if(ch.match(/^[0-9\.]$/) && !(cursor.parent && cursor.parent.unit) && !(cursor.parent && cursor.parent.parent && cursor.parent.parent.unit) && ((cursor[L] instanceof Variable) || (cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')))) // Numbers after letters are 'letters' as they are part of a var name
       cmd = Letter(ch);
     else if (cmd = CharCmds[ch] || LatexCmds[ch])
       cmd = cmd(ch);

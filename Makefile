@@ -26,6 +26,7 @@ SOURCES_FULL = \
 SOURCES_BASIC = \
   $(BASE_SOURCES) \
   $(SRC_DIR)/commands/math.js \
+  $(SRC_DIR)/commands/math/letterVariable.js \
   $(SRC_DIR)/commands/math/basicSymbols.js \
   $(SRC_DIR)/commands/math/commands.js
 
