@@ -9,8 +9,9 @@ var Currency = P(MathCommand, function(_, super_) {
     this.ends[L].write = function(cursor, ch) {
       if (!RegExp(/[0-9\.]/).test(ch)) {
         cursor.insRightOf(this.parent);
-      }
-      MathBlock.p.write.apply(this, arguments);
+        cursor.parent.write(cursor, ch);
+      } else
+        MathBlock.p.write.apply(this, arguments);
     };
   };
 });

@@ -1,6 +1,6 @@
 
 // Not truly latex appropriate, but useful for making scientific notation appear pretty 
-var ScientificNotation = LatexCmds.scientificNotation = P(MathCommand, function(_, super_) {
+var ScientificNotation = LatexCmds.scientificNotation = P(DerivedMathCommand, function(_, super_) {
   _.ctrlSeq = 'ScientificNotation{...}{...}';
   _.htmlTemplate =
       '<span>'
@@ -26,13 +26,17 @@ var ScientificNotation = LatexCmds.scientificNotation = P(MathCommand, function(
     this.ends[L].upOutOf = this.ends[R];
     this.ends[R].downOutOf = this.ends[L];
     this.ends[L].write = function(cursor, ch) {
-      if (!RegExp(/[0-9]/).test(ch)) 
+      if (!RegExp(/[0-9]/).test(ch)) {
         cursor.insRightOf(this.parent);
-      MathBlock.p.write.apply(this, arguments);
+        cursor.parent.write(cursor, ch);
+      } else
+        MathBlock.p.write.apply(this, arguments);
     };
     this.ends[R].write = function(cursor, ch) {
-      if (!RegExp(/[0-9\+\-]/).test(ch)) 
+      if (!RegExp(/[0-9\+\-]/).test(ch)) {
         cursor.insRightOf(this.parent);
+        cursor.parent.write(cursor, ch);
+      }
       else if((ch === '+') || (ch === '-')) {
         //See if we are at Left most position and see if to the right is a + or - sign
         //or See if we are in position 2, and if the thing next to us is a + or - sign
@@ -48,10 +52,12 @@ var ScientificNotation = LatexCmds.scientificNotation = P(MathCommand, function(
           cursor[L].jQ.html(ch);
           return;
         }
-        else if(cursor[L] !== 0)
+        else if(cursor[L] !== 0) {
           cursor.insRightOf(this.parent);
-      }
-      MathBlock.p.write.apply(this, arguments);
+          cursor.parent.write(cursor, ch);
+        }
+      } else
+        MathBlock.p.write.apply(this, arguments);
     };
   }
   _.createLeftOf = function(cursor) {

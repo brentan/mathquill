@@ -111,7 +111,7 @@ var Variable = P(Symbol, function(_, super_) {
       }
     } else {
       // Variable or Function name
-      if(word.length > 2) {
+      if(word.length > 0) {
         var formatter = function(text, self) {
           var autoCommands = Object.keys(self.controller.API.__options.autoCommands);
           for(var i = 0; i < autoCommands.length; i++) {
@@ -121,20 +121,39 @@ var Variable = P(Symbol, function(_, super_) {
             } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_');
 
           }
-          return (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
+          text = (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
+          if(text.indexOf('.') > -1) 
+            text = text.replace('.','') + ".<span class='mq-inline-box'></span>";  //BRENTAN- better visual than this box after the period?
+          return text;
         }
-        var wordList = this.controller.API.__options.autocomplete || [];
-        var commandList = this.controller.API.__options.staticAutocomplete || [];
+        var wordList = [];
+        var commandList = [];
+        var pretext = '';
+        if(this.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent === this.parent.parent.ends[R])) {
+          // In a FunctionCommand, we only autocomplete the method calls that are public for that object
+          //TODO: Add the code to make this work, also add display code so that autocomplete shows the 'object.' portion
+          wordList = this.parent.parent.getObject().propertyList;
+          commandList = this.parent.parent.getObject().methodList;
+          pretext = this.parent.parent.objectName() + '.';
+        } else {
+          if(word.length < 3) return; // Only autocomplete on 3 characters or more
+          // Get the provided list of words and commands to autocomplete
+          wordList = this.controller.API.__options.autocomplete || [];
+          commandList = this.controller.API.__options.staticAutocomplete || [];
+        }
         //Find all matches
         for(var i = 0; i < wordList.length; i++)
-          if(wordList[i].match(regex)) matchList.push("<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + formatter(wordList[i], this) + "</i></span></li>");
+          if(wordList[i].match(regex)) matchList.push("<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], this) + "</i></span></li>");
         for(var i = 0; i < commandList.length; i++)
-          if(commandList[i].match(regex)) matchList.push("<li data-word='" + commandList[i] + "('><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>");
+          if(commandList[i].match(regex)) matchList.push("<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>");
       }
     }
     if(matchList.length > 0) {
       matchList[0] = matchList[0].replace('<li', '<li class="mq-popup-selected"');
-      var leftBlock = letters[0].jQ;
+      if(this.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent === this.parent.parent.ends[R]))
+        var leftBlock = this.parent.parent.jQ;
+      else
+        var leftBlock = letters[0].jQ;
       var topBlock = letters[letters.length - 1].jQ;
       var leftOffset = leftBlock.position();
       var topOffset = topBlock.position();
@@ -148,8 +167,10 @@ var Variable = P(Symbol, function(_, super_) {
         if(right_of) _this.controller.cursor.insRightOf(right_of);
         else _this.controller.cursor.insAtRightEnd(right_end_of);
         _this.controller.API.typedText(word);
+        if(word[word.length - 1] === '.')
+          FunctionCommand(true).createLeftOf(_this.controller.cursor);
         _this.controller.closePopup();
-        if((word[word.length - 1] !== '(') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
+        if((word[word.length - 1] !== '(') && (word[word.length - 1] !== '.') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
           _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
         _this.controller.cursor.workingGroupChange();
       };
@@ -206,7 +227,9 @@ var Letter = P(Variable, function(_, super_) {
   _.createLeftOf = function(cursor) {
     if((this.ctrlSeq == 'u') && (cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) && !(cursor[L] instanceof Variable) && !(cursor[L] && (cursor[L].ctrlSeq == 'µ'))) 
       Letter('µ').createLeftOf(cursor);
-    else
+    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof Variable)) {
+      FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
+    } else
       super_.createLeftOf.apply(this, arguments);
   }
 });

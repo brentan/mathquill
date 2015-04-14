@@ -1,12 +1,13 @@
 /**********************************
  * Input box to type units commands
  **********************************/
+// Not truly latex appropriate, but useful for making units work
 
  // BRENTAN: Far future: giac has an '8th' unit type, which is currency.  Consider adding more currency to giac if we have a way to set exchange rates programmatically
  // BRENTAN: Temperature is not well handled by giac, due to confusion over absolute or relative.  Add something in 'text' that converts C -> K and F -> R, and add a warning to the output box or something
 
 var Unit = LatexCmds.Unit = 
-CharCmds["'"] = P(MathCommand, function(_, super_) {
+CharCmds["'"] = P(DerivedMathCommand, function(_, super_) {
   _.ctrlSeq = 'Unit{...}{...}';
   _.replaces = function(replacedFragment) {
     replacedFragment.disown();

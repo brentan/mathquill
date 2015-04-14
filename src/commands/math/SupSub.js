@@ -42,7 +42,7 @@ var SupSub = P(MathCommand, function(_, super_) {
         this.elementWise = true;
         cursor.insRightOf(ins);
       }
-      if((cursor[L] instanceof Fraction) || (cursor[L] instanceof ScientificNotation) || (cursor[L] instanceof SummationNotation) || (cursor[L] instanceof Unit)) {
+      if((cursor[L] instanceof Fraction) || (cursor[L] instanceof DerivedMathCommand)) {
         // Some items should be wrapped in brackets before we add the exponent
         var bracket = CharCmds['(']();
         var to_move = cursor[L];
@@ -83,12 +83,13 @@ var SupSub = P(MathCommand, function(_, super_) {
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
         if(cursor[L] instanceof Variable) cursor[L].autoOperator(cursor);
         cursor.insRightOf(this.parent);
-      }
-      if ((supsub == 'sub') && !RegExp(/[A-Za-z0-9]/).test(ch)) {
+        cursor.parent.write(cursor, ch);
+      } else if ((supsub == 'sub') && !RegExp(/[A-Za-z0-9]/).test(ch)) {
         if(cursor[L] instanceof Variable) cursor[L].autoOperator(cursor);
         cursor.insRightOf(this.parent);
-      }
-      MathBlock.p.write.apply(this, arguments);
+        cursor.parent.write(cursor, ch);
+      } else
+        MathBlock.p.write.apply(this, arguments);
     };
     if(this.sup && (this.sup.ends[L] && this.sup.ends[L].ctrlSeq === '.')) {
       // There is no latex elementWise operator...so we just add a '.' to the front to represent it.  Note since we auto-add a '0' before '.' in numbers, it means a leading '.' should only indicate elementwise math

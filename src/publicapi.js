@@ -130,9 +130,11 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__options.autocomplete = list.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
   }
-  _.addAutocomplete = function(item) {
+  _.addAutocomplete = function(item) { //BRENTAN: add in functionCommand autocomplete logic
     if(typeof this.__options.autocomplete === 'undefined') this.__options.autocomplete = [item];
+    else if(this.__options.autocomplete.indexOf(item) > -1) return; 
     else this.__options.autocomplete.push(item);
+    this.__options.autocomplete = this.__options.autocomplete.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
   }
   _.cmd = function(cmd) {
