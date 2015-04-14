@@ -184,6 +184,7 @@ var PlusMinus = P(BinaryOperator, function(_) {
   };
 });
 var Multiplication = P(BinaryOperator, function(_, super_) {
+  _.addedImplicitly = false;
   _.finalizeTree = function() {
     if(this[L] && (this[L].ctrlSeq === '.')) {
       var to_remove = [this[L]];
@@ -199,6 +200,10 @@ var Multiplication = P(BinaryOperator, function(_, super_) {
       this.ctrlSeq = '.' + this.ctrlSeq;
       this.textTemplate = '.' + this.textTemplate;
     }
+  }
+  _.implicit = function() {
+    this.addedImplicitly = true;
+    return this;
   }
 });
 

@@ -516,7 +516,7 @@ var MathBlock = P(MathElement, function(_, super_) {
       cmd = Letter(ch);
     else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (typeof cursor[L][L] !== 'undefined') && cursor[L][L].ctrlSeq.match(/^[0-9]$/)) // this should match scientific notation
       cmd = ScientificNotation(ch);
-    else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (cursor[L][L].ctrlSeq === '\\cdot ') && (cursor[L][L][L] !== 0) && (typeof cursor[L][L][L] !== 'undefined') && cursor[L][L][L].ctrlSeq.match(/^[0-9]$/)) {// this should match scientific notation
+    else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (cursor[L][L] instanceof Multiplication) && (cursor[L][L].addedImplicitly) && (cursor[L][L][L] !== 0) && (typeof cursor[L][L][L] !== 'undefined') && cursor[L][L][L].ctrlSeq.match(/^[0-9]$/)) {// this should match scientific notation
       cursor[L][L].remove(); // Remove the implicit multiplication
       cmd = ScientificNotation(ch);
     } else if(ch.match(/^[0-9\.]$/) && !(cursor.parent && cursor.parent.unit) && !(cursor.parent && cursor.parent.parent && cursor.parent.parent.unit) && ((cursor[L] instanceof Variable) || (cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')))) // Numbers after letters are 'letters' as they are part of a var name
@@ -557,9 +557,9 @@ var MathBlock = P(MathElement, function(_, super_) {
 
     // Test for implicit multiplication
     if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !cursor[L].ctrlSeq.match(/^[\,…]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
-      LatexCmds.cdot().createLeftOf(cursor);
+      LatexCmds.cdot().implicit().createLeftOf(cursor);
     else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket))))
-      LatexCmds.cdot().createLeftOf(cursor);
+      LatexCmds.cdot().implicit().createLeftOf(cursor);
     
     cmd.createLeftOf(cursor);
   };
