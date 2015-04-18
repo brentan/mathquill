@@ -56,15 +56,18 @@ Node.open(function(_) {
     // End -> move to the end of the current block.
     case 'End':
       ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent);
+      ctrlr.cursor.workingGroupChange();
       break;
 
     // Ctrl-End -> move all the way to the end of the root block.
     case 'Ctrl-End':
       ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
+      ctrlr.cursor.workingGroupChange();
       break;
 
     // Shift-End -> select to the end of the current block.
     case 'Shift-End':
+      if((cursor.parent === ctrlr.root) && (cursor[R] === 0)) ctrlr.selectRight();
       while (cursor[R]) {
         ctrlr.selectRight();
       }
@@ -72,6 +75,7 @@ Node.open(function(_) {
 
     // Ctrl-Shift-End -> select to the end of the root block.
     case 'Ctrl-Shift-End':
+      if((cursor.parent === ctrlr.root) && (cursor[R] === 0)) ctrlr.selectRight();
       while (cursor[R] || cursor.parent !== ctrlr.root) {
         ctrlr.selectRight();
       }
@@ -80,15 +84,18 @@ Node.open(function(_) {
     // Home -> move to the start of the root block or the current block.
     case 'Home':
       ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent);
+      ctrlr.cursor.workingGroupChange();
       break;
 
     // Ctrl-Home -> move to the start of the current block.
     case 'Ctrl-Home':
       ctrlr.notify('move').cursor.insAtLeftEnd(ctrlr.root);
+      ctrlr.cursor.workingGroupChange();
       break;
 
     // Shift-Home -> select to the start of the current block.
     case 'Shift-Home':
+      if((cursor.parent === ctrlr.root) && (cursor[L] === 0)) ctrlr.selectLeft();
       while (cursor[L]) {
         ctrlr.selectLeft();
       }
@@ -96,6 +103,7 @@ Node.open(function(_) {
 
     // Ctrl-Shift-Home -> move to the start of the root block.
     case 'Ctrl-Shift-Home':
+      if((cursor.parent === ctrlr.root) && (cursor[L] === 0)) ctrlr.selectLeft();
       while (cursor[L] || cursor.parent !== ctrlr.root) {
         ctrlr.selectLeft();
       }
@@ -118,7 +126,7 @@ Node.open(function(_) {
       } else {
         ctrlr.selectLeft();
       }
-
+      break;
     case 'Shift-Down':
       if (cursor[R]) {
         while (cursor[R]) ctrlr.selectRight();
@@ -126,7 +134,7 @@ Node.open(function(_) {
       else {
         ctrlr.selectRight();
       }
-
+      break;
     case 'Ctrl-Up': break;
     case 'Ctrl-Down': break;
 
@@ -152,7 +160,7 @@ Node.open(function(_) {
       return;
     }
     e.preventDefault();
-    ctrlr.scrollHoriz();
+    if(!ctrlr.blurred) ctrlr.scrollHoriz();
   };
 
   _.moveOutOf = // called by Controller::escapeDir, moveDir

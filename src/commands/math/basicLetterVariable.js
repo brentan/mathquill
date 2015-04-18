@@ -112,6 +112,20 @@ var Variable = P(Symbol, function(_, super_) {
     } else {
       // Variable or Function name
       if(word.length > 0) {
+        var wordList = [];
+        var commandList = [];
+        var pretext = '';
+        if(this.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent === this.parent.parent.ends[R])) {
+          // In a FunctionCommand, we only autocomplete the method calls that are public for that object
+          wordList = this.parent.parent.getObject().propertyList;
+          commandList = this.parent.parent.getObject().methodList;
+          pretext = this.parent.parent.objectName() + '.';
+        } else {
+          if(word.length < 3) return; // Only autocomplete on 3 characters or more
+          // Get the provided list of words and commands to autocomplete
+          wordList = this.controller.API.__options.autocomplete || [];
+          commandList = this.controller.API.__options.staticAutocomplete || [];
+        }
         var formatter = function(text, self) {
           var autoCommands = Object.keys(self.controller.API.__options.autoCommands);
           for(var i = 0; i < autoCommands.length; i++) {
@@ -125,21 +139,6 @@ var Variable = P(Symbol, function(_, super_) {
           if(text.indexOf('.') > -1) 
             text = text.replace('.','') + ".<span class='mq-inline-box'></span>";  //BRENTAN- better visual than this box after the period?
           return text;
-        }
-        var wordList = [];
-        var commandList = [];
-        var pretext = '';
-        if(this.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent === this.parent.parent.ends[R])) {
-          // In a FunctionCommand, we only autocomplete the method calls that are public for that object
-          //TODO: Add the code to make this work, also add display code so that autocomplete shows the 'object.' portion
-          wordList = this.parent.parent.getObject().propertyList;
-          commandList = this.parent.parent.getObject().methodList;
-          pretext = this.parent.parent.objectName() + '.';
-        } else {
-          if(word.length < 3) return; // Only autocomplete on 3 characters or more
-          // Get the provided list of words and commands to autocomplete
-          wordList = this.controller.API.__options.autocomplete || [];
-          commandList = this.controller.API.__options.staticAutocomplete || [];
         }
         //Find all matches
         for(var i = 0; i < wordList.length; i++)

@@ -468,7 +468,21 @@ var MathBlock = P(MathElement, function(_, super_) {
       var cursor = ctrlr.cursor;
       if(cursor[L] instanceof Letter)
         cursor[L].autoOperator(cursor);
+    } else if(key === 'Enter') {
+      if((ctrlr.cursor.parent == ctrlr.root) && !(ctrlr.cursor[L]) && (ctrlr.element) && (ctrlr.element.PrependBlankItem)) {
+        // Enter pressed with cursor in initial position.  Add a block BEFORE me
+        ctrlr.element.PrependBlankItem();
+        e.preventDefault();
+        return;
+      } else if((ctrlr.cursor.parent != ctrlr.root) || ((ctrlr.cursor.parent == ctrlr.root) && (ctrlr.cursor[R]))) {
+        // Enter pressed but cursor is not in final position.  Move to final position
+        ctrlr.cursor.insAtRightEnd(ctrlr.root);
+        ctrlr.cursor.workingGroupChange();
+        e.preventDefault();
+        return;
+      }
     } else if((key === 'Backspace') || (key === 'Del')) {
+      ctrlr.notifyElementOfChange();
       var out = super_.keystroke.apply(this, arguments);
       var cursor = ctrlr.cursor;
       if(cursor[L] && (cursor[L] instanceof Variable))
@@ -511,6 +525,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     window.setTimeout(function() { el.css('background-color','#ffffff'); }, 100);
   }
   _.write = function(cursor, ch, replacedFragment) {
+    cursor.controller.notifyElementOfChange();
     var cmd;
     if (ch.match(/^[a-eg-zA-Z]$/)) //exclude f because want florin
       cmd = Letter(ch);

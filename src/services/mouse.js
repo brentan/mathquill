@@ -3,79 +3,56 @@
  *******************************************************/
 
 Controller.open(function(_) {
-  _.delegateMouseEvents = function() {
-    var ultimateRootjQ = this.root.jQ;
-    //context-menu event handling
-    this.container.bind('contextmenu.mathquill', function(e) {
-      var rootjQ = $(e.target).closest('.mq-root-block');
-      var root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
-      var ctrlr = root.controller, cursor = ctrlr.cursor;
-      //Find nearest MathCommand to send this to, or if that fails root
-      var target_node = ctrlr.seek($(e.target), e.pageX, e.pageY).cursor.parent;
-      while(!(target_node instanceof MathCommand)) {
-        target_node = target_node.parent;
-        if(typeof target_node === 'undefined') {
-          target_node = root;
-          break;
-        };
-      }
-      target_node.contextMenu(cursor,e);
-      e.preventDefault(); // doesn't work in IE\u22648, but it's a one-line fix:
-      return false;
-    });
-    //drag-to-select event handling
-    this.container.bind('mousedown.mathquill', function(e) {
-      var rootjQ = $(e.target).closest('.mq-root-block');
-      var root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
-      var ctrlr = root.controller, cursor = ctrlr.cursor, blink = cursor.blink;
-      var orig_block = cursor.parent;
-      var textareaSpan = ctrlr.textareaSpan, textarea = ctrlr.textarea;
-      ctrlr.closePopup();
+  //context-menu event handling BRENTAN: if selection, bring up a copy/cut/paste context menu
+  _.contextMenu = function(e) {
+    var rootjQ = $(e.target).closest('.mq-root-block');
+    var root = Node.byId[rootjQ.attr(mqBlockId) || this.root.jQ.attr(mqBlockId)];
 
-      var target;
-      function mousemove(e) { target = $(e.target); }
-      function docmousemove(e) {
-        if (!cursor.anticursor) cursor.startSelection();
-        ctrlr.seek(target, e.pageX, e.pageY).cursor.select();
-        target = undefined;
-      }
-      // outside rootjQ, the MathQuill node corresponding to the target (if any)
-      // won't be inside this root, so don't mislead Controller::seek with it
+    if (this.blurred) 
+      this.focus();
 
-      function mouseup(e) {
-        cursor.blink = blink;
-        if (!cursor.selection) {
-          if (ctrlr.editable) {
-            if(orig_block) orig_block.blur();
-            cursor.show();
-            cursor.parent.focus();
-          }
-          else {
-            textareaSpan.detach();
-          }
-        }
-
-        // delete the mouse handlers now that we're not dragging anymore
-        rootjQ.unbind('mousemove', mousemove);
-        $(e.target.ownerDocument).unbind('mousemove', docmousemove).unbind('mouseup', mouseup);
-      }
-
-      if (ctrlr.blurred) {
-        if (!ctrlr.editable) rootjQ.prepend(textareaSpan);
-        textarea.focus();
-      }
-      e.preventDefault(); // doesn't work in IE≤8, but it's a one-line fix:
-      e.target.unselectable = true; // http://jsbin.com/yagekiji/1
-
-      cursor.blink = noop;
-      ctrlr.seek($(e.target), e.pageX, e.pageY).cursor.startSelection();
-
-      rootjQ.mousemove(mousemove);
-      $(e.target.ownerDocument).mousemove(docmousemove).mouseup(mouseup);
-      // listen on document not just body to not only hear about mousemove and
-      // mouseup on page outside field, but even outside page, except iframes: https://github.com/mathquill/mathquill/commit/8c50028afcffcace655d8ae2049f6e02482346c5#commitcomment-6175800
-    });
+    //Find nearest MathCommand to send this to, or if that fails root
+    var target_node = this.seek($(e.target), e.pageX, e.pageY).cursor.parent;
+    while(!(target_node instanceof MathCommand)) {
+      target_node = target_node.parent;
+      if(typeof target_node === 'undefined') {
+        target_node = root;
+        break;
+      };
+    }
+    target_node.contextMenu(this.cursor,e);
+    e.preventDefault(); // doesn't work in IE\u22648, but it's a one-line fix:
+    return false;
+  };
+  //drag-to-select event handling
+  _.orig_block = 0;
+  _.mouseDown = function(e) {
+    this.orig_block = this.cursor.parent;
+    this.closePopup();
+    if (this.blurred) 
+      this.focus();
+    this.seek($(e.target), e.pageX, e.pageY).cursor.workingGroupChange(true).startSelection();
   }
+  _.mouseMove = function(e) {
+    if (!this.cursor.anticursor) this.cursor.startSelection();
+    this.seek($(e.target), e.pageX, e.pageY).cursor.select();
+  };
+  _.mouseOut = function(e) {
+    if (this.cursor.selection)
+      this.cursor.selection.jQ.removeClass('mq-selection');
+    else
+      this.cursor.hide();
+  }
+  _.mouseUp = function(e) {
+    if (!this.cursor.selection) {
+      if (this.editable) {
+        if(this.orig_block) this.orig_block.blur();
+        this.cursor.show();
+        this.cursor.parent.focus();
+        this.cursor.workingGroupChange(true);
+      } 
+    } 
+  };
 });
 
 Controller.open(function(_) {

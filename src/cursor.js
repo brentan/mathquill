@@ -13,6 +13,7 @@ JS environment could actually contain many instances. */
 var Cursor = P(Point, function(_) {
   _.init = function(initParent, options, container) {
     this.parent = initParent;
+    this.controller = initParent.controller;
     this.options = options;
     this.container = container;
 
@@ -39,9 +40,15 @@ var Cursor = P(Point, function(_) {
       this.parent.focus();
     }
     this.intervalId = setInterval(this.blink, 500);
+    this.workingGroupChange(true);
     return this;
   };
   _.hide = function() {
+    var mathField = this.container;
+    mathField.find(".active_block").replaceWith(function() {
+      return $( this ).contents();
+    });
+    mathField.find(".hasCursor_highlighting").removeClass("hasCursor_highlighting");
     if ('intervalId' in this)
       clearInterval(this.intervalId);
     delete this.intervalId;
@@ -158,13 +165,14 @@ var Cursor = P(Point, function(_) {
   };
 
   // This is active block highlighting.  It will highlight the active block in the element
-  _.workingGroupChange = function() {
+  _.workingGroupChange = function(force) {
     var mathField = this.container;
     var suppress = false;
     mathField.find(".active_block").replaceWith(function() {
       return $( this ).contents();
     });
     mathField.find(".hasCursor_highlighting").removeClass("hasCursor_highlighting");
+    if(this.anticursor && !force) return this;
     var cursor = this.jQ;
     cursor.addClass('hasCursor_highlighting');
     var suppress = false;
@@ -180,6 +188,7 @@ var Cursor = P(Point, function(_) {
       if(!suppress) _this.addClass('hasCursor_highlighting');
     });
     mathField.find(".mq-hasCursor").first().children(".hasCursor_highlighting").wrapAll("<span class='active_block'></span>");
+    return this;
   };
 
   _.startSelection = function() {

@@ -46,7 +46,7 @@ var Options = P(), optionProcessors = {};
 MathQuill.__options = Options.p;
 
 var AbstractMathQuill = P(function(_) {
-  _.init = function() { throw "wtf don't call me, I'm 'abstract'"; };
+  _.init = function() { throw "don't call me, I'm 'abstract'"; };
   _.initRoot = function(root, el, opts) {
     this.__options = Options();
     this.config(opts);
@@ -73,6 +73,7 @@ var AbstractMathQuill = P(function(_) {
     }
     return this;
   };
+  _.setElement = function(el) { this.__controller.element = el; return this; };
   _.el = function() { return this.__controller.container[0]; };
   _.text = function() { return this.__controller.exportText(this.__options); };
   _.latex = function(latex) {
@@ -82,6 +83,11 @@ var AbstractMathQuill = P(function(_) {
       return this;
     }
     return this.__controller.exportLatex();
+  };
+  _.toString = function() { 
+    // BRENTAN: Need to add flag for text or math mode
+    var latex = this.__controller.exportLatex();
+    return latex = 'latex{' + latex + '}';
   };
   _.html = function() {
     return this.__controller.root.jQ.html()
@@ -97,11 +103,11 @@ var AbstractMathQuill = P(function(_) {
 });
 MathQuill.prototype = AbstractMathQuill.prototype;
 
-MathQuill.StaticMath = APIFnFor(P(AbstractMathQuill, function(_, super_) {
+MathQuill.StaticMath = APIFnFor(P(AbstractMathQuill, function(_, super_) { // BRENTAN: Likely does not work...take a look at some point
   _.init = function(el) {
     this.initRoot(MathBlock(), el.addClass('mq-math-mode'));
-    this.__controller.delegateMouseEvents();
-    this.__controller.staticMathTextareaEvents();
+    this.__controller.editable = false;
+    this.__controller.editablesTextareaEvents();
   };
   _.latex = function() {
     var returned = super_.latex.apply(this, arguments);
@@ -116,11 +122,17 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.initRootAndEvents = function(root, el, opts) {
     this.initRoot(root, el, opts);
     this.__controller.editable = true;
-    this.__controller.delegateMouseEvents();
     this.__controller.editablesTextareaEvents();
   };
-  _.focus = function() { this.__controller.textarea.focus(); return this; };
-  _.blur = function() { this.__controller.textarea.blur(); return this; };
+  _.focus = function(dir) { 
+    this.__controller.focus(); 
+    if(dir)
+      this.moveToDirEnd(dir);
+    return this; 
+  };
+  _.blur = function() { this.__controller.blur(); return this; };
+  _.windowBlur = function() { this.__controller.windowBlur(); return this; };
+  _.inFocus = function() { return !this.__controller.blurred; };
   _.write = function(latex) {
     this.__controller.writeLatex(latex);
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
@@ -130,7 +142,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__options.autocomplete = list.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
   }
-  _.addAutocomplete = function(item) { //BRENTAN: add in functionCommand autocomplete logic
+  _.addAutocomplete = function(item) { 
     if(typeof this.__options.autocomplete === 'undefined') this.__options.autocomplete = [item];
     else if(this.__options.autocomplete.indexOf(item) > -1) return; 
     else this.__options.autocomplete.push(item);
@@ -163,25 +175,46 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__controller.cursor.clearSelection();
     return this;
   };
+  _.clear = function() {
+    this.select();
+    this.clearSelection();
+    return this;
+  }
 
   _.moveToDirEnd = function(dir) {
     this.__controller.notify('move').cursor.insAtDirEnd(dir, this.__controller.root);
+    this.__controller.cursor.workingGroupChange();
     return this;
   };
   _.moveToLeftEnd = function() { return this.moveToDirEnd(L); };
   _.moveToRightEnd = function() { return this.moveToDirEnd(R); };
 
-  _.keystroke = function(keys) {
-    var keys = keys.replace(/^\s+|\s+$/g, '').split(/\s+/);
-    for (var i = 0; i < keys.length; i += 1) {
-      this.__controller.keystroke(keys[i], { preventDefault: noop });
-    }
+  _.keystroke = function(key, evt) {
+    this.__controller.keystroke(key, evt);
     return this;
   };
   _.typedText = function(text) {
     for (var i = 0; i < text.length; i += 1) this.__controller.typedText(text.charAt(i));
     return this;
   };
+  _.cut = function(e) { this.__controller.cut(e); return this; }
+  _.copy = function(e) { this.__controller.copy(e); return this; }
+  _.paste = function(text) { this.__controller.paste(text); return this; }
+  _.contextMenu = function(e) {
+    return this.__controller.contextMenu(e);
+  }
+  _.mouseDown = function(e) {
+    this.__controller.mouseDown(e);
+  }
+  _.mouseMove = function(e) {
+    this.__controller.mouseMove(e);
+  }
+  _.mouseUp = function(e) {
+    this.__controller.mouseUp(e);
+  }
+  _.mouseOut = function(e) {
+    this.__controller.mouseOut(e);
+  }
 });
 
 function RootBlockMixin(_) {

@@ -9,6 +9,7 @@
 var Controller = P(function(_) {
   _.init = function(API, root, container) {
     this.API = API;
+    this.element = 0;
     this.root = root;
     this.container = container;
 
@@ -25,6 +26,15 @@ var Controller = P(function(_) {
       else handlers[name](this.API);
     }
   };
+
+  _.notifyElementOfChange = function() {
+    if(this.element && this.element.changed)
+      this.element.changed(this.API);
+  }
+  _.notifyElementofBlur = function() {
+    if(this.element && this.element.mathquillBlurred)
+      this.element.mathquillBlurred(this.API);
+  }
 
   var notifyees = [];
   this.onNotify = function(f) { notifyees.push(f); };

@@ -33,18 +33,15 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   }
   _.getObject = function() {
     if(this.saved_object) return this.saved_object;
-    try {
+    this.saved_object = SC_Objects[this.objectName()];
+    if(typeof this.saved_object === 'string') {
+      SC_Objects[this.objectName()] = eval(this.saved_object);
       this.saved_object = SC_Objects[this.objectName()];
-      if(typeof this.saved_object === 'string') {
-        SC_Objects[this.objectName()] = eval(this.saved_object);
-        this.saved_object = SC_Objects[this.objectName()];
-      }
-      return this.saved_object;
-    } catch(err) {
+    } else if(typeof this.saved_object === 'undefined') {
       this.saved_object = false;
       return SC_Object();
-      //BRENTAN: Do something here...?
     }
+    return this.saved_object;
   }
   _.objectName = function() {
     return this.blocks[0].text({});
