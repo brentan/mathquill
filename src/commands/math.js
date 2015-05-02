@@ -451,17 +451,23 @@ var MathBlock = P(MathElement, function(_, super_) {
     if (ctrlr.API.__options.spaceBehavesLikeTab
         && (key === 'Spacebar' || key === 'Shift-Spacebar')) {
       var el = ctrlr.container.children('.mq-popup');
+      e.preventDefault();
       if(el.length > 0) {
         //Find the element that is currently selected
         el.find('li.mq-popup-selected').click();
       } else {
         var cursor = ctrlr.cursor;
+        // Test for spacebar with no math yet...in this case, we become a text field
+        if((cursor.parent === ctrlr.root) && ctrlr.element && ctrlr.element.changeToText) {
+          var current_output = ctrlr.API.text();
+          if(current_output.match(/^[a-z0-9\.-]*$/i)) 
+            return ctrlr.element.changeToText(current_output);
+        } 
         // Test for autocommands 
         if(cursor[L] instanceof Letter)
           cursor[L].autoOperator(cursor);
         ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
       }
-      e.preventDefault();
       return;
     } else if(key === 'Tab') {
       // Test for autocommands 
@@ -470,7 +476,7 @@ var MathBlock = P(MathElement, function(_, super_) {
         cursor[L].autoOperator(cursor);
     } else if(key === 'Enter') {
       if((ctrlr.cursor.parent == ctrlr.root) && !(ctrlr.cursor[L]) && (ctrlr.element) && (ctrlr.element.PrependBlankItem)) {
-        // Enter pressed with cursor in initial position.  Add a block BEFORE me
+        // Enter pressed with cursor in initial position.  
         ctrlr.element.PrependBlankItem();
         e.preventDefault();
         return;
@@ -615,5 +621,13 @@ MathQuill.MathField = APIFnFor(P(EditableField, function(_, super_) {
   _.init = function(el, opts) {
     el.addClass('mq-editable-field mq-math-mode');
     this.initRootAndEvents(RootMathBlock(), el, opts);
+  };
+  _.latex = function(latex) {
+    if (arguments.length > 0) {
+      this.__controller.renderLatexMath(latex);
+      if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
+      return this;
+    }
+    return this.__controller.exportLatex();
   };
 }));

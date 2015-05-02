@@ -76,16 +76,7 @@ var AbstractMathQuill = P(function(_) {
   _.setElement = function(el) { this.__controller.element = el; return this; };
   _.el = function() { return this.__controller.container[0]; };
   _.text = function() { return this.__controller.exportText(this.__options); };
-  _.latex = function(latex) {
-    if (arguments.length > 0) {
-      this.__controller.renderLatexMath(latex);
-      if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
-      return this;
-    }
-    return this.__controller.exportLatex();
-  };
   _.toString = function() { 
-    // BRENTAN: Need to add flag for text or math mode
     var latex = this.__controller.exportLatex();
     return latex = 'latex{' + latex + '}';
   };
@@ -126,14 +117,23 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.focus = function(dir) { 
     this.__controller.focus(); 
-    if(dir)
+    if(dir && (dir < 2))
       this.moveToDirEnd(dir);
+    else if(dir) {
+      this.__controller.seek(false, dir, 0);
+    }
     return this; 
   };
   _.blur = function() { this.__controller.blur(); return this; };
   _.windowBlur = function() { this.__controller.windowBlur(); return this; };
   _.inFocus = function() { return !this.__controller.blurred; };
   _.write = function(latex) {
+    if (latex.slice(0,6) === 'latex{' && latex.slice(-1) === '}') {
+      latex = latex.slice(6, -1);
+      // BRENTAN: set as 'math' mode
+    } else {
+      // Set as 'text' mode
+    }
     this.__controller.writeLatex(latex);
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
     return this;
@@ -202,6 +202,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.paste = function(text) { this.__controller.paste(text); return this; }
   _.contextMenu = function(e) {
     return this.__controller.contextMenu(e);
+  }
+  _.cursorX = function() {
+    if(this.__controller.cursor.jQ && this.__controller.cursor.jQ.offset()) return this.__controller.cursor.jQ.offset().left;
+    return undefined;
   }
   _.mouseDown = function(e) {
     this.__controller.mouseDown(e);

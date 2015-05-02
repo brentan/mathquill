@@ -70,4 +70,3 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   };
 });
 
-//BRENTAN: Look at operatorName for strategies on jumping out of functionCommand when + is used etc

@@ -27,14 +27,13 @@ Controller.open(function(_) {
     var latex = '';
     if (this.cursor.selection) {
       latex = this.cursor.selection.join('latex');
-      //BRENTAN: Flag for if we are math or text mode
       latex = 'latex{' + latex + '}';
     }
     this.selectFn(latex);
   };
   _.editablesTextareaEvents = function() {
     var ctrlr = this, cursor = ctrlr.cursor
-    this.selectFn = function(text) { this.element.workspace.selectFn(text); };
+    this.selectFn = function(text) { this.element.workspace.clipboard=text; };
     this.cut = function(e) {
       if (cursor.selection) {
         setTimeout(function() {
@@ -52,12 +51,8 @@ Controller.open(function(_) {
     this.scrollHoriz();
   };
   _.paste = function(text) {
-    if (text.slice(0,6) === 'latex{' && text.slice(-1) === '}') {
+    if (text.slice(0,6) === 'latex{' && text.slice(-1) === '}') 
       text = text.slice(6, -1);
-      // BRENTAN: set as 'math' mode
-    } else {
-      // Set as 'text' mode
-    }
     this.writeLatex(text).blur();
   };
 });

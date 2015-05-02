@@ -182,12 +182,7 @@ Controller.open(function(_) {
     prayDirection(dir);
     var cursor = this.cursor;
 
-    // only prevent default of Tab if not in the root editable
-    if (cursor.parent !== this.root) e.preventDefault();
-
-    // want to be a noop if in the root editable (in fact, Tab has an unrelated
-    // default browser action if so)
-    if (cursor.parent === this.root) return;
+    e.preventDefault();
 
     cursor.parent.moveOutOf(dir, cursor);
     cursor.workingGroupChange();
