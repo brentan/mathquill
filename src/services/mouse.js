@@ -38,6 +38,7 @@ Controller.open(function(_) {
     this.seek($(e.target), e.pageX, e.pageY).cursor.select();
   };
   _.mouseOut = function(e) {
+    this.element.workspace.blurToolbar();
     if (this.cursor.selection)
       this.cursor.selection.jQ.removeClass('mq-selection');
     else

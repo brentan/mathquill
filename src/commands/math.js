@@ -590,7 +590,6 @@ var MathBlock = P(MathElement, function(_, super_) {
     this.jQ.removeClass('mq-empty');
     if(this.unit) this.unit.focus();
     if(this.parent && this.parent.unit) this.parent.unit.focus();
-
     return this;
   };
   _.blur = function() {
@@ -599,7 +598,6 @@ var MathBlock = P(MathElement, function(_, super_) {
       this.jQ.addClass('mq-empty');
     if(this.unit) this.unit.blur();
     if(this.parent && this.parent.unit) this.parent.unit.blur();
-
     return this;
   };
   _.recursiveSetUnit = function() {

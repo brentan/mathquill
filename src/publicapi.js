@@ -128,12 +128,8 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.windowBlur = function() { this.__controller.windowBlur(); return this; };
   _.inFocus = function() { return !this.__controller.blurred; };
   _.write = function(latex) {
-    if (latex.slice(0,6) === 'latex{' && latex.slice(-1) === '}') {
+    if (latex.slice(0,6) === 'latex{' && latex.slice(-1) === '}') 
       latex = latex.slice(6, -1);
-      // BRENTAN: set as 'math' mode
-    } else {
-      // Set as 'text' mode
-    }
     this.__controller.writeLatex(latex);
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
     return this;
@@ -148,6 +144,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     else this.__options.autocomplete.push(item);
     this.__options.autocomplete = this.__options.autocomplete.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
+  }
+  _.command = function(cmd) {
+    // Toolbar command
+    this.cmd(cmd);
   }
   _.cmd = function(cmd) {
     var ctrlr = this.__controller.notify(), cursor = ctrlr.cursor.show();

@@ -14,9 +14,11 @@ Controller.open(function(_) {
         cursor.select();
       } else
         cursor.show();
+      if(ctrlr.element) ctrlr.element.workspace.attachToolbar(ctrlr.API, ctrlr.element.workspace.mathToolbar());
     };
     ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
       ctrlr.blurred = true;
+      if(ctrlr.element) ctrlr.element.workspace.blurToolbar();
       if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
       root.postOrder('intentionalBlur'); // none, intentional blur: #264
       cursor.clearSelection();

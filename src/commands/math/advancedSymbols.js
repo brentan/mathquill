@@ -213,10 +213,6 @@ LatexCmds.closecurlybrace = LatexCmds.rbrace = bind(VanillaSymbol, '\\rbrace ', 
 
 //various symbols
 
-LatexCmds['∫'] =
-LatexCmds['int'] =
-LatexCmds.integral = bind(Symbol,'\\int ','<big>&int;</big>');
-
 LatexCmds.caret = bind(VanillaSymbol,'\\text{^}','^');
 LatexCmds.underscore = bind(VanillaSymbol,'\\_','_');
 
@@ -291,7 +287,7 @@ LatexCmds.image = LatexCmds.imagin = LatexCmds.imaginary = LatexCmds.Imaginary =
 LatexCmds.part = LatexCmds.partial = bind(VanillaSymbol,'\\partial ','&part;');
 
 LatexCmds.infty = LatexCmds.infin = LatexCmds.infinity =
-  bind(VanillaSymbol,'\\infty ','&infin;');
+  bind(VanillaSymbol,'\\infty ','&infin;','infinity');
 
 LatexCmds.alef = LatexCmds.alefsym = LatexCmds.aleph = LatexCmds.alephsym =
   bind(VanillaSymbol,'\\aleph ','&alefsym;');
