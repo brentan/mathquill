@@ -526,9 +526,8 @@ var MathBlock = P(MathElement, function(_, super_) {
     return node.seek(pageX, cursor);
   };
   _.flash = function() {
-    var el = this.jQ.closest('.mq-root-block');
-    el.css('background-color','#ffe0e0');
-    window.setTimeout(function() { el.css('background-color','#ffffff'); }, 100);
+    var el = this.jQ.closest('.sc_element');
+    el.stop().css("background-color", "#ffe0e0").animate({ backgroundColor: "#FFFFFF"}, 400);
   }
   _.write = function(cursor, ch, replacedFragment) {
     cursor.controller.notifyElementOfChange();

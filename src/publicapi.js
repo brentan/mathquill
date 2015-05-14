@@ -145,9 +145,55 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__options.autocomplete = this.__options.autocomplete.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
   }
-  _.command = function(cmd) {
+  _.command = function(cmd, option) {
     // Toolbar command
-    this.cmd(cmd);
+    switch(cmd) {
+      case 'matrix_add_column_before':
+      case 'matrix_add_column_after':
+        var mat = 0;
+        for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
+        if(!mat) return;
+        mat.insertColumn(this.__controller.cursor, cmd === 'matrix_add_column_before' ? L : R);
+        break;
+      case 'matrix_add_row_before':
+      case 'matrix_add_row_after':
+        var mat = 0;
+        for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
+        if(!mat) return;
+        mat.insertRow(this.__controller.cursor, cmd === 'matrix_add_row_before' ? L : R);
+        break;
+      case 'matrix_remove_column':
+        var mat = 0;
+        for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
+        if(!mat) return;
+        mat.deleteColumn(this.__controller.cursor);
+        break;
+      case 'matrix_remove_row':
+        var mat = 0;
+        for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
+        if(!mat) return;
+        mat.deleteRow(this.__controller.cursor);
+        break;
+      case 'unit':
+        var unit = 0;
+        var leave_unit = false;
+        for(unit = this.__controller.cursor; unit !== 0; unit = unit.parent) if(unit instanceof Unit) break;
+        if(!unit) {
+          unit = Unit().createLeftOf(this.__controller.cursor);
+          leave_unit = true;
+        }
+        this.typedText(option);
+        var el = this.__controller.container.children('.mq-popup');
+        if(el.length > 0) 
+          el.find('li.mq-popup-selected').click();
+        if(leave_unit) {
+          this.__controller.cursor.insRightOf(unit);
+          this.__controller.cursor.workingGroupChange();
+        }
+        break;
+      default:
+        this.cmd(cmd);
+    }
   }
   _.cmd = function(cmd) {
     var ctrlr = this.__controller.notify(), cursor = ctrlr.cursor.show();

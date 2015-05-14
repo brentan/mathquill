@@ -1,6 +1,6 @@
 
 // Not truly latex appropriate, but useful for making scientific notation appear pretty 
-var ScientificNotation = LatexCmds.scientificNotation = P(DerivedMathCommand, function(_, super_) {
+var ScientificNotation = LatexCmds.scientificNotation = LatexCmds.scientificNotationToolbar = P(DerivedMathCommand, function(_, super_) {
   _.ctrlSeq = 'ScientificNotation{...}{...}';
   _.htmlTemplate =
       '<span>'
@@ -62,7 +62,19 @@ var ScientificNotation = LatexCmds.scientificNotation = P(DerivedMathCommand, fu
   }
   _.createLeftOf = function(cursor) {
     super_.createLeftOf.apply(this, arguments);
-    if(typeof this.incorporate_previous !== 'undefined') {
+    if(this.incorporate_previous === 'scientificNotationToolbar') {
+      // If this is set, it means we were created from the link in the toolbar
+      // Zip up all the preceding digits
+      var move_to_exponent = false;
+      for(next = this[L]; (next !== 0) && (typeof next.ctrlSeq !== 'undefined') && next.ctrlSeq.match(/^[0-9\.]$/); next = this[L]) {
+        next.disown().adopt(this.ends[L], 0, this.ends[L].ends[L]);
+        next.jQ.prependTo(this.ends[L].jQ);
+        move_to_exponent = true;
+      }
+      // place the cursor
+      if(move_to_exponent)
+        cursor.insAtLeftEnd(this.ends[R]);
+    } else if(typeof this.incorporate_previous !== 'undefined') {
       // If this is set, it means we were automagically created from a 1e3 type of syntax.
       // We need to roll up the previous digits into this element and place the cursor
       var e = this[L];
@@ -79,6 +91,6 @@ var ScientificNotation = LatexCmds.scientificNotation = P(DerivedMathCommand, fu
       // Insert the last command into the exponent and place the cursor
       cursor.insAtLeftEnd(this.ends[R]);
       this.ends[R].write(cursor, this.incorporate_previous);
-    }
+    } 
   };
 });

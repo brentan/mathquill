@@ -17,7 +17,7 @@ var SupSub = P(MathCommand, function(_, super_) {
   _.createLeftOf = function(cursor) {
     if(this.supsub === 'sub') {
       // Only add subscript to a variable name (aka letter) 
-      if (!(cursor[L] instanceof Variable)) return;
+      if (!(cursor[L] instanceof Variable)) return cursor.parent.flash();
       // Inserting in a string for some reason...
       if((cursor[L] instanceof Variable) && (cursor[R] instanceof Variable)) {
         var cdot = LatexCmds.cdot()
@@ -26,7 +26,7 @@ var SupSub = P(MathCommand, function(_, super_) {
       }
     } else {
       // Only add superscript to actual math stuff (digits, variables, brackets, etc)
-      if((cursor[L] === 0) || (cursor[L] instanceof BinaryOperator)) return;
+      if((cursor[L] === 0) || (cursor[L] instanceof BinaryOperator)) return cursor.parent.flash();
       // Test for elementwise operator .^
       if((cursor[L].ctrlSeq === '.') && (cursor[L][L])) {
         var to_remove = [cursor[L]];

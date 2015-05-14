@@ -125,6 +125,7 @@ CharCmds["'"] = P(DerivedMathCommand, function(_, super_) {
     }
     cursor.insAtRightEnd(this.ends[R]);
     cursor.workingGroupChange();
+    return this;
   };
   _.latex = function() {
     return '\\Unit{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
