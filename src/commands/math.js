@@ -543,7 +543,12 @@ var MathBlock = P(MathElement, function(_, super_) {
       cmd = Letter(ch);
     else if (cmd = CharCmds[ch] || LatexCmds[ch])
       cmd = cmd(ch);
-    else
+    else if(ch === '#') {
+      if((cursor.controller.exportText() == '') && cursor.controller.element && cursor.controller.element.changeToText)
+        return window.setTimeout(function() { cursor.controller.element.changeToText('#'); }, 10);
+      else
+        return this.flash();
+    } else
       cmd = VanillaSymbol(ch);
 
     // Units...if we are in a unit box, drastically reduce what we are allowed to type (other things will push us out of the box)

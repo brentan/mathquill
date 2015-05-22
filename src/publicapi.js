@@ -191,6 +191,12 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
           this.__controller.cursor.workingGroupChange();
         }
         break;
+      case 'textMode':
+        if(this.text().trim() == '')
+          this.__controller.element.changeToText('');
+        else 
+          this.__controller.element.AppendText();
+        break;
       default:
         this.cmd(cmd);
     }

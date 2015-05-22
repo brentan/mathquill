@@ -231,11 +231,12 @@ var Inequality = P(BinaryOperator, function(_, super_) {
     this.strict = strict;
     var strictness = (strict ? 'Strict' : '');
     this.ctrlSeq = this.data['ctrlSeq'+strictness];
+    this.htmlTemplate = '<span class="mq-binary-operator">' + this.data['html'+strictness] + '</span>';
     this.jQ.html(this.data['html'+strictness]);
     this.textTemplate = [ this.data['text'+strictness] ];
   };
   _.deleteTowards = function(dir, cursor) {
-    if (dir === L && !this.strict) {
+    if (!(this instanceof Equality) && (dir === L) && !this.strict) {
       this.swap(true);
       return;
     }
@@ -262,15 +263,28 @@ var Equality = P(Inequality, function(_, super_) {
     super_.init.call(this, data, strict);
   };
   _.createLeftOf = function(cursor) {
-    if (((cursor[L] instanceof Inequality) || (cursor[L] instanceof Equality)) && cursor[L].strict) {
+    if ((cursor[L] instanceof Inequality) && !(cursor[L] instanceof Equality) && cursor[L].strict) {
+      cursor[L].swap(false);
+      return;
+    } 
+    if (!cursor.controller.expression_mode && (cursor[L] instanceof Equality) && cursor[L].strict) {
       cursor[L].swap(false);
       return;
     }
+    if(cursor.controller.expression_mode)
+      this.swap(false);
     super_.createLeftOf.apply(this, arguments);
   };
+  _.deleteTowards = function(dir, cursor) {
+    if (!cursor.controller.expression_mode && (dir === L) && !this.strict) {
+      this.swap(true);
+      return;
+    }
+    super_.deleteTowards.apply(this, arguments);
+  };
 });
-var equal = { ctrlSeq: '\\eq ', html: '==', text: ' == ',
-              ctrlSeqStrict: '=', htmlStrict: '=', textStrict: ' := ' };
+var equal = { ctrlSeq: '\\eq ', html: '=', text: ' == ',
+              ctrlSeqStrict: '=', htmlStrict: '&#8801;', textStrict: ' := ' };
 LatexCmds['='] = bind(Equality, equal, true);
 LatexCmds.eq = bind(Equality, equal, false);
 
