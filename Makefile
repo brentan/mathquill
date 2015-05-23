@@ -82,7 +82,7 @@ BUILD_DIR_EXISTS = $(BUILD_DIR)/.exists--used_by_Makefile
 .PHONY: all basic dev js uglify css font dist clean
 all: font css uglify
 gem: font css uglify
-	# copy built files over to the gem folders
+	# copy built files over to the gem folders...legacy as we no longer use a gem to allow for async loads and more control in my own code
 	cp -f $(BUILD_DIR)/mathquill.css ./$(GEM_DIR)/app/assets/stylesheets/mathquill.css
 	cp -f $(BUILD_DIR)/mathquill.min.js ./$(GEM_DIR)/app/assets/javascripts/mathquill.js
 	rm -rf ./$(GEM_DIR)/app/assets/fonts
@@ -96,10 +96,24 @@ gem: font css uglify
 	cd $(APP_DIR); bundle update mathquill_swiftcalcs_rails
 
 basic: $(UGLY_BASIC_JS) $(BASIC_CSS)
-# app is used to build and auto-copy the js file over to a local app development environment for immediate testing
-app: js
-	# BE SURE TO REMOVE include mathquill AND ADD include mathquill-dev TO APPLICATION.JS
-	cp -f $(BUILD_DIR)/mathquill.js ./$(APP_DIR)/app/assets/javascripts/mathquill-dev.js
+# app is used to build and auto-copy the js files to the swift calcs repo
+app: css js
+	cp -f $(BUILD_DIR)/mathquill.css ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+	cp -f $(BUILD_DIR)/mathquill.js ./$(APP_DIR)/public/mathquill.js
+	rm -rf ./$(APP_DIR)/app/assets/fonts
+	cp -r $(FONT_SOURCE) ./$(APP_DIR)/app/assets/fonts
+	# Convert css to scss and use font-url to take advantage of the asset pipeline in rails 4
+	sed -e s/url\(\'font\\//font-url\(\'/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > ./$(APP_DIR)/app/assets/stylesheets/mathquill.css.scss
+	rm ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+# app is used to build and auto-copy the minified js files to the swift calcs repo
+app_ugly: css uglify
+	cp -f $(BUILD_DIR)/mathquill.css ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+	cp -f $(BUILD_DIR)/mathquill.min.js ./$(APP_DIR)/public/mathquill.js
+	rm -rf ./$(APP_DIR)/app/assets/fonts
+	cp -r $(FONT_SOURCE) ./$(APP_DIR)/app/assets/fonts
+	# Convert css to scss and use font-url to take advantage of the asset pipeline in rails 4
+	sed -e s/url\(\'font\\//font-url\(\'/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > ./$(APP_DIR)/app/assets/stylesheets/mathquill.css.scss
+	rm ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
 # dev is like all, but without minification
 dev: font css js
 js: $(BUILD_JS)

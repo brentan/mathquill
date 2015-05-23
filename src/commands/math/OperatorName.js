@@ -26,10 +26,7 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
       return this.blocks[0].text(opts) + '(' + this.blocks[1].text(opts) + ')';
   };
   _.latex = function() {
-    if(BuiltInOpNames.hasOwnProperty(this.blocks[0].text())) //This is a built-in latex command
-      return '\\' + this.blocks[0].latex() + '\\left({' + this.blocks[1].latex() + '}\\right)';
-    else
-      return '\\operatorname{' + this.blocks[0].latex() + '}\\left({' + this.blocks[1].latex() + '}\\right)';
+    return '\\operatorname{' + this.blocks[0].latex() + '}\\left({' + this.blocks[1].latex() + '}\\right)';
   };
   _.parser = function() {
     var string = Parser.string;
@@ -44,42 +41,29 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
       blocks[i].adopt(self, self.ends[R], 0);
     }
 
-    if(BuiltInOpNames.hasOwnProperty(this.ctrlSeq)) {
-      for (var i = 0; i < fn.length; i += 1) {
-        Letter(fn.charAt(i)).adopt(this.ends[L], this.ends[L].ends[R], 0);
-      }
-      return optWhitespace.then(string('\\left(')).then(function() {
-        var child = blocks[1];
-        return block.then(function (block) {
-          block.children().adopt(child, child.ends[R], 0);
-          return succeed(self);
-        });
-      }).then(string('\\right)')).result(self);
-    } else {
-      return optWhitespace.then(function() {
-        var child = blocks[0];
-        return block.then(function(block) {
-          block.children().adopt(child, child.ends[R], 0);
-          for(var node = block.ends[L]; node !== 0; node = node[R]) {
-            if(node.ctrlSeq === 'f') 
-              node.htmlTemplate = '<var>f</var>';
-            else if((node instanceof SupSub) && (node.supsub === 'sub')) {
-              for(var node2 = node.blocks[0].ends[L]; node2 !== 0; node2 = node2[R]) {
-                if(node2.ctrlSeq === 'f') 
-                  node2.htmlTemplate = '<var>f</var>';
-              }
+    return optWhitespace.then(function() {
+      var child = blocks[0];
+      return block.then(function(block) {
+        block.children().adopt(child, child.ends[R], 0);
+        for(var node = block.ends[L]; node !== 0; node = node[R]) {
+          if(node.ctrlSeq === 'f') 
+            node.htmlTemplate = '<var>f</var>';
+          else if((node instanceof SupSub) && (node.supsub === 'sub')) {
+            for(var node2 = node.blocks[0].ends[L]; node2 !== 0; node2 = node2[R]) {
+              if(node2.ctrlSeq === 'f') 
+                node2.htmlTemplate = '<var>f</var>';
             }
           }
-          return succeed(self);
-        });
-      }).then(string('\\left(')).then(function() {
-        var child = blocks[1];
-        return block.then(function (block) {
-          block.children().adopt(child, child.ends[R], 0);
-          return succeed(self);
-        });
-      }).then(string('\\right)')).result(self);
-    }
+        }
+        return succeed(self);
+      });
+    }).then(string('\\left(')).then(function() {
+      var child = blocks[1];
+      return block.then(function (block) {
+        block.children().adopt(child, child.ends[R], 0);
+        return succeed(self);
+      });
+    }).then(string('\\right)')).result(self);
   };
 });
 for (var fn in BuiltInOpNames) if (BuiltInOpNames.hasOwnProperty(fn)) {
