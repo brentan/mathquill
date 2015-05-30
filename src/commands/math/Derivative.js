@@ -51,6 +51,12 @@ var Derivative = P(MathCommand, function(_, super_) {
       });
     }).then(string('\\right)')).result(self);
   };
+  _.finalizeTree = function() {
+    this.downInto = this.ends[L];
+    this.upInto = this.ends[R];
+    this.ends[R].upOutOf = this.ends[L];
+    this.ends[L].downOutOf = this.ends[R];
+  };
 });
 
 LatexCmds.derivative = bind(Derivative,'\\derivative ', 1, false);

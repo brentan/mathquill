@@ -4,7 +4,7 @@ var Variable = P(Symbol, function(_, super_) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
   };
   _.text = function(opts) {
-    if(opts && opts.unit && !(this[L] instanceof Variable) && !(this[L] && this[L].ctrlSeq == 'µ')) return "_" + this.textTemplate;
+    if(opts && opts.unit && !(this[L] instanceof Variable) && !(this[L] && this[L].ctrlSeq == 'µ') && (this.ctrlSeq != '2')) return "_" + this.textTemplate;
     return this.textTemplate;
   };
   _.autoUnItalicize = function(cursor) {
@@ -254,6 +254,9 @@ var BuiltInOpNames = {}; // http://latex.wikia.com/wiki/List_of_LaTeX_symbols#Na
     autoOps[autoTrigs[i]+'h'] =
     autoOps['ar'+autoTrigs[i]+'h'] =
     autoOps['arc'+autoTrigs[i]+'h'] = 1;
+  }
+  for (var fn in BuiltInOpNames) if (BuiltInOpNames.hasOwnProperty(fn)) {
+    LatexCmds[fn] = OperatorName;
   }
 }());
 optionProcessors.autoOperatorNames = function(cmds) {

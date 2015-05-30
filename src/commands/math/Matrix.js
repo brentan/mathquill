@@ -45,21 +45,6 @@ var Matrix =
         delimjQs.css('position','relative');
         delimjQs.css('top',Math.round(height*0.6) + 'px');
       };
-      //BRENTAN: Need to move the below out of a context menu and into a toolbar
-      _.contextMenuOLD = function(cursor, event) {
-        var self = this;
-        var menu = [
-          { text: "Insert Column Before", handler: function() { self.insertColumn(cursor, L)}},
-          { text: "Insert Column After", handler: function() { self.insertColumn(cursor, R)}},
-          { text: "Insert Row Before", handler: function() { self.insertRow(cursor, L)}},
-          { text: "Insert Row After", handler: function() { self.insertRow(cursor, R)}}
-        ];
-        if(this.col > 1)
-          menu.push({ text: "Delete Column", handler: function() { self.deleteColumn(cursor)}});
-        if(this.row > 1)
-          menu.push({ text: "Delete Row", handler: function() { self.deleteRow(cursor)}});
-        this.showPopupMenu(menu, event);
-      }
       _.latex = function () {
         var latex = '';
         var index = 1;

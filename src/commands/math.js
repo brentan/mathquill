@@ -30,6 +30,7 @@ var MathElement = P(Node, function(_, super_) {
     // Default context menu to call.  
     // BRENTAN: Need to make this do something, especially if you have some stuff selected (expand/factor/simplify would be good base options?  Evaluate?)
     // This will likely need to be a passed in handler since evaluation etc lives outside the scope of mathquill
+    return true;
   }
 });
 
@@ -480,12 +481,6 @@ var MathBlock = P(MathElement, function(_, super_) {
         ctrlr.element.PrependBlankItem();
         e.preventDefault();
         return;
-      } else if((ctrlr.cursor.parent != ctrlr.root) || ((ctrlr.cursor.parent == ctrlr.root) && (ctrlr.cursor[R]))) {
-        // Enter pressed but cursor is not in final position.  Move to final position
-        ctrlr.cursor.insAtRightEnd(ctrlr.root);
-        ctrlr.cursor.workingGroupChange();
-        e.preventDefault();
-        return;
       }
     } else if((key === 'Backspace') || (key === 'Del')) {
       ctrlr.notifyElementOfChange();
@@ -530,7 +525,6 @@ var MathBlock = P(MathElement, function(_, super_) {
     el.stop().css("background-color", "#ffe0e0").animate({ backgroundColor: "#FFFFFF"}, 400);
   }
   _.write = function(cursor, ch, replacedFragment) {
-    cursor.controller.notifyElementOfChange();
     var cmd;
     if (ch.match(/^[a-eg-zA-Z]$/)) //exclude f because want florin
       cmd = Letter(ch);

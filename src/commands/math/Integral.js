@@ -125,13 +125,13 @@ var IntegralNoLimit = P(MathCommand, function(_, super_) {
     }
 
     return optWhitespace.then(string('_')).then(function() {
-      var child = blocks[0];
+      var child = blocks[1];
       return block.then(function(block) {
         block.children().adopt(child, child.ends[R], 0);
         return succeed(self);
       });
     }).then(string('\\left(')).then(function() {
-      var child = blocks[2];
+      var child = blocks[0];
       return block.then(function (block) {
         block.children().adopt(child, child.ends[R], 0);
         return succeed(self);

@@ -131,6 +131,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if (latex.slice(0,6) === 'latex{' && latex.slice(-1) === '}') 
       latex = latex.slice(6, -1);
     this.__controller.writeLatex(latex);
+    this.__controller.notifyElementOfChange();
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
     return this;
   };
@@ -154,6 +155,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
         mat.insertColumn(this.__controller.cursor, cmd === 'matrix_add_column_before' ? L : R);
+        this.__controller.notifyElementOfChange();
         break;
       case 'matrix_add_row_before':
       case 'matrix_add_row_after':
@@ -161,18 +163,21 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
         mat.insertRow(this.__controller.cursor, cmd === 'matrix_add_row_before' ? L : R);
+        this.__controller.notifyElementOfChange();
         break;
       case 'matrix_remove_column':
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
         mat.deleteColumn(this.__controller.cursor);
+        this.__controller.notifyElementOfChange();
         break;
       case 'matrix_remove_row':
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
         mat.deleteRow(this.__controller.cursor);
+        this.__controller.notifyElementOfChange();
         break;
       case 'unit':
         var unit = 0;
@@ -190,6 +195,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
           this.__controller.cursor.insRightOf(unit);
           this.__controller.cursor.workingGroupChange();
         }
+        this.__controller.notifyElementOfChange();
         break;
       case 'textMode':
         if(this.text().trim() == '')
@@ -210,6 +216,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         cmd = klass(cmd);
         if (cursor.selection) cmd.replaces(cursor.replaceSelection());
         cmd.createLeftOf(cursor);
+        this.__controller.notifyElementOfChange();
       }
       else /* TODO: API needs better error reporting */;
     }
@@ -225,11 +232,13 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.clearSelection = function() {
     this.__controller.cursor.clearSelection();
+    this.__controller.notifyElementOfChange();
     return this;
   };
   _.clear = function() {
     this.select();
     this.clearSelection();
+    this.__controller.notifyElementOfChange();
     return this;
   }
 
@@ -246,12 +255,13 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     return this;
   };
   _.typedText = function(text) {
+    this.__controller.notifyElementOfChange();
     for (var i = 0; i < text.length; i += 1) this.__controller.typedText(text.charAt(i));
     return this;
   };
-  _.cut = function(e) { this.__controller.cut(e); return this; }
+  _.cut = function(e) { this.__controller.cut(e); this.__controller.notifyElementOfChange(); return this; }
   _.copy = function(e) { this.__controller.copy(e); return this; }
-  _.paste = function(text) { this.__controller.paste(text); return this; }
+  _.paste = function(text) { this.__controller.paste(text); this.__controller.notifyElementOfChange(); return this; }
   _.contextMenu = function(e) {
     return this.__controller.contextMenu(e);
   }

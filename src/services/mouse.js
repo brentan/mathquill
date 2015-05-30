@@ -20,9 +20,7 @@ Controller.open(function(_) {
         break;
       };
     }
-    target_node.contextMenu(this.cursor,e);
-    e.preventDefault(); // doesn't work in IE\u22648, but it's a one-line fix:
-    return false;
+    return target_node.contextMenu(this.cursor,e);
   };
   //drag-to-select event handling
   _.orig_block = 0;
