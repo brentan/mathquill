@@ -36,7 +36,7 @@ Controller.open(function(_) {
     this.seek($(e.target), e.pageX, e.pageY).cursor.select();
   };
   _.mouseOut = function(e) {
-    this.element.workspace.blurToolbar();
+    this.element.workspace.blurToolbar(this.API);
     if (this.cursor.selection)
       this.cursor.selection.jQ.removeClass('mq-selection');
     else
@@ -67,6 +67,11 @@ Controller.open(function(_) {
     }
     var node = nodeId ? Node.byId[nodeId] : this.root;
     pray('nodeId is the id of some Node that exists', node);
+    if(this.unitMode) {
+      // In unit mode, selection is limited to the unit block
+      if(!node.unit && !(node.parent && node.parent.unit) && !(node.parent && node.parent.parent && node.parent.parent.unit)) 
+        node = Node.byId[this.root.jQ.find('.mq-unit').first().attr(mqBlockId)];
+    }
 
     // don't clear selection until after getting node from target, in case
     // target was selection span, otherwise target will have no parent and will

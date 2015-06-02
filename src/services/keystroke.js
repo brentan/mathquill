@@ -36,6 +36,14 @@ Node.open(function(_) {
 
     // Tab or Esc -> go one block right if it exists, else escape right.
     case 'Esc':
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Close the popup
+        ctrlr.closePopup();
+        break;
+      }
+      ctrlr.escapeDir(R, key, e);
+      return;
     case 'Tab':
       var el = ctrlr.container.children('.mq-popup');
       if(el.length > 0) {
@@ -112,7 +120,15 @@ Node.open(function(_) {
     case 'Shift-Left': ctrlr.selectLeft(); break;
     case 'Ctrl-Left': break;
 
-    case 'Right': ctrlr.moveRight(); break;
+    case 'Right': 
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Close the popup
+        ctrlr.closePopup();
+        break;
+      }
+      ctrlr.moveRight(); 
+      break;
     case 'Shift-Right': ctrlr.selectRight(); break;
     case 'Ctrl-Right': break;
 

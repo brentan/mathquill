@@ -10,6 +10,7 @@ var Controller = P(function(_) {
   _.init = function(API, root, container) {
     this.API = API;
     this.element = 0;
+    this.unitMode = false;
     this.root = root;
     this.container = container;
     this.expression_mode = false;  // BRENTAN- add an expression mode that doesn't do equality assignments
@@ -29,11 +30,11 @@ var Controller = P(function(_) {
   };
 
   _.notifyElementOfChange = function() {
-    if(this.element && this.element.changed)
+    if(!this.unitMode && this.element && this.element.changed)
       this.element.changed(this.API);
   }
   _.notifyElementofBlur = function() {
-    if(this.element && this.element.mathquillBlurred)
+    if(!this.unitMode && this.element && this.element.mathquillBlurred)
       this.element.mathquillBlurred(this.API);
   }
 

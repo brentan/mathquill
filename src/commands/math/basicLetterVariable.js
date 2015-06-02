@@ -157,7 +157,8 @@ var Variable = P(Symbol, function(_, super_) {
       var leftOffset = leftBlock.position();
       var topOffset = topBlock.position();
       var _this = this;
-      var onclick = function() {
+      var onclick = function(e) {
+        e.preventDefault();
         var word = $(this).attr('data-word');
         var to_replace = _this.fullWord()[1];
         var right_of = to_replace[0][L];

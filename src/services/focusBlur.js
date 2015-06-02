@@ -3,6 +3,7 @@ Controller.open(function(_) {
     var ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
     ctrlr.focus = function() {
       ctrlr.blurred = false;
+      if(ctrlr.unitMode) return;
       if(ctrlr.element) ctrlr.element.setFocusedItem(ctrlr.API);
       ctrlr.container.addClass('mq-focused');
       if (!cursor.parent)
@@ -18,7 +19,11 @@ Controller.open(function(_) {
     };
     ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
       ctrlr.blurred = true;
-      if(ctrlr.element) ctrlr.element.workspace.blurToolbar();
+      if(ctrlr.unitMode) {
+        ctrlr.element.unitChosen(ctrlr.API.text());
+        return;
+      }
+      if(ctrlr.element) ctrlr.element.workspace.blurToolbar(ctrlr.API);
       if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
       root.postOrder('intentionalBlur'); // none, intentional blur: #264
       cursor.clearSelection();
@@ -29,6 +34,10 @@ Controller.open(function(_) {
     };
     ctrlr.windowBlur = function() {
       ctrlr.blurred = true;
+      if(ctrlr.unitMode) {
+        ctrlr.element.unitChosen(ctrlr.API.text());
+        return;
+      }
       if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
       if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
       cursor.hide().parent.blur(); // synchronous with/in the same frame as

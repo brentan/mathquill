@@ -59,6 +59,7 @@ CharCmds["'"] = P(DerivedMathCommand, function(_, super_) {
       } 
     });
     this.ends[R].deleteOutOf = function(dir, cursor) {
+      if(cursor.controller.unitMode) return;
       for(var el= this.ends[L]; el !== 0; el = el[R])
         el.remove();
       cursor.insAtRightEnd(this);
@@ -125,12 +126,15 @@ CharCmds["'"] = P(DerivedMathCommand, function(_, super_) {
     }
     cursor.insAtRightEnd(this.ends[R]);
     cursor.workingGroupChange();
+    if(cursor.controller.unitMode) 
+      this.ends[L].jQ.hide();
     return this;
   };
   _.latex = function() {
     return '\\Unit{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
   }
   _.text = function(opts) { 
+    if(opts.unitMode) return this.blocks[1].text(jQuery.extend({unit: true}, opts));
     return this.blocks[0].text(opts) + '*(' + this.blocks[1].text(jQuery.extend({unit: true}, opts)) + ')';
   }
 });

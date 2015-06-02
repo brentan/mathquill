@@ -501,11 +501,13 @@ var MathBlock = P(MathElement, function(_, super_) {
   // and selection of the MathQuill tree, these all take in a direction and
   // the cursor
   _.moveOutOf = function(dir, cursor, updown) {
+    if(cursor.controller.unitMode && (this.parent instanceof Unit)) return;
     var updownInto = updown && this.parent[updown+'Into'];
     if (!updownInto && this[dir]) cursor.insAtDirEnd(-dir, this[dir]);
     else cursor.insDirOf(dir, this.parent);
   };
   _.selectOutOf = function(dir, cursor) {
+    if(cursor.controller.unitMode && (this.parent instanceof Unit)) return;
     cursor.insDirOf(dir, this.parent);
   };
   _.deleteOutOf = function(dir, cursor) {
@@ -522,7 +524,7 @@ var MathBlock = P(MathElement, function(_, super_) {
   };
   _.flash = function() {
     var el = this.jQ.closest('.sc_element');
-    el.stop().css("background-color", "#ffe0e0").animate({ backgroundColor: "#FFFFFF"}, 400);
+    el.stop().css("background-color", "#ffe0e0").animate({ backgroundColor: "#FFFFFF"}, {complete: function() { $(this).css('background-color','')} , duration: 400 });
   }
   _.write = function(cursor, ch, replacedFragment) {
     var cmd;
@@ -577,7 +579,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     // Test for implicit multiplication
     if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !cursor[L].ctrlSeq.match(/^[\,…]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
       LatexCmds.cdot().implicit().createLeftOf(cursor);
-    else if(!(cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket))))
+    else if(!(ch.match(/^[\,]$/i) || cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket))))
       LatexCmds.cdot().implicit().createLeftOf(cursor);
     
     cmd.createLeftOf(cursor);

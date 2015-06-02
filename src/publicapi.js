@@ -74,8 +74,14 @@ var AbstractMathQuill = P(function(_) {
     return this;
   };
   _.setElement = function(el) { this.__controller.element = el; return this; };
+  _.setUnitMode = function(val) { this.__controller.unitMode = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
-  _.text = function() { return this.__controller.exportText(this.__options); };
+  _.text = function() { 
+    var opts = this.__options;
+    if(this.__controller.unitMode)
+      opts = jQuery.extend({unitMode: true}, opts);
+    return this.__controller.exportText(opts); 
+  };
   _.toString = function() { 
     var latex = this.__controller.exportLatex();
     return latex = 'latex{' + latex + '}';
@@ -116,6 +122,8 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__controller.editablesTextareaEvents();
   };
   _.focus = function(dir) { 
+    //The other hacky unit mode thing.  If the parent element is in unitmode but im not, ignore focus events
+    if(!this.__controller.unitMode && this.__controller.element && this.__controller.element.unitMode) return this;
     this.__controller.focus(); 
     if(dir && (dir < 2))
       this.moveToDirEnd(dir);
@@ -146,7 +154,23 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__options.autocomplete = this.__options.autocomplete.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
   }
+  _.flash = function() {
+    this.__controller.cursor.parent.flash();
+    return this;
+  }
   _.command = function(cmd, option) {
+    // A bit hacky...but if attached element is in 'unitMode', pass the command on to that element
+    if(!this.__controller.unitMode && this.__controller.element && this.__controller.element.unitMode) return this.__controller.element.unitMode.command(cmd, option);
+
+    // Are we in a unit box?  If so, we limit our options
+    if(this.__controller.cursor.parent.unit || (this.__controller.cursor.parent.parent && this.__controller.cursor.parent.parent.unit)) {
+      var allow = false;
+      if(cmd == 'unit') allow = true;
+      if(cmd == '\\mu') allow = true;
+      if(cmd.match(/^[\/^\(]$/)) allow = true;
+      if(!allow) return this.flash();
+    }
+
     // Toolbar command
     switch(cmd) {
       case 'matrix_add_column_before':
@@ -237,8 +261,14 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.clear = function() {
     this.select();
-    this.clearSelection();
+    this.__controller.backspace();
     this.__controller.notifyElementOfChange();
+    return this;
+  }
+  _.hideCursor = function() {
+    this.__controller.cursor.hide();
+    this.__controller.cursor.workingGroupChange();
+    this.__controller.root.jQ.find('.mq-active').removeClass('mq-active');
     return this;
   }
 
