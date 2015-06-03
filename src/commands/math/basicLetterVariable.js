@@ -156,6 +156,7 @@ var Variable = P(Symbol, function(_, super_) {
       var topBlock = letters[letters.length - 1].jQ;
       var leftOffset = leftBlock.position();
       var topOffset = topBlock.position();
+      var scrollTop = this.controller.element ? this.controller.element.workspace.jQ.scrollTop() : 0;
       var _this = this;
       var onclick = function(e) {
         e.preventDefault();
@@ -174,7 +175,7 @@ var Variable = P(Symbol, function(_, super_) {
           _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
         _this.controller.cursor.workingGroupChange();
       };
-      this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset.top + topBlock.height(), leftOffset.left, onclick);
+      this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset.top + topBlock.height() + scrollTop, leftOffset.left, onclick);
     } else
       this.controller.closePopup();
   };

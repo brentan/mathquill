@@ -71,6 +71,8 @@ CharCmds["'"] = P(DerivedMathCommand, function(_, super_) {
       cursor.insAtRightEnd(this);
       cursor.unwrapGramp();
     };
+    if(this.getController().unitMode) 
+      this.ends[L].jQ.hide();
   };
   _.createLeftOf = function(cursor) {
     if (this._replacedFragment) {
@@ -126,8 +128,6 @@ CharCmds["'"] = P(DerivedMathCommand, function(_, super_) {
     }
     cursor.insAtRightEnd(this.ends[R]);
     cursor.workingGroupChange();
-    if(cursor.controller.unitMode) 
-      this.ends[L].jQ.hide();
     return this;
   };
   _.latex = function() {

@@ -51,6 +51,7 @@ Controller.open(function(_) {
     this.scrollHoriz();
   };
   _.paste = function(text) {
+    this.notifyElementOfChange();
     if (text.slice(0,6) === 'latex{' && text.slice(-1) === '}') 
       text = text.slice(6, -1);
     this.writeLatex(text).blur();

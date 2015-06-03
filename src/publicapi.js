@@ -261,6 +261,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.clear = function() {
     this.select();
+    this.typedText('0'); // If we dont do it this way, we could be highlighting nothing and then backspacing out of the element, removing it
     this.__controller.backspace();
     this.__controller.notifyElementOfChange();
     return this;
@@ -291,7 +292,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.cut = function(e) { this.__controller.cut(e); this.__controller.notifyElementOfChange(); return this; }
   _.copy = function(e) { this.__controller.copy(e); return this; }
-  _.paste = function(text) { this.__controller.paste(text); this.__controller.notifyElementOfChange(); return this; }
+  _.paste = function(text) { this.__controller.paste(text); return this; }
   _.contextMenu = function(e) {
     return this.__controller.contextMenu(e);
   }

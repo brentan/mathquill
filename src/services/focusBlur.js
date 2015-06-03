@@ -20,7 +20,7 @@ Controller.open(function(_) {
     ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
       ctrlr.blurred = true;
       if(ctrlr.unitMode) {
-        ctrlr.element.unitChosen(ctrlr.API.text());
+        ctrlr.element.unitChosen(ctrlr.API.latex());
         return;
       }
       if(ctrlr.element) ctrlr.element.workspace.blurToolbar(ctrlr.API);
@@ -35,7 +35,7 @@ Controller.open(function(_) {
     ctrlr.windowBlur = function() {
       ctrlr.blurred = true;
       if(ctrlr.unitMode) {
-        ctrlr.element.unitChosen(ctrlr.API.text());
+        ctrlr.element.unitChosen(ctrlr.API.latex());
         return;
       }
       if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);

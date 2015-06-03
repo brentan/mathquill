@@ -56,6 +56,8 @@ var Controller = P(function(_) {
     }
     el.css({top: Math.ceil(top) + 'px', left: Math.floor(left) + 'px'});
     el.html(html);
+    if(this.element && ((left + el.width()) > this.element.workspace.jQ.width())) // Adjust left if needed
+      el.css({left: Math.floor(max(0,this.element.workspace.jQ.width() - el.width())) + 'px'});
     el.find('li').mouseenter(function() {  // We dont use CSS hover because the class is how we keep track of which item is 'active'
       $(this).closest('ul').find('li').removeClass('mq-popup-selected');
       $(this).addClass('mq-popup-selected');
