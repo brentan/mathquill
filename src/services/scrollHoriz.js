@@ -8,12 +8,14 @@ Controller.open(function(_) {
     var cursor = this.cursor, seln = cursor.selection;
     var rootRect = this.root.jQ[0].getBoundingClientRect();
     if (!seln) {
+      if(typeof cursor.jQ[0] === 'undefined') return;
       var x = cursor.jQ[0].getBoundingClientRect().left;
       if (x > rootRect.right - 20) var scrollBy = x - (rootRect.right - 20);
       else if (x < rootRect.left + 20) var scrollBy = x - (rootRect.left + 20);
       else return;
     }
     else {
+      if(typeof seln.jQ[0] === 'undefined') return;
       var rect = seln.jQ[0].getBoundingClientRect();
       var overLeft = rect.left - (rootRect.left + 20);
       var overRight = rect.right - (rootRect.right - 20);

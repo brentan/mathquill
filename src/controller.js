@@ -13,7 +13,7 @@ var Controller = P(function(_) {
     this.unitMode = false;
     this.root = root;
     this.container = container;
-    this.expression_mode = false;  // BRENTAN- add an expression mode that doesn't do equality assignments
+    this.expression_mode = false;  
 
     API.__controller = root.controller = this;
 

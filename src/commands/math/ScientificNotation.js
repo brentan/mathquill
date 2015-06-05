@@ -55,7 +55,8 @@ var ScientificNotation = LatexCmds.scientificNotation = LatexCmds.scientificNota
         else if(cursor[L] !== 0) {
           cursor.insRightOf(this.parent);
           cursor.parent.write(cursor, ch);
-        }
+        } else
+          MathBlock.p.write.apply(this, arguments);
       } else
         MathBlock.p.write.apply(this, arguments);
     };

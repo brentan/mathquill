@@ -33,7 +33,7 @@ Controller.open(function(_) {
   };
   _.editablesTextareaEvents = function() {
     var ctrlr = this, cursor = ctrlr.cursor
-    this.selectFn = function(text) { if(!this.unitMode && this.element) this.element.workspace.clipboard = text; };
+    this.selectFn = function(text) { if(!this.unitMode && this.element) { this.element.workspace.clipboard = text; this.element.workspace.selectFn(text); } };
     this.cut = function(e) {
       if (cursor.selection) {
         setTimeout(function() {

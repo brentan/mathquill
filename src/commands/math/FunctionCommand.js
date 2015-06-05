@@ -1,6 +1,6 @@
 
 // Not truly latex appropriate, but useful for creating object.method calls with autocomplete
-// We extend off scientific notation because we want to import all of
+
 var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function(_, super_) {
   _.ctrlSeq = 'FunctionCommand{...}{...}';
   _.htmlTemplate =
@@ -16,7 +16,7 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
     super_.init.call(this);
   };
   _.text = function(opts) {
-    return this.blocks[0].text(opts) + '__' + this.blocks[1].text(opts);
+    return this.blocks[0].text(opts) + 'SWIFTCALCSMETHOD' + this.blocks[1].text(opts);
   }
   _.latex = function() {
     return '\\functionCommand{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
@@ -33,15 +33,11 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   }
   _.getObject = function() {
     if(this.saved_object) return this.saved_object;
-    this.saved_object = SC_Objects[this.objectName()];
-    if(typeof this.saved_object === 'string') {
-      SC_Objects[this.objectName()] = eval(this.saved_object);
-      this.saved_object = SC_Objects[this.objectName()];
-    } else if(typeof this.saved_object === 'undefined') {
-      this.saved_object = false;
-      return SC_Object();
+    if(this.getController().element) {
+      this.saved_object = this.getController().element.autocompleteObject(this.objectName());
+      if(this.saved_object) return this.saved_object;
     }
-    return this.saved_object;
+    return {propertyList: [], methodList: []};
   }
   _.objectName = function() {
     return this.blocks[0].text({});
@@ -55,7 +51,7 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
       if(e === 0) return; //this shouldn't happen....
       if(e[L] === 0) return; //nor should this...
       // Zip up all the preceding letters
-      for(next = e[L]; (next !== 0) && (next instanceof Variable); next = e[L]) {
+      for(next = e[L]; (next !== 0) && ((next instanceof Variable) || ((next instanceof SupSub) && (next.supsub === 'sub'))); next = e[L]) {
         next.disown().adopt(this.ends[L], 0, this.ends[L].ends[L]);
         next.jQ.prependTo(this.ends[L].jQ);
       }

@@ -119,11 +119,12 @@ var Variable = P(Symbol, function(_, super_) {
           // In a FunctionCommand, we only autocomplete the method calls that are public for that object
           wordList = this.parent.parent.getObject().propertyList;
           commandList = this.parent.parent.getObject().methodList;
-          pretext = this.parent.parent.objectName() + '.';
+          pretext = this.parent.parent.objectName();
+          pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>.' : (pretext + '.');
         } else {
           if(word.length < 3) return; // Only autocomplete on 3 characters or more
           // Get the provided list of words and commands to autocomplete
-          wordList = this.controller.API.__options.autocomplete || [];
+          wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete || [];
         }
         var formatter = function(text, self) {
@@ -229,6 +230,8 @@ var Letter = P(Variable, function(_, super_) {
     if((this.ctrlSeq == 'u') && (cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) && !(cursor[L] instanceof Variable) && !(cursor[L] && (cursor[L].ctrlSeq == 'µ'))) 
       Letter('µ').createLeftOf(cursor);
     else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof Variable)) {
+      FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
+    } else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof SupSub) && cursor[L][L].supsub === 'sub') {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
     } else
       super_.createLeftOf.apply(this, arguments);

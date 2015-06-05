@@ -143,6 +143,9 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
     return this;
   };
+  _.setExpressionMode = function(val) { 
+    this.__controller.expression_mode = val;
+  }
   _.setAutocomplete = function(list) {
     this.__options.autocomplete = list.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
