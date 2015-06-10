@@ -4,6 +4,7 @@
 
 // VanillaSymbol's
 LatexCmds[' '] = LatexCmds.space = bind(VanillaSymbol, '\\ ', ' ');
+LatexCmds[','] = bind(VanillaSymbol, ',', ',&nbsp;');
 LatexCmds.whitespace = bind(VanillaSymbol, '\\space ', '&nbsp;');
 
 LatexCmds.backslash = bind(VanillaSymbol,'\\backslash ','\\');
