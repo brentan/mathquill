@@ -295,7 +295,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.cut = function(e) { this.__controller.cut(e); this.__controller.notifyElementOfChange(); return this; }
   _.copy = function(e) { this.__controller.copy(e); return this; }
-  _.paste = function(text) { this.__controller.paste(text); return this; }
+  _.paste = function(text) { this.__controller.paste(text); this.__controller.closePopup(); return this; }
   _.contextMenu = function(e) {
     return this.__controller.contextMenu(e);
   }

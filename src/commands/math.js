@@ -623,7 +623,7 @@ MathQuill.MathField = APIFnFor(P(EditableField, function(_, super_) {
   _.latex = function(latex) {
     if (arguments.length > 0) {
       this.__controller.renderLatexMath(latex);
-      if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
+      if (this.__controller.blurred) { this.__controller.cursor.hide().parent.blur(); this.__controller.closePopup(); }
       return this;
     }
     return this.__controller.exportLatex();
