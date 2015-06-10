@@ -11,11 +11,13 @@ JS environment could actually contain many instances. */
 
 //A fake cursor in the fake textbox that the math is rendered in.
 var Cursor = P(Point, function(_) {
-  _.init = function(initParent, options) {
+  _.init = function(initParent, options, container) {
     this.parent = initParent;
+    this.controller = initParent.controller;
     this.options = options;
+    this.container = container;
 
-    var jQ = this.jQ = this._jQ = $('<span class="mq-cursor">&zwj;</span>');
+    var jQ = this.jQ = this._jQ = $('<span class="mq-cursor">&#8203;</span>');
     //closured for setInterval
     this.blink = function(){ jQ.toggleClass('mq-blink'); };
 
@@ -38,9 +40,15 @@ var Cursor = P(Point, function(_) {
       this.parent.focus();
     }
     this.intervalId = setInterval(this.blink, 500);
+    this.workingGroupChange(true);
     return this;
   };
   _.hide = function() {
+    var mathField = this.container;
+    mathField.find(".active_block").replaceWith(function() {
+      return $( this ).contents();
+    });
+    mathField.find(".hasCursor_highlighting").removeClass("hasCursor_highlighting");
     if ('intervalId' in this)
       clearInterval(this.intervalId);
     delete this.intervalId;
@@ -51,6 +59,8 @@ var Cursor = P(Point, function(_) {
 
   _.withDirInsertAt = function(dir, parent, withDir, oppDir) {
     if (parent !== this.parent && this.parent.blur) this.parent.blur();
+    if(parent.unit) parent.unit.focus();
+    if(parent.parent && parent.parent.unit) parent.parent.unit.focus();
     this.parent = parent;
     this[dir] = withDir;
     this[-dir] = oppDir;
@@ -153,6 +163,34 @@ var Cursor = P(Point, function(_) {
     if (gramp[L].siblingDeleted) gramp[L].siblingDeleted(cursor.options, R);
     if (gramp[R].siblingDeleted) gramp[R].siblingDeleted(cursor.options, L);
   };
+
+  // This is active block highlighting.  It will highlight the active block in the element
+  _.workingGroupChange = function(force) {
+    var mathField = this.container;
+    var suppress = false;
+    mathField.find(".active_block").replaceWith(function() {
+      return $( this ).contents();
+    });
+    mathField.find(".hasCursor_highlighting").removeClass("hasCursor_highlighting");
+    if(this.anticursor && !force) return this;
+    var cursor = this.jQ;
+    cursor.addClass('hasCursor_highlighting');
+    var suppress = false;
+    cursor.prevAll().each(function() {
+      var _this = $(this);
+      if(_this.hasClass('mq-binary-operator')) suppress = true;
+      if(!suppress) _this.addClass('hasCursor_highlighting');
+    });
+    suppress = false;
+    cursor.nextAll().each(function() {
+      var _this = $(this);
+      if(_this.hasClass('mq-binary-operator')) suppress = true;
+      if(!suppress) _this.addClass('hasCursor_highlighting');
+    });
+    mathField.find(".mq-hasCursor").first().children(".hasCursor_highlighting").wrapAll("<span class='active_block'></span>");
+    return this;
+  };
+
   _.startSelection = function() {
     var anticursor = this.anticursor = Point.copy(this);
     var ancestors = anticursor.ancestors = {}; // a map from each ancestor of

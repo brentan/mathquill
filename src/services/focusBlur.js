@@ -1,37 +1,49 @@
 Controller.open(function(_) {
   _.focusBlurEvents = function() {
     var ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
-    var blurTimeout;
-    ctrlr.textarea.focus(function() {
+    ctrlr.focus = function() {
       ctrlr.blurred = false;
-      clearTimeout(blurTimeout);
+      if(ctrlr.unitMode) return;
+      if(ctrlr.element) ctrlr.element.setFocusedItem(ctrlr.API);
       ctrlr.container.addClass('mq-focused');
       if (!cursor.parent)
         cursor.insAtRightEnd(root);
-      if (cursor.selection) {
+      if (cursor.selection) { 
         cursor.selection.jQ.removeClass('mq-blur');
         ctrlr.selectionChanged(); //re-select textarea contents after tabbing away and back
-      }
-      else
+      } else if(cursor.anticursor) {
+        cursor.select();
+      } else
         cursor.show();
-    }).blur(function() {
+      if(ctrlr.element) ctrlr.element.workspace.attachToolbar(ctrlr.API, ctrlr.element.workspace.mathToolbar());
+    };
+    ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
       ctrlr.blurred = true;
-      blurTimeout = setTimeout(function() { // wait for blur on window; if
-        root.postOrder('intentionalBlur'); // none, intentional blur: #264
-        cursor.clearSelection();
-        blur();
-      });
-      $(window).on('blur', windowBlur);
-    });
-    function windowBlur() { // blur event also fired on window, just switching
-      clearTimeout(blurTimeout); // tabs/windows, not intentional blur
-      if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
-      blur();
-    }
-    function blur() { // not directly in the textarea blur handler so as to be
+      if(ctrlr.unitMode) {
+        ctrlr.element.unitChosen(ctrlr.API.latex());
+        return;
+      }
+      if(ctrlr.element) ctrlr.element.workspace.blurToolbar(ctrlr.API);
+      if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
+      root.postOrder('intentionalBlur'); // none, intentional blur: #264
+      cursor.clearSelection();
       cursor.hide().parent.blur(); // synchronous with/in the same frame as
+      ctrlr.closePopup();
       ctrlr.container.removeClass('mq-focused'); // clearing/blurring selection
-      $(window).off('blur', windowBlur);
+      ctrlr.handle('blur');
+    };
+    ctrlr.windowBlur = function() {
+      ctrlr.blurred = true;
+      if(ctrlr.unitMode) {
+        ctrlr.element.unitChosen(ctrlr.API.latex());
+        return;
+      }
+      if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
+      if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
+      cursor.hide().parent.blur(); // synchronous with/in the same frame as
+      ctrlr.closePopup();
+      ctrlr.container.removeClass('mq-focused'); // clearing/blurring selection
+      ctrlr.handle('blur');
     }
     ctrlr.blurred = true;
     cursor.hide().parent.blur();
@@ -40,9 +52,7 @@ Controller.open(function(_) {
 
 /**
  * TODO: I wanted to move MathBlock::focus and blur here, it would clean
- * up lots of stuff like, TextBlock::focus is set to MathBlock::focus
- * and TextBlock::blur calls MathBlock::blur, when instead they could
- * use inheritance and super_.
+ * up lots of stuff.
  *
  * Problem is, there's lots of calls to .focus()/.blur() on nodes
  * outside Controller::focusBlurEvents(), such as .postOrder('blur') on

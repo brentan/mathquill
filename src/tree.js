@@ -94,6 +94,11 @@ var Node = P(function(_) {
     this.ends[L] = 0;
     this.ends[R] = 0;
   };
+  _.getController = function() {
+    if(this.controller) return this.controller;
+    this.controller = this.parent.getController();
+    return this.controller;
+  }
 
   _.dispose = function() { delete Node.byId[this.id]; };
 

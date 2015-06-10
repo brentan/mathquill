@@ -2,7 +2,13 @@
 var latexMathParser = (function() {
   function commandToBlock(cmd) {
     var block = MathBlock();
-    cmd.adopt(block, 0, 0);
+    if((cmd instanceof Letter) && (cmd.ctrlSeq.length > 1)) {
+      var stream = cmd.ctrlSeq;
+      for (var i = 0; i < stream.length; i += 1) {
+        Letter(stream[i]).adopt(block, block.ends[R], 0);
+      }
+    } else
+      cmd.adopt(block, 0, 0);
     return block;
   }
   function joinBlocks(blocks) {
@@ -24,8 +30,9 @@ var latexMathParser = (function() {
   var fail = Parser.fail;
 
   // Parsers yielding MathCommands
-  var variable = letter.map(function(c) { return Letter(c); });
+  var variable = regex(/^[a-z]+[0-9]*/i).map(function(c) { return Letter(c); });
   var symbol = regex(/^[^${}\\_^]/).map(function(c) { return VanillaSymbol(c); });
+
 
   var controlSequence =
     regex(/^[^\\a-eg-zA-Z]/) // hotfix #164; match MathBlock::write
@@ -83,7 +90,6 @@ Controller.open(function(_, super_) {
     var eof = Parser.eof;
 
     var block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
-
     if (block && !block.isEmpty()) {
       block.children().adopt(cursor.parent, cursor[L], cursor[R]);
       var jQ = block.jQize();
@@ -128,50 +134,17 @@ Controller.open(function(_, super_) {
     cursor.insAtRightEnd(root);
   };
   _.renderLatexText = function(latex) {
+    console.log('renderLatexText: ' + latex);
     var root = this.root, cursor = this.cursor;
-
+ 
     root.jQ.children().slice(1).remove();
     root.eachChild('postOrder', 'dispose');
     root.ends[L] = root.ends[R] = 0;
     delete cursor.selection;
     cursor.show().insAtRightEnd(root);
 
-    var regex = Parser.regex;
-    var string = Parser.string;
-    var eof = Parser.eof;
-    var all = Parser.all;
+    //root.jQize().appendTo(root.jQ);
+    //root.finalizeInsert(cursor.options);
 
-    // Parser RootMathCommand
-    var mathMode = string('$').then(latexMathParser)
-      // because TeX is insane, math mode doesn't necessarily
-      // have to end.  So we allow for the case that math mode
-      // continues to the end of the stream.
-      .skip(string('$').or(eof))
-      .map(function(block) {
-        // HACK FIXME: this shouldn't have to have access to cursor
-        var rootMathCommand = RootMathCommand(cursor);
-
-        rootMathCommand.createBlocks();
-        var rootMathBlock = rootMathCommand.ends[L];
-        block.children().adopt(rootMathBlock, 0, 0);
-
-        return rootMathCommand;
-      })
-    ;
-
-    var escapedDollar = string('\\$').result('$');
-    var textChar = escapedDollar.or(regex(/^[^$]/)).map(VanillaSymbol);
-    var latexText = mathMode.or(textChar).many();
-    var commands = latexText.skip(eof).or(all.result(false)).parse(latex);
-
-    if (commands) {
-      for (var i = 0; i < commands.length; i += 1) {
-        commands[i].adopt(root, root.ends[R], 0);
-      }
-
-      root.jQize().appendTo(root.jQ);
-
-      root.finalizeInsert(cursor.options);
-    }
-  };
+  }
 });

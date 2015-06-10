@@ -9,6 +9,14 @@
   .mq-non-leaf, .mq-scaled {
     .inline-block;
   }
+  span {
+    display: inline-block;
+  }
+  .mq-hasCursor .active_block {
+    background-color: #d7efed;
+    display: inline-block;
+  } 
+
 
   // TODO: dasherize non-symbola
   var, .mq-text-mode, .mq-nonSymbola {
@@ -133,6 +141,10 @@
     .mq-sub {
       display: block;
       float: left;
+      span {
+        font-family: "Times New Roman", Symbola, serif;
+        font-style: italic;
+      }
     }
     &.mq-limit .mq-sub {
       margin-left: -.25em;
@@ -160,7 +172,7 @@
 
   sup.mq-nthroot {
     font-size: 80%;
-    vertical-align: 0.8em;
+    vertical-align: 0.3em;
     margin-right: -.6em;
     margin-left: .2em;
     min-width: .5em;
@@ -219,16 +231,29 @@
   ////
   // non-italicized operator names
   // like \sin, \cos, \ln, etc.
-  .mq-operator-name {
+  span.mq-operator-name var, span.mq-operator-name span {
     font-family: Symbola, "Times New Roman", serif;
     line-height: .9;
     font-style: normal;
   }
-  var.mq-operator-name.mq-first {
-    padding-left: .2em;
-  }
-  var.mq-operator-name.mq-last {
-    padding-right: .2em;
+  span.mq-unit {
+    border: 1px solid transparent;
+    padding-right: 1px;
+    padding-left: 2px;
+    padding-top: 2px;
+    margin-right: 1px;
+    margin-left: 2px;
+    font-size: 0.8em;
+    color: #666666;
+    var, span {
+      font-family: Symbola, "Times New Roman", serif;
+      line-height: .9;
+      font-style: normal;
+    }
+    &.mq-active {
+      color: black;
+      border: 1px solid gray;
+    }
   }
 
   ////
@@ -323,5 +348,28 @@
   &, .mq-editable-field {
     cursor: text;
     font-family: @symbola;
+  }
+
+  
+  span.mq-elementwise:before {
+    content: '\2299';
+    color: #aaaaaa;
+    margin-right: 2px;
+    position: relative;
+    top: -0.6em;
+    font-size: 0.5em;
+  }
+  span.mq-fraction-elementwise:before {
+    content: '\2299';
+    color: #aaaaaa;
+    margin-right: -2px;
+    font-size: 0.5em;
+    position: relative;
+    top: -1px;
+  }
+  .mq-multiply-elementWise {
+    font-size: 0.6em;
+    position:relative;
+    top: -0.3em;
   }
 }

@@ -12,7 +12,6 @@ Controller.open(function(_) {
 Node.open(function(_) {
   _.keystroke = function(key, e, ctrlr) {
     var cursor = ctrlr.cursor;
-
     switch (key) {
     case 'Ctrl-Shift-Backspace':
     case 'Ctrl-Backspace':
@@ -26,9 +25,32 @@ Node.open(function(_) {
       ctrlr.backspace();
       break;
 
+    case 'Enter':
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Find the element that is currently selected
+        el.find('li.mq-popup-selected').click();
+        break;
+      }
+      return;
+
     // Tab or Esc -> go one block right if it exists, else escape right.
     case 'Esc':
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Close the popup
+        ctrlr.closePopup();
+        break;
+      }
+      ctrlr.escapeDir(R, key, e);
+      return;
     case 'Tab':
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Find the element that is currently selected
+        el.find('li.mq-popup-selected').click();
+        break;
+      }
       ctrlr.escapeDir(R, key, e);
       return;
 
@@ -41,15 +63,18 @@ Node.open(function(_) {
     // End -> move to the end of the current block.
     case 'End':
       ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent);
+      ctrlr.cursor.workingGroupChange();
       break;
 
     // Ctrl-End -> move all the way to the end of the root block.
     case 'Ctrl-End':
       ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
+      ctrlr.cursor.workingGroupChange();
       break;
 
     // Shift-End -> select to the end of the current block.
     case 'Shift-End':
+      if((cursor.parent === ctrlr.root) && (cursor[R] === 0)) ctrlr.selectRight();
       while (cursor[R]) {
         ctrlr.selectRight();
       }
@@ -57,6 +82,7 @@ Node.open(function(_) {
 
     // Ctrl-Shift-End -> select to the end of the root block.
     case 'Ctrl-Shift-End':
+      if((cursor.parent === ctrlr.root) && (cursor[R] === 0)) ctrlr.selectRight();
       while (cursor[R] || cursor.parent !== ctrlr.root) {
         ctrlr.selectRight();
       }
@@ -65,15 +91,18 @@ Node.open(function(_) {
     // Home -> move to the start of the root block or the current block.
     case 'Home':
       ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent);
+      ctrlr.cursor.workingGroupChange();
       break;
 
     // Ctrl-Home -> move to the start of the current block.
     case 'Ctrl-Home':
       ctrlr.notify('move').cursor.insAtLeftEnd(ctrlr.root);
+      ctrlr.cursor.workingGroupChange();
       break;
 
     // Shift-Home -> select to the start of the current block.
     case 'Shift-Home':
+      if((cursor.parent === ctrlr.root) && (cursor[L] === 0)) ctrlr.selectLeft();
       while (cursor[L]) {
         ctrlr.selectLeft();
       }
@@ -81,6 +110,7 @@ Node.open(function(_) {
 
     // Ctrl-Shift-Home -> move to the start of the root block.
     case 'Ctrl-Shift-Home':
+      if((cursor.parent === ctrlr.root) && (cursor[L] === 0)) ctrlr.selectLeft();
       while (cursor[L] || cursor.parent !== ctrlr.root) {
         ctrlr.selectLeft();
       }
@@ -90,7 +120,15 @@ Node.open(function(_) {
     case 'Shift-Left': ctrlr.selectLeft(); break;
     case 'Ctrl-Left': break;
 
-    case 'Right': ctrlr.moveRight(); break;
+    case 'Right': 
+      var el = ctrlr.container.children('.mq-popup');
+      if(el.length > 0) {
+        //Close the popup
+        ctrlr.closePopup();
+        break;
+      }
+      ctrlr.moveRight(); 
+      break;
     case 'Shift-Right': ctrlr.selectRight(); break;
     case 'Ctrl-Right': break;
 
@@ -103,7 +141,7 @@ Node.open(function(_) {
       } else {
         ctrlr.selectLeft();
       }
-
+      break;
     case 'Shift-Down':
       if (cursor[R]) {
         while (cursor[R]) ctrlr.selectRight();
@@ -111,7 +149,7 @@ Node.open(function(_) {
       else {
         ctrlr.selectRight();
       }
-
+      break;
     case 'Ctrl-Up': break;
     case 'Ctrl-Down': break;
 
@@ -137,7 +175,7 @@ Node.open(function(_) {
       return;
     }
     e.preventDefault();
-    ctrlr.scrollHoriz();
+    if(!ctrlr.blurred) ctrlr.scrollHoriz();
   };
 
   _.moveOutOf = // called by Controller::escapeDir, moveDir
@@ -155,18 +193,14 @@ Controller.open(function(_) {
     if (e === 'move' || e === 'upDown') this.show().clearSelection();
   });
   _.escapeDir = function(dir, key, e) {
+
     prayDirection(dir);
     var cursor = this.cursor;
 
-    // only prevent default of Tab if not in the root editable
-    if (cursor.parent !== this.root) e.preventDefault();
-
-    // want to be a noop if in the root editable (in fact, Tab has an unrelated
-    // default browser action if so)
-    if (cursor.parent === this.root) return;
+    e.preventDefault();
 
     cursor.parent.moveOutOf(dir, cursor);
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
     return this.notify('move');
   };
 
@@ -186,8 +220,15 @@ Controller.open(function(_) {
     }
     else if (cursor[dir]) cursor[dir].moveTowards(dir, cursor, updown);
     else cursor.parent.moveOutOf(dir, cursor, updown);
+    
+    if(this.container.children('.mq-autocomplete').length > 0) {
+      if(cursor[L] instanceof Variable) cursor[L].autoComplete();
+      else if(cursor[R] instanceof Variable) cursor[R].autoComplete();
+      else if((cursor[L] instanceof SupSub) && (cursor[L].supsub == 'sub') && (cursor[L].sub.ends[R])) cursor[L].sub.ends[R].autoComplete();
+      else this.container.children('.mq-autocomplete').remove();
+    }
 
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
     return this.notify('move');
   };
   _.moveLeft = function() { return this.moveDir(L); };
@@ -208,6 +249,18 @@ Controller.open(function(_) {
   _.moveUp = function() { return moveUpDown(this, 'up'); };
   _.moveDown = function() { return moveUpDown(this, 'down'); };
   function moveUpDown(self, dir) {
+    // Test if a popup menu (autocomplete or units menu) is currently active
+    var el = self.container.children('.mq-popup');
+    if(el.length > 0) {
+      //Find the element that is currently selected
+      var current_selection = el.find('li.mq-popup-selected');
+      var to_select = dir === 'up' ? current_selection.prev('li') : current_selection.next('li');
+      if(to_select.length == 0) return self;
+      current_selection.removeClass('mq-popup-selected');
+      to_select.addClass('mq-popup-selected');
+      return self;
+    }
+
     var cursor = self.notify('upDown').cursor;
     var dirInto = dir+'Into', dirOutOf = dir+'OutOf';
     if (cursor[R][dirInto]) cursor.insAtLeftEnd(cursor[R][dirInto]);
@@ -222,7 +275,7 @@ Controller.open(function(_) {
         }
       });
     }
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
     return self;
   }
   this.onNotify(function(e) { if (e !== 'upDown') this.upDownCache = {}; });
@@ -242,7 +295,7 @@ Controller.open(function(_) {
     if (cursor[L].siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
     if (cursor[R].siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
     cursor.parent.bubble('reflow');
-    cursor.parent.bubble('workingGroupChange');
+    cursor.workingGroupChange();
 
     return this;
   };

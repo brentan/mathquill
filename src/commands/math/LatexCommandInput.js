@@ -88,13 +88,15 @@ CharCmds['\\'] = P(MathCommand, function(_, super_) {
       if (this._replacedFragment) cmd.replaces(this._replacedFragment);
       cmd.createLeftOf(cursor);
     } else {
-      cmd = TextBlock();
-      cmd.replaces(latex);
+      cmd = OperatorName();
+      if (this._replacedFragment) cmd.replaces(this._replacedFragment);
       cmd.createLeftOf(cursor);
-      cursor.insRightOf(cmd);
-      if (this._replacedFragment)
-        this._replacedFragment.remove();
+      cursor.insAtRightEnd(cmd.blocks[0]);
+      for(var i = 0; i < latex.length; i++)
+        Letter(latex[i]).createLeftOf(cursor);
+      cursor.insAtRightEnd(cmd.blocks[1]);
     }
+    cursor.workingGroupChange();
   };
 });
 

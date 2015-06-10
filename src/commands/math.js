@@ -27,46 +27,10 @@ var MathElement = P(Node, function(_, super_) {
     self.bubble('reflow');
   };
   _.contextMenu = function(cursor, event) {
-    //Default context menu to call.  
-  }
-  _.showPopupMenu = function(menu, event) {
-    //Function creates a popup menu at the current location with the menu options.
-    //Requires the menu widget of JqueryUI.  Menu is an array of items representing each
-    //element in the menu, from top to bottom.  Each element is a hash with a 'text' method
-    //that holds the text to display in the menu, and a 'handler' method that contains a function
-    //to execute on selection
-    //[{text: 'item 1', handler: function() { alert('item 1'); } }, ...]
-
-    //Test if popup menu already exists, if so destroy it
-    if($("#mq-popup-menu").length == 1)
-      $("#mq-popup-menu").remove(); 
-
-    //Create the menu closing ul
-    var menujQ = $('<ul></ul>').attr('id', 'mq-popup-menu').appendTo('body');
-    //Populate the menu
-    for(var i = 0; i < menu.length; i++) 
-      $("<li></li>").attr('mq-menu-id', i).html(menu[i].text).appendTo(menujQ);
-    //Create the menu and listener
-    menujQ.menu({
-      select: function( event, ui ) {
-        var id = ui.item.attr('mq-menu-id')*1;
-        menu[id].handler(event);
-        menujQ.hide();
-      }
-    });
-    //Locate at the click location
-    menujQ.position({
-        my: "left top",
-        of: event
-    });
-    //Show the menu
-    menujQ.show();
-
-    //Global click handle to close the menu on a click anywhere
-    $(document).bind('click', function(e) {
-      menujQ.hide();
-      $( this ).unbind( e );
-    });
+    // Default context menu to call.  
+    // BRENTAN: Need to make this do something, especially if you have some stuff selected (expand/factor/simplify would be good base options?  Evaluate?)
+    // This will likely need to be a passed in handler since evaluation etc lives outside the scope of mathquill
+    return true;
   }
 });
 
@@ -101,7 +65,6 @@ var MathCommand = P(MathElement, function(_, super_) {
 
     return block.times(self.numBlocks()).map(function(blocks) {
       self.blocks = blocks;
-
       for (var i = 0; i < blocks.length; i += 1) {
         blocks[i].adopt(self, self.ends[R], 0);
       }
@@ -114,9 +77,11 @@ var MathCommand = P(MathElement, function(_, super_) {
   _.createLeftOf = function(cursor) {
     var cmd = this;
 
-    //Test for matrix specific commands - BRENTAN!
-    if(cursor.options.enableMatrixShortcuts && (typeof cursor.parent !== 'undefined') &&
-        (typeof cursor.parent !== 'undefined') &&
+    if(!(this instanceof Variable) && (this.supsub !== 'sub'))
+      cursor.container.children('.mq-popup').remove();
+
+    // Test for matrix specific commands
+    if((typeof cursor.parent !== 'undefined') &&
         (cursor.parent.parent instanceof Matrix)) {
       if(cmd.ctrlSeq == ',')
         return cursor.parent.parent.moveOrInsertColumn(cursor);
@@ -128,6 +93,27 @@ var MathCommand = P(MathElement, function(_, super_) {
         return cursor.parent.parent.deleteColumn(cursor);
       else if(cmd.ctrlSeq == '>')
         return cursor.parent.parent.insertColumn(cursor);
+    } // Similar to matrix commands, see if we are in square brackets and have added a comma (new column command!).  Transform into Matrix 
+    else if((typeof cursor.parent !== 'undefined') &&
+        (cursor.parent.parent instanceof Bracket) &&
+        (cursor.parent.parent.ctrlSeq === '\\left[') && 
+        ((cmd.ctrlSeq == ',') || (cmd.ctrlSeq == ';'))) {
+      var bracket = cursor.parent.parent
+      //Move the cursor
+      if(bracket[L] !== 0)
+        cursor.insRightOf(bracket[L]);
+      else
+        cursor.insAtLeftEnd(bracket.parent);
+      //Insert the Matrix at this position
+      var new_mat = Matrix('\\bmatrix',1,1);
+      new_mat.createLeftOf(cursor);
+      //Move what was in the brackets into the new matrix
+      bracket.ends[L].children().disown().adopt(new_mat.ends[L], 0, 0).jQ.appendTo(new_mat.ends[L].jQ);
+      bracket.remove();
+      if(cmd.ctrlSeq == ',')
+        return new_mat.insertColumn(cursor);
+      else
+        return new_mat.insertRow(cursor);
     }
 
     var replacedFragment = cmd.replacedFragment;
@@ -144,7 +130,7 @@ var MathCommand = P(MathElement, function(_, super_) {
         (this instanceof Fraction) ||
         (this instanceof SupSub) ||
         (this instanceof SquareRoot))
-      this.bubble('workingGroupChange');
+      cursor.workingGroupChange();
   };
   _.createBlocks = function() {
     var cmd = this,
@@ -353,14 +339,34 @@ var MathCommand = P(MathElement, function(_, super_) {
       return text + child.text(opts) + (cmd.textTemplate[i] || '');
     });
   };
+  _.setUnit = function() {
+    // determine if I'm in a unit, and do the same to all my children
+    if(this.parent.unit) {
+      this.unit = this.parent.unit;
+      if((this.parent instanceof SupSub) || (this.parent.unitsup)) this.unitsup = true;
+    }
+    if(this.parent.parent && this.parent.parent.unit) {
+      this.unit = this.parent.parent.unit;
+      if((this.parent.parent instanceof SupSub) || (this.parent.parent.unitsup)) this.unitsup = true;
+    }
+  }
+  _.recursiveSetUnit = function() {
+    this.setUnit();
+    this.eachChild(function (child) { if(child.recursiveSetUnit) child.recursiveSetUnit(); });
+  };
 });
+
+/**
+ * Special mathcommand that we use to distinguish from normal mathCommand for the purpose of implicit multiplication
+ */
+var DerivedMathCommand = P(MathCommand, function(_, super_) {});
 
 /**
  * Lightweight command without blocks or children.
  */
 var Symbol = P(MathCommand, function(_, super_) {
   _.init = function(ctrlSeq, html, text) {
-    if (!text) text = ctrlSeq && ctrlSeq.length > 1 ? ctrlSeq.slice(1) : ctrlSeq;
+    if (!text) text = (ctrlSeq && ctrlSeq.length > 1 ? ctrlSeq.slice(1) : ctrlSeq).trim();
 
     super_.init.call(this, ctrlSeq, html, [ text ]);
   };
@@ -395,9 +401,22 @@ var Symbol = P(MathCommand, function(_, super_) {
   _.isEmpty = function(){ return true; };
 });
 var VanillaSymbol = P(Symbol, function(_, super_) {
-  _.init = function(ch, html) {
-    super_.init.call(this, ch, '<span>'+(html || ch)+'</span>');
+  _.init = function(ch, html, textTemplate) {
+    super_.init.call(this, ch, '<span>'+(html || ch)+'</span>', (textTemplate || ch));
   };
+  _.createLeftOf = function(cursor) {
+    if(this.ctrlSeq === '.') {
+      if((cursor[L] === 0 ) || (cursor[L] instanceof BinaryOperator)) //Implicit multiplication will take care of other cases and 'make' cursor[L] a binaryoperator
+        VanillaSymbol('0').createLeftOf(cursor);
+      else if((cursor[L] !== 0) && (cursor[L].ctrlSeq === '.')) {// ellipses
+        cursor[L].ctrlSeq = '…';
+        cursor[L].jQ.html('<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>');
+        cursor[L].textTemplate = '..';
+        return;
+      } 
+    }
+    super_.createLeftOf.call(this, cursor);
+  }
 });
 var BinaryOperator = P(Symbol, function(_, super_) {
   _.init = function(ctrlSeq, html, text) {
@@ -406,7 +425,6 @@ var BinaryOperator = P(Symbol, function(_, super_) {
     );
   };
 });
-
 /**
  * Children and parent of MathCommand's. Basically partitions all the
  * symbols and operators that descend (in the Math DOM tree) from
@@ -433,9 +451,48 @@ var MathBlock = P(MathElement, function(_, super_) {
   _.keystroke = function(key, e, ctrlr) {
     if (ctrlr.API.__options.spaceBehavesLikeTab
         && (key === 'Spacebar' || key === 'Shift-Spacebar')) {
+      var el = ctrlr.container.children('.mq-popup');
       e.preventDefault();
-      ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
+      if(el.length > 0) {
+        //Find the element that is currently selected
+        el.find('li.mq-popup-selected').click();
+      } else {
+        var cursor = ctrlr.cursor;
+        // Test for spacebar with no math yet...in this case, we become a text field
+        if((cursor.parent === ctrlr.root) && ctrlr.element && ctrlr.element.changeToText) {
+          var current_output = ctrlr.API.text();
+          if(current_output.match(/^[a-z0-9\.-]*$/i)) 
+            return ctrlr.element.changeToText(current_output);
+        } 
+        // Test for autocommands 
+        if(cursor[L] instanceof Letter)
+          cursor[L].autoOperator(cursor);
+        ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
+      }
       return;
+    } else if(key === 'Tab') {
+      // Test for autocommands 
+      var cursor = ctrlr.cursor;
+      if(cursor[L] instanceof Letter)
+        cursor[L].autoOperator(cursor);
+    } else if(key === 'Enter') {
+      if((ctrlr.cursor.parent == ctrlr.root) && !(ctrlr.cursor[L]) && (ctrlr.element) && (ctrlr.element.PrependBlankItem)) {
+        // Enter pressed with cursor in initial position.  
+        ctrlr.element.PrependBlankItem();
+        e.preventDefault();
+        return;
+      }
+    } else if((key === 'Backspace') || (key === 'Del')) {
+      ctrlr.notifyElementOfChange();
+      var out = super_.keystroke.apply(this, arguments);
+      var cursor = ctrlr.cursor;
+      if(cursor[L] && (cursor[L] instanceof Variable))
+        cursor[L].autoComplete();
+      else if((cursor[L] === 0) && cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub') && cursor.parent.parent[L])
+        cursor.parent.parent[L].autoComplete();
+      else
+        ctrlr.closePopup();
+      return out;
     }
     return super_.keystroke.apply(this, arguments);
   };
@@ -444,11 +501,13 @@ var MathBlock = P(MathElement, function(_, super_) {
   // and selection of the MathQuill tree, these all take in a direction and
   // the cursor
   _.moveOutOf = function(dir, cursor, updown) {
+    if(cursor.controller.unitMode && (this.parent instanceof Unit)) return;
     var updownInto = updown && this.parent[updown+'Into'];
     if (!updownInto && this[dir]) cursor.insAtDirEnd(-dir, this[dir]);
     else cursor.insDirOf(dir, this.parent);
   };
   _.selectOutOf = function(dir, cursor) {
+    if(cursor.controller.unitMode && (this.parent instanceof Unit)) return;
     cursor.insDirOf(dir, this.parent);
   };
   _.deleteOutOf = function(dir, cursor) {
@@ -463,32 +522,95 @@ var MathBlock = P(MathElement, function(_, super_) {
     while (pageX < node.jQ.offset().left) node = node[L];
     return node.seek(pageX, cursor);
   };
+  _.flash = function() {
+    var el = this.jQ.closest('.sc_element');
+    el.stop().css("background-color", "#ffe0e0").animate({ backgroundColor: "#FFFFFF"}, {complete: function() { $(this).css('background-color','')} , duration: 400 });
+  }
   _.write = function(cursor, ch, replacedFragment) {
     var cmd;
     if (ch.match(/^[a-eg-zA-Z]$/)) //exclude f because want florin
       cmd = Letter(ch);
+    else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (typeof cursor[L][L] !== 'undefined') && cursor[L][L].ctrlSeq.match(/^[0-9]$/)) // this should match scientific notation
+      cmd = ScientificNotation(ch);
+    else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (cursor[L][L] instanceof Multiplication) && (cursor[L][L].addedImplicitly) && (cursor[L][L][L] !== 0) && (typeof cursor[L][L][L] !== 'undefined') && cursor[L][L][L].ctrlSeq.match(/^[0-9]$/)) {// this should match scientific notation
+      cursor[L][L].remove(); // Remove the implicit multiplication
+      cmd = ScientificNotation(ch);
+    } else if(ch.match(/^[0-9\.]$/) && !(cursor.parent && cursor.parent.unit) && !(cursor.parent && cursor.parent.parent && cursor.parent.parent.unit) && ((cursor[L] instanceof Variable) || (cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')))) // Numbers after letters are 'letters' as they are part of a var name
+      cmd = Letter(ch);
     else if (cmd = CharCmds[ch] || LatexCmds[ch])
       cmd = cmd(ch);
-    else
+    else if(ch === '#') {
+      if((cursor.controller.exportText() == '') && cursor.controller.element && cursor.controller.element.changeToText)
+        return window.setTimeout(function() { cursor.controller.element.changeToText('#'); }, 10);
+      else
+        return this.flash();
+    } else
       cmd = VanillaSymbol(ch);
+
+    // Units...if we are in a unit box, drastically reduce what we are allowed to type (other things will push us out of the box)
+    if(cursor.parent && cursor.parent.parent && cursor.parent.parent.unitsup) {
+      // We are in a deep fraction in a unit
+      if(!ch.match(/^[0-9\.\+\-\*\^\/\(\)]$/)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+    } else if(cursor.parent && cursor.parent.parent && cursor.parent.parent.unit) {
+      // We are in a supsub or first level fraction
+      if(cursor.parent.parent instanceof SupSub) {
+        if(!ch.match(/^[0-9\.\+\-\*\^\/\(\)]$/)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+        else if(((ch === '/') || (ch === '^')) && !(cursor[L] instanceof VanillaSymbol) && !(cursor[L] instanceof Variable)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+      } else {
+        if(!ch.match(/^[a-zµ2\^\*\/\(\)]$/i)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+        else if(((ch === '/') || (ch === '^')) && !(cursor[L] instanceof VanillaSymbol) && !(cursor[L] instanceof Variable)) { if (replacedFragment) replacedFragment.remove(); this.flash(); return; }
+      }
+    } 
 
     if (replacedFragment) cmd.replaces(replacedFragment);
 
+    // Test for autocommands 
+    if(!(cmd instanceof Variable) && (cursor[L] instanceof Letter)) {
+      if(cursor[L].autoOperator(cursor) && (cmd instanceof Bracket) && (cmd.side === L))
+        return;
+    }
+
+    // Only allow variables (letters basically) in a operatorname
+    if(cursor.parent && ((cursor.parent.parent instanceof OperatorName) || (cursor.parent.parent instanceof FunctionCommand)) && (cursor.parent === cursor.parent.parent.ends[L])) {
+      if(!((cmd instanceof Variable) || ((ch === '_') && cursor[R] === 0))) return this.flash(); 
+      if((cursor[L] instanceof SupSub) || ((ch === '_') && cursor[L] === 0)) return this.flash(); 
+    }
+
+    // Test for implicit multiplication
+    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !cursor[L].ctrlSeq.match(/^[\,…\.]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
+      LatexCmds.cdot().implicit().createLeftOf(cursor);
+    else if(!(ch.match(/^[\,]$/i) || cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket) && (ch !== '.'))))
+      LatexCmds.cdot().implicit().createLeftOf(cursor);
+    
     cmd.createLeftOf(cursor);
   };
 
   _.focus = function() {
     this.jQ.addClass('mq-hasCursor');
     this.jQ.removeClass('mq-empty');
-
+    if(this.unit) this.unit.focus();
+    if(this.parent && this.parent.unit) this.parent.unit.focus();
     return this;
   };
   _.blur = function() {
     this.jQ.removeClass('mq-hasCursor');
     if (this.isEmpty())
       this.jQ.addClass('mq-empty');
-
+    if(this.unit) this.unit.blur();
+    if(this.parent && this.parent.unit) this.parent.unit.blur();
     return this;
+  };
+  _.recursiveSetUnit = function() {
+    this.eachChild(function (child) { if(child.recursiveSetUnit) child.recursiveSetUnit(); });
+    this.eachChild(function (child) { 
+      if((child instanceof VanillaSymbol) && ((child.ctrlSeq == 'µ') || (child.ctrlSeq == '2'))) { 
+        var newnode = Letter(child.ctrlSeq);
+        newnode.jQize();
+        newnode.jQ.insDirOf(R, child.jQ);
+        child[R] = newnode.adopt(child.parent, child, child[R]);
+        child.remove();
+      } 
+    });
   };
 });
 
@@ -497,5 +619,13 @@ MathQuill.MathField = APIFnFor(P(EditableField, function(_, super_) {
   _.init = function(el, opts) {
     el.addClass('mq-editable-field mq-math-mode');
     this.initRootAndEvents(RootMathBlock(), el, opts);
+  };
+  _.latex = function(latex) {
+    if (arguments.length > 0) {
+      this.__controller.renderLatexMath(latex);
+      if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
+      return this;
+    }
+    return this.__controller.exportLatex();
   };
 }));
