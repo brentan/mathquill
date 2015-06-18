@@ -133,7 +133,7 @@ var Variable = P(Symbol, function(_, super_) {
             if(text === autoCommands[i]) {
               text = LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate;
               break;
-            } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_');
+            } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_').replace(new RegExp('_' + autoCommands[i] + '$',''), '_' + LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate);
 
           }
           text = (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
@@ -169,6 +169,8 @@ var Variable = P(Symbol, function(_, super_) {
         if(right_of) _this.controller.cursor.insRightOf(right_of);
         else _this.controller.cursor.insAtRightEnd(right_end_of);
         _this.controller.API.typedText(word);
+        if(_this.controller.cursor[L] instanceof Letter)
+          _this.controller.cursor[L].autoOperator(_this.controller.cursor);
         if(word[word.length - 1] === '.')
           FunctionCommand(true).createLeftOf(_this.controller.cursor);
         _this.controller.closePopup();
