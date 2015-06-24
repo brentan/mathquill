@@ -51,6 +51,10 @@ var Matrix =
         var c = this.col;
         var numBlocks = this.numBlocks();
         var ctrlSeq = this.ctrlSeq.substring(1,this.ctrlSeq.length);
+        var number = 0;
+        for(var i = this.parent; i !== 0; i = i.parent)
+          if(i instanceof Matrix) number++;
+        ctrlSeq += number;
 
         this.eachChild(function (child) {
           if (child.ends[L])
@@ -83,15 +87,27 @@ var Matrix =
         }
         return (this.row > 1) ? ('[[' + out + ']]') : ('[' + out + ']')
       };
+      _.nested = false; // Only used during parse command, where it is also set.  Using it elsewhere may result in erroneous result
       _.parser = function () {
         var regex = Parser.regex;
-        return regex(/^\{[pbvBV]?matrix\}[\s\S]*?\\end\{[pbvBV]?matrix\}/).map(function (body) {
-          if(body.substring(7,1) == '}') {
+        return regex(/^\{[pbvBV]?matrix([0-9]+)\}[\s\S]*?\\end\{[pbvBV]?matrix\1\}/).map(function (body) {
+          if(body.substring(1,1) == 'm') 
             var command = body.substring(1,7);
-            body = body.substring(8, body.length - 12).trim();
-          } else {
+          else 
             var command = body.substring(1,8);
-            body = body.substring(9, body.length - 13).trim();
+          var id = body.replace(/^[\s\S]*\\end\{[pbvBV]?matrix([0-9]+)\}$/,'$1')*1;
+          body = body.replace(/^\{[pbvBV]?matrix[0-9]+\}/,'').replace(/\\end\{[pbvBV]?matrix[0-9]+\}$/,'');
+          // Lets see if we are nested
+          var child_blocks = [];
+          var nested = false;
+          var child = '';
+          while(true) {
+            if(!body.match(RegExp("^[\\s\\S]*\\{[pbvBV]?matrix" + (id+1) + "\\}[\\s\\S]*$",''))) break;
+            // We have a nested matrix.  We should extract the child(ren) and parse them on their own.  To keep errors from popping up, we simply extract here for later parsing
+            nested = true; //need to push in to 'matrix' below
+            child = body.replace(RegExp("^[\\s\\S]*(\\\\begin[\\s]*\\{[pbvBV]?matrix" + (id+1) + "\\}[\\s\\S]*?\\\\end\\{[pbvBV]?matrix" + (id + 1) + "\\})[\\s\\S]*$",''),"$1");
+            body = body.replace(RegExp("^([\\s\\S]*)\\\\begin[\\s]*\\{[pbvBV]?matrix" + (id+1) + "\\}[\\s\\S]*?\\\\end\\{[pbvBV]?matrix" + (id + 1) + "\\}([\\s\\S]*)$",''),"$1{BLOCK" + child_blocks.length + '}$2');
+            child_blocks.push(child);
           }
           var rows = body.split(/\\\\/).map(function (r) {
             return r.trim();
@@ -105,12 +121,46 @@ var Matrix =
             cells = cells.concat(cols);
           });
           var matrix = Matrix('\\' + command, colsCount, rowsCount);
+          matrix.nested = nested;
 
           var blocks = matrix.blocks = Array(matrix.numBlocks());
           for (var i = 0; i < blocks.length; i++) {
+            while(true) {
+              if(!cells[i].match(/\{BLOCK[0-9]+\}/)) break;
+              // This cell holds its own matrix.  Insert the matrix code into this cell so it can be properly parsed.
+              var cid = cells[i].replace(/^[\s\S]*\{BLOCK([0-9]+)\}[\s\S]*$/,"$1") * 1;
+              cells[i] = cells[i].replace(RegExp("\\{BLOCK" + cid + "\\}",''),child_blocks[cid]);
+            }
             var newBlock = blocks[i] = latexMathParser.parse(cells[i]);
             newBlock.deleteOutOf = MatrixMathBlock().deleteOutOf;
             newBlock.adopt(matrix, matrix.ends[R], 0);
+          }
+          // Check if we are list of equal sized, non-nested lists.  This means emgiac returned a matrix as a list of lists, and we should return to matrix form
+          child = matrix.ends[L];
+          if(matrix.nested && (rowsCount == 1) && child && (child.ends[L] === child.ends[R]) && (child.ends[L] instanceof Matrix) && !child.ends[L].nested && (child.ends[L].row == 1)) {
+            var is_list_of_lists = true;
+            var size = child.ends[L].col;
+            for(child = child[R]; child !== 0; child = child[R]) {
+              if(!(child.ends[L] instanceof Matrix) || (child.ends[L] !== child.ends[R]) || child.ends[L].nested || (child.ends[L].row != 1) || (child.ends[L].col != size)) {
+                is_list_of_lists = false;
+                break;
+              }
+            }
+            if(is_list_of_lists) {
+              var new_matrix = Matrix('\\' + command, matrix.ends[L].ends[L].col, colsCount);
+              new_matrix.blocks = Array(new_matrix.numBlocks());
+              var i = 0;
+              var next = 0;
+              for(child = matrix.ends[L]; child !== 0; child = child[R]) {
+                for(var el = child.ends[L].ends[L]; el !== 0; el = next) {
+                  next = el[R];
+                  el.adopt(new_matrix, new_matrix.ends[R], 0);
+                  new_matrix.blocks[i] = el;
+                  i++;
+                }
+              }
+              return new_matrix;
+            }
           }
           return matrix;
         })
