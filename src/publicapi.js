@@ -215,9 +215,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
           leave_unit = true;
         }
         this.typedText(option);
-        var el = this.__controller.container.children('.mq-popup');
-        if(el.length > 0) 
-          el.find('li.mq-popup-selected').click();
+        this.__controller.closePopup();
         if(leave_unit) {
           this.__controller.cursor.insRightOf(unit);
           this.__controller.cursor.workingGroupChange();

@@ -122,7 +122,7 @@ var Variable = P(Symbol, function(_, super_) {
           pretext = this.parent.parent.objectName();
           pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>.' : (pretext + '.');
         } else {
-          if(word.length < 3) return; // Only autocomplete on 3 characters or more
+          if((word.length < 3) && (word.indexOf('_') == -1)) return; // Only autocomplete on 3 characters or more
           // Get the provided list of words and commands to autocomplete
           wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete || [];
@@ -210,6 +210,7 @@ var Letter = P(Variable, function(_, super_) {
     return super_.init.call(this, this.letter = ch); 
   };
   _.autoOperator = function(cursor) {
+    if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) return false;
     var autoCmds = cursor.options.autoCommands;
     // join together longest sequence of letters
     var str = cursor[L].letter, l = cursor[L][L], i = 1;
@@ -324,7 +325,7 @@ LatexCmds['2'] = P(VanillaSymbol, function(_, super_) {  //Do this for units, so
     super_.init.call(this, '2');
   }
   _.createLeftOf = function(cursor) {
-    if((cursor.parent && cursor.parent.parent && cursor.parent.parent instanceof Unit) || (cursor.parent && cursor.parent.parent && cursor.parent.parent.unit && !(cursor.parent.parent instanceof SupSub))) {
+    if((cursor.parent && cursor.parent.parent && cursor.parent.parent instanceof Unit && (cursor.parent === cursor.parent.parent.ends[R])) || (cursor.parent && cursor.parent.parent && cursor.parent.parent.unit && !(cursor.parent.parent instanceof SupSub))) {
       if(cursor[L] && (cursor[L].ctrlSeq === 'H'))
         Letter('2').createLeftOf(cursor);
       else
