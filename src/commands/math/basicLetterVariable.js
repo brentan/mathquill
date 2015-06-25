@@ -122,7 +122,7 @@ var Variable = P(Symbol, function(_, super_) {
           pretext = this.parent.parent.objectName();
           pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>.' : (pretext + '.');
         } else {
-          if(word.length < 3) return; // Only autocomplete on 3 characters or more
+          if((word.length < 3) && (word.indexOf('_') == -1)) return; // Only autocomplete on 3 characters or more
           // Get the provided list of words and commands to autocomplete
           wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete || [];
@@ -133,7 +133,7 @@ var Variable = P(Symbol, function(_, super_) {
             if(text === autoCommands[i]) {
               text = LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate;
               break;
-            } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_');
+            } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_').replace(new RegExp('_' + autoCommands[i] + '$',''), '_' + LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate);
 
           }
           text = (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
@@ -169,6 +169,8 @@ var Variable = P(Symbol, function(_, super_) {
         if(right_of) _this.controller.cursor.insRightOf(right_of);
         else _this.controller.cursor.insAtRightEnd(right_end_of);
         _this.controller.API.typedText(word);
+        if(_this.controller.cursor[L] instanceof Letter)
+          _this.controller.cursor[L].autoOperator(_this.controller.cursor);
         if(word[word.length - 1] === '.')
           FunctionCommand(true).createLeftOf(_this.controller.cursor);
         _this.controller.closePopup();
@@ -208,6 +210,7 @@ var Letter = P(Variable, function(_, super_) {
     return super_.init.call(this, this.letter = ch); 
   };
   _.autoOperator = function(cursor) {
+    if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) return false;
     var autoCmds = cursor.options.autoCommands;
     // join together longest sequence of letters
     var str = cursor[L].letter, l = cursor[L][L], i = 1;
@@ -322,7 +325,7 @@ LatexCmds['2'] = P(VanillaSymbol, function(_, super_) {  //Do this for units, so
     super_.init.call(this, '2');
   }
   _.createLeftOf = function(cursor) {
-    if((cursor.parent && cursor.parent.parent && cursor.parent.parent instanceof Unit) || (cursor.parent && cursor.parent.parent && cursor.parent.parent.unit && !(cursor.parent.parent instanceof SupSub))) {
+    if((cursor.parent && cursor.parent.parent && cursor.parent.parent instanceof Unit && (cursor.parent === cursor.parent.parent.ends[R])) || (cursor.parent && cursor.parent.parent && cursor.parent.parent.unit && !(cursor.parent.parent instanceof SupSub))) {
       if(cursor[L] && (cursor[L].ctrlSeq === 'H'))
         Letter('2').createLeftOf(cursor);
       else

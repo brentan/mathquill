@@ -215,9 +215,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
           leave_unit = true;
         }
         this.typedText(option);
-        var el = this.__controller.container.children('.mq-popup');
-        if(el.length > 0) 
-          el.find('li.mq-popup-selected').click();
+        this.__controller.closePopup();
         if(leave_unit) {
           this.__controller.cursor.insRightOf(unit);
           this.__controller.cursor.workingGroupChange();
@@ -295,7 +293,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.cut = function(e) { this.__controller.cut(e); this.__controller.notifyElementOfChange(); return this; }
   _.copy = function(e) { this.__controller.copy(e); return this; }
-  _.paste = function(text) { this.__controller.paste(text); return this; }
+  _.paste = function(text) { this.__controller.paste(text); this.__controller.closePopup(); return this; }
   _.contextMenu = function(e) {
     return this.__controller.contextMenu(e);
   }
