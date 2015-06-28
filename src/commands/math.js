@@ -461,8 +461,10 @@ var MathBlock = P(MathElement, function(_, super_) {
         // Test for spacebar with no math yet...in this case, we become a text field
         if((cursor.parent === ctrlr.root) && ctrlr.element && ctrlr.element.changeToText) {
           var current_output = ctrlr.API.text();
-          if(current_output.match(/^[a-z0-9\.-]*$/i)) 
+          if((current_output == '') || (current_output.match(/^[a-z0-9\.-]*$/i) && SwiftCalcs.elements[current_output])) 
             return ctrlr.element.changeToText(current_output);
+          else 
+            return;
         } 
         // Test for autocommands 
         if(cursor[L] instanceof Letter)
