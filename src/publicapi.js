@@ -82,6 +82,9 @@ var AbstractMathQuill = P(function(_) {
       opts = jQuery.extend({unitMode: true}, opts);
     return this.__controller.exportText(opts); 
   };
+  _.empty = function() {
+    return this.__controller.exportText(this.__options).trim() == '';
+  }
   _.toString = function() { 
     var latex = this.__controller.exportLatex();
     return latex = 'latex{' + latex + '}';
@@ -100,7 +103,7 @@ var AbstractMathQuill = P(function(_) {
 });
 MathQuill.prototype = AbstractMathQuill.prototype;
 
-MathQuill.StaticMath = APIFnFor(P(AbstractMathQuill, function(_, super_) { // BRENTAN: Likely does not work...take a look at some point
+MathQuill.StaticMath = APIFnFor(P(AbstractMathQuill, function(_, super_) { // BRENTAN: Likely does not work...take a look at some point.  Is static needed?  Or can we use workspace.LatexToHtml for all 'static' needs?
   _.init = function(el) {
     this.initRoot(MathBlock(), el.addClass('mq-math-mode'));
     this.__controller.editable = false;
@@ -129,7 +132,9 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
       this.moveToDirEnd(dir);
     else if(dir) {
       this.__controller.seek(false, dir, 0);
-    }
+    } else if(this.__controller.cursor.anticursor)
+      this.__controller.cursor.select();
+    else this.__controller.cursor.show();
     return this; 
   };
   _.blur = function() { this.__controller.blur(); return this; };
