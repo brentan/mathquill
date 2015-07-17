@@ -15,6 +15,8 @@ CharCmds["'"] = P(DerivedMathCommand, function(_, super_) {
   };
   _.htmlTemplate = '<span><span>&0</span><span class="mq-unit mq-non-leaf">&1</span></span>';
   _.finalizeTree = function() {
+    // Change any fancy 'f' back into normal f
+    this.jQ.find('.mq-florin').removeClass('.mq-florin').html('f');
     this.ends[R].focus = function() {
       this.jQ.addClass('mq-active');
       if (this.isEmpty())

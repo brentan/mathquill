@@ -73,8 +73,10 @@ var AbstractMathQuill = P(function(_) {
     }
     return this;
   };
-  _.setElement = function(el) { this.__controller.element = el; return this; };
+  _.setElement = function(el) { this.__controller.element = el; this.__controller.showPopups = true; return this; };
+  _.showPopups = function() { this.__controller.showPopups = true; return this; };
   _.setUnitMode = function(val) { this.__controller.unitMode = val; return this; };
+  _.setStaticMode = function(val) { this.__controller.staticMode = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
   _.text = function() { 
     var opts = this.__options;
@@ -127,6 +129,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.focus = function(dir) { 
     //The other hacky unit mode thing.  If the parent element is in unitmode but im not, ignore focus events
     if(!this.__controller.unitMode && this.__controller.element && this.__controller.element.unitMode) return this;
+    this.jQ.find('.mq-selection').removeClass('mq-selection');
     this.__controller.focus(); 
     if(dir && (dir < 2))
       this.moveToDirEnd(dir);
@@ -135,12 +138,30 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     } else if(this.__controller.cursor.anticursor)
       this.__controller.cursor.select();
     else this.__controller.cursor.show();
+    this.scrollToMe(dir);
     return this; 
   };
+  _.scrollToMe = function(dir) {
+    if(this.jQ && this.__controller.element) {
+      var top = this.jQ.position().top;
+      var bottom = top + this.jQ.height();
+      var to_move_top = Math.min(0, top);
+      var to_move_bot = Math.max(0, bottom - this.__controller.element.workspace.jQ.height()+20);
+      if((to_move_bot > 0) && (to_move_top < 0)) {
+        if(dir === R)
+          this.__controller.element.workspace.jQ.scrollTop(this.__controller.element.workspace.jQ.scrollTop() + to_move_bot);
+        else
+          this.__controller.element.workspace.jQ.scrollTop(this.__controller.element.workspace.jQ.scrollTop() + to_move_top);
+      } else
+        this.__controller.element.workspace.jQ.scrollTop(this.__controller.element.workspace.jQ.scrollTop() + to_move_top + to_move_bot);
+    }
+    return this;
+  }
   _.blur = function() { this.__controller.blur(); return this; };
   _.windowBlur = function() { this.__controller.windowBlur(); return this; };
   _.inFocus = function() { return !this.__controller.blurred; };
   _.write = function(latex) {
+    if(this.__controller.staticMode) return this;
     if (latex.slice(0,6) === 'latex{' && latex.slice(-1) === '}') 
       latex = latex.slice(6, -1);
     this.__controller.writeLatex(latex);
@@ -167,6 +188,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     return this;
   }
   _.command = function(cmd, option) {
+    if(this.__controller.staticMode) return this;
     // A bit hacky...but if attached element is in 'unitMode', pass the command on to that element
     if(!this.__controller.unitMode && this.__controller.element && this.__controller.element.unitMode) return this.__controller.element.unitMode.command(cmd, option);
 
@@ -214,6 +236,11 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
       case 'unit':
         var unit = 0;
         var leave_unit = false;
+        var blur_me = false;
+        if(this.__controller.blurred) {
+          blur_me = true; 
+          this.focus();
+        }
         for(unit = this.__controller.cursor; unit !== 0; unit = unit.parent) if(unit instanceof Unit) break;
         if(!unit) {
           unit = Unit().createLeftOf(this.__controller.cursor);
@@ -226,6 +253,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
           this.__controller.cursor.workingGroupChange();
         }
         this.__controller.notifyElementOfChange();
+        if(blur_me) this.blur();
         break;
       case 'textMode':
         if(this.text().trim() == '')
@@ -265,6 +293,11 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__controller.notifyElementOfChange();
     return this;
   };
+  _.getSelection = function() {
+    if (this.__controller.cursor.selection) 
+      return this.__controller.cursor.selection.join('latex');
+    return '';
+  }
   _.clear = function() {
     this.select();
     this.typedText('0'); // If we dont do it this way, we could be highlighting nothing and then backspacing out of the element, removing it
@@ -288,17 +321,36 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.moveToRightEnd = function() { return this.moveToDirEnd(R); };
 
   _.keystroke = function(key, evt) {
+    if(this.__controller.staticMode) return this;
     this.__controller.keystroke(key, evt);
     return this;
   };
   _.typedText = function(text) {
+    if(this.__controller.staticMode) return this;
     this.__controller.notifyElementOfChange();
     for (var i = 0; i < text.length; i += 1) this.__controller.typedText(text.charAt(i));
     return this;
   };
-  _.cut = function(e) { this.__controller.cut(e); this.__controller.notifyElementOfChange(); return this; }
+  _.cut = function(e) { 
+    if(this.__controller.staticMode) {
+      this.copy(e);
+    } else {
+      this.__controller.cut(e); 
+      this.__controller.notifyElementOfChange(); 
+    }
+    return this; 
+  }
   _.copy = function(e) { this.__controller.copy(e); return this; }
-  _.paste = function(text) { this.__controller.paste(text); this.__controller.closePopup(); return this; }
+  _.paste = function(text) { 
+    if(this.__controller.staticMode) return this;
+    this.__controller.paste(text); 
+    this.__controller.closePopup(); 
+    return this; 
+  }
+  _.closePopup = function() {
+    this.__controller.closePopup();
+    return this;
+  }
   _.contextMenu = function(e) {
     return this.__controller.contextMenu(e);
   }

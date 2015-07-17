@@ -15,6 +15,9 @@
   .mq-hasCursor .active_block {
     background-color: #d7efed;
     display: inline-block;
+    span.mq-unit {
+      border-color: #c7dfdd;
+    }
   } 
 
 
@@ -237,22 +240,26 @@
     font-style: normal;
   }
   span.mq-unit {
-    border: 1px solid transparent;
-    padding-right: 1px;
-    padding-left: 2px;
-    padding-top: 2px;
+    border: 1px solid #eaeaea;
+    color: #777777;
+    * { border-color: #777777; }
+    border-radius: 3px;
+    padding: 1px 2px 1px 3px;
     margin-right: 1px;
     margin-left: 2px;
     font-size: 0.8em;
-    color: #666666;
     var, span {
       font-family: Symbola, "Times New Roman", serif;
       line-height: .9;
       font-style: normal;
     }
     &.mq-active {
+      outline: none;
+      outline-width: 0px;
+      box-shadow: 0 0 5px rgba(255, 150, 20, 1);
+      border: 1px solid rgb(255, 150, 20);
       color: black;
-      border: 1px solid gray;
+    * { border-color: black; }
     }
   }
 

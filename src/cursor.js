@@ -25,6 +25,7 @@ var Cursor = P(Point, function(_) {
   };
 
   _.show = function() {
+    if(this.controller.staticMode) return this;
     this.jQ = this._jQ.removeClass('mq-blink');
     if ('intervalId' in this) //already was shown, just restart interval
       clearInterval(this.intervalId);

@@ -288,6 +288,7 @@ optionProcessors.unitList = function(units) {
   var by_symbol = {};
   var names = [];
   var symbols = [];
+  var symbols_prefix = [];
   var prefix = {micro: 'µ', yocto: 'y', zepto: 'z', atto: 'a', femto: 'f', pico: 'p', nano: 'n', milli: 'm', centi: 'c', deci: 'd', deca: 'D', hecto: 'h', kilo: 'k', mega: 'M', giga: 'G', tera: 'T', peta: 'P', exa: 'E', zetta: 'Z', yotta: 'Y' };
   for(var i = 0; i < units.length; i++) {
     names.push(units[i].name);
@@ -297,7 +298,7 @@ optionProcessors.unitList = function(units) {
     if(units[i].prefix) {
       for(var key in prefix) {
         names.push(key + units[i].name);
-        symbols.push(prefix[key] + units[i].symbol);
+        symbols_prefix.push(prefix[key] + units[i].symbol);
         by_name[key + units[i].name] = prefix[key] + units[i].symbol;
         by_symbol[prefix[key] + units[i].symbol] = key + units[i].name;
       }
@@ -306,7 +307,7 @@ optionProcessors.unitList = function(units) {
   var sortFunction = function (a, b) {
     return a.toLowerCase().localeCompare(b.toLowerCase());
   };
-  return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.sort(sortFunction) }
+  return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.sort(sortFunction).concat(symbols_prefix.sort(sortFunction)) }
 }
 
 LatexCmds.µ = P(VanillaSymbol, function(_, super_) {  //Do this for units, so that mu becomes a letter in the unit box

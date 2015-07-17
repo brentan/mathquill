@@ -129,7 +129,7 @@ var SupSub = P(MathCommand, function(_, super_) {
     if(this.sup) {
       if(this.elementWise) tex += '.';
       tex += '^' + (this.sup && (this.sup.ends[L] !== 0) && this.sup.ends[L] === this.sup.ends[R] ?
-          this.sup.ends[L].text(opts) :
+          '(' + this.sup.ends[L].text(opts) + ')' :
       '(' + this.sup.foldChildren('', function (text, child) {
         return text + child.text(opts);
       })
