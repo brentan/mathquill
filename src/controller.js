@@ -65,9 +65,9 @@ var Controller = P(function(_) {
   _.current_tooltip = false;
   _.destroyTooltip = function() {
     if(this.current_tooltip && this.element && (this.element.workspace.tooltip_holder === this.current_tooltip))
-      SwiftCalcs.destroyTooltip();
+      SwiftCalcs.destroyHelpPopup();
     else if(this.current_tooltip && !this.element) 
-      SwiftCalcs.destroyTooltip();
+      SwiftCalcs.destroyHelpPopup();
     this.current_tooltip = false;
   }
 });

@@ -88,8 +88,7 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
       this.controller.current_tooltip = this;
       if(this.controller.element) this.controller.element.workspace.tooltip_holder = this;
       var html = this.controller.API.__options.helpList[command];
-      html = html.replace(/<(.*)>/g,'<span class="code">$1</span>').replace(/\n/g,'<br>').replace(/\|(.*)\|/g,'<span class="explanation">$1</span>');
-      SwiftCalcs.createTooltip(html, this.jQ);
+      SwiftCalcs.createHelpPopup(html);
       return this;
     }
     this.controller.destroyTooltip();
