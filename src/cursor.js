@@ -189,6 +189,14 @@ var Cursor = P(Point, function(_) {
       if(!suppress) _this.addClass('hasCursor_highlighting');
     });
     mathField.find(".mq-hasCursor").first().children(".hasCursor_highlighting").wrapAll("<span class='active_block'></span>");
+    // OperatorName and FunctionCommand popup help
+    if(this.controller.showPopups && cursor.closest('.mq-function-command, .mq-operator-name-holder').length) {
+      var el = cursor.closest('.mq-function-command, .mq-operator-name-holder');
+      var cmdId = el.attr('mathquill-command-id');
+      this.controller.current_tooltip = Node.byId[cmdId].createTooltip();
+    } else {
+      this.controller.destroyTooltip();
+    }
     return this;
   };
 
@@ -216,6 +224,7 @@ var Cursor = P(Point, function(_) {
         break;
       }
     }
+    this.controller.destroyTooltip();
     pray('cursor and anticursor in the same tree', lca);
     // The cursor and the anticursor should be in the same tree, because the
     // mousemove handler attached to the document, unlike the one attached to

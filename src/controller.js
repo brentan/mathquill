@@ -62,4 +62,12 @@ var Controller = P(function(_) {
   _.closePopup = function() {
     this.container.children('.mq-popup').remove();
   };
+  _.current_tooltip = false;
+  _.destroyTooltip = function() {
+    if(this.current_tooltip && this.element && (this.element.workspace.tooltip_holder === this.current_tooltip))
+      SwiftCalcs.destroyTooltip();
+    else if(this.current_tooltip && !this.element) 
+      SwiftCalcs.destroyTooltip();
+    this.current_tooltip = false;
+  }
 });

@@ -26,6 +26,7 @@ Controller.open(function(_) {
         ctrlr.element.unitChosen(ctrlr.API.latex());
         return;
       }
+      ctrlr.destroyTooltip();
       if(ctrlr.element) ctrlr.element.workspace.blurToolbar(ctrlr.API);
       if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
       root.postOrder('intentionalBlur'); // none, intentional blur: #264

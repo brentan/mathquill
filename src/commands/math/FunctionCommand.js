@@ -4,7 +4,7 @@
 var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function(_, super_) {
   _.ctrlSeq = 'FunctionCommand{...}{...}';
   _.htmlTemplate =
-      '<span>'
+      '<span class="mq-function-command">'
     +   '<span>&0</span>'
     +   '<span>.</span>'
     +   '<span>&1</span>'
@@ -64,5 +64,9 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
         Letter(this.incorporate_previous).createLeftOf(cursor);
     }
   };
+  _.createTooltip = function() {
+    // For now we don't do anything with help for function commands
+    return;
+  }
 });
 

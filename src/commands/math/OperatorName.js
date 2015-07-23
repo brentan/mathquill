@@ -1,6 +1,6 @@
 
 var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
-  _.htmlTemplate = '<span><span class="mq-operator-name">&0</span>'
+  _.htmlTemplate = '<span class="mq-operator-name-holder"><span class="mq-operator-name">&0</span>'
         + '<span class="mq-non-leaf">'
         + '<span class="mq-scaled mq-paren">(</span>'
         + '<span class="mq-non-leaf">&1</span>'
@@ -80,4 +80,19 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
       }).then(string('\\right)')).result(self);
     }
   };
+  _.createTooltip = function() {
+    var command = this.blocks[0].text({});
+    if(!this.controller) this.getController();
+    if(this.controller.current_tooltip === this) return this;
+    if(this.controller.API.__options.helpList && this.controller.API.__options.helpList[command]) {
+      this.controller.current_tooltip = this;
+      if(this.controller.element) this.controller.element.workspace.tooltip_holder = this;
+      var html = this.controller.API.__options.helpList[command];
+      html = html.replace(/<(.*)>/g,'<span class="code">$1</span>').replace(/\n/g,'<br>').replace(/\|(.*)\|/g,'<span class="explanation">$1</span>');
+      SwiftCalcs.createTooltip(html, this.jQ);
+      return this;
+    }
+    this.controller.destroyTooltip();
+    return false;
+  }
 });

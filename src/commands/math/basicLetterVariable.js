@@ -43,6 +43,7 @@ var Variable = P(Symbol, function(_, super_) {
       to_remove[i].jQ.prependTo(block.ends[L].jQ);
     }
     block.ends[L].jQ.removeClass('mq-empty');
+    cursor.workingGroupChange();
   };
   _.fullWord = function() {
     var word = this.text({})+'';
@@ -158,6 +159,8 @@ var Variable = P(Symbol, function(_, super_) {
       var leftOffset = leftBlock.position();
       var topOffset = topBlock.position();
       var scrollTop = this.controller.element ? this.controller.element.workspace.jQ.scrollTop() : 0;
+      if(topBlock.closest('.tutorial_block').length)
+        scrollTop = topBlock.closest('.tutorial_block').scrollTop();
       var _this = this;
       var onclick = function(e) {
         e.preventDefault();
