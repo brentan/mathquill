@@ -46,6 +46,7 @@ var Options = P(), optionProcessors = {};
 MathQuill.__options = Options.p;
 
 var AbstractMathQuill = P(function(_) {
+  _.mathquill = true;
   _.init = function() { throw "don't call me, I'm 'abstract'"; };
   _.initRoot = function(root, el, opts) {
     this.__options = Options();
@@ -84,6 +85,10 @@ var AbstractMathQuill = P(function(_) {
       opts = jQuery.extend({unitMode: true}, opts);
     return this.__controller.exportText(opts); 
   };
+  _.setWidth = function(w) {
+    this.jQ.css('maxWidth', w + 'px');
+    return this;
+  }
   _.empty = function() {
     return this.__controller.exportText(this.__options).trim() == '';
   }
@@ -260,6 +265,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
           this.__controller.element.changeToText('');
         else 
           this.__controller.element.AppendText();
+        break;
+      case 'command':
+        for(var i = 0; i < option.length; i++)
+          this.typedText(option[i]);
         break;
       default:
         this.cmd(cmd);
