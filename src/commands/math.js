@@ -463,13 +463,12 @@ var MathBlock = P(MathElement, function(_, super_) {
           var current_output = ctrlr.API.text();
           if((current_output == '') || (current_output.match(/^[a-z0-9\.-]*$/i) && SwiftCalcs.elements[current_output])) 
             return ctrlr.element.changeToText(current_output);
-          else 
-            return;
         } 
         // Test for autocommands 
         if(cursor[L] instanceof Letter)
           cursor[L].autoOperator(cursor);
-        ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
+        if(cursor.parent !== ctrlr.root)
+          ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
       }
       return;
     } else if(key === 'Tab') {

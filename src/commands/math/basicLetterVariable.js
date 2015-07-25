@@ -26,6 +26,8 @@ var Variable = P(Symbol, function(_, super_) {
       }
       cursor.insRightOf(cursor.parent.parent);
     }
+    if((to_remove[to_remove.length - 1][L] === 0) && (to_remove[0][R] === 0) && (to_remove[to_remove.length - 1].parent === this.controller.root) && SwiftCalcs.elements[str] && this.controller.element && this.controller.element.changeToText)
+      return this.controller.element.changeToText(str); // If this is only thing in box, and if this matches a swiftcalcs option, we change to it
     var block = OperatorName();
     block.createLeftOf(cursor);
     for(var i = 0; i < to_remove.length; i++) {

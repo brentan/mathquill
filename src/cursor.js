@@ -46,6 +46,8 @@ var Cursor = P(Point, function(_) {
   };
   _.hide = function() {
     var mathField = this.container;
+    if(this[L] instanceof Letter)
+      this[L].autoOperator(this);
     mathField.find(".active_block").replaceWith(function() {
       return $( this ).contents();
     });
