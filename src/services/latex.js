@@ -100,7 +100,7 @@ Controller.open(function(_, super_) {
       if (block.ends[L][L].siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
       cursor.parent.bubble('reflow');
     }
-
+    this.removeGhost();
     return this;
   };
   _.renderLatexMath = function(latex) {

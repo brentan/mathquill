@@ -463,6 +463,8 @@ var MathBlock = P(MathElement, function(_, super_) {
           var current_output = ctrlr.API.text();
           if((current_output == '') || (current_output.match(/^[a-z0-9\.-]*$/i) && SwiftCalcs.elements[current_output])) 
             return ctrlr.element.changeToText(current_output);
+          if(current_output.match(/^[a-z][a-z0-9_]* := [a-z0-9\.-]+$/i) && ctrlr.element.changeToText(current_output)) 
+            return;
         } 
         // Test for autocommands 
         if(cursor[L] instanceof Letter)
@@ -584,6 +586,7 @@ var MathBlock = P(MathElement, function(_, super_) {
       LatexCmds.cdot().implicit().createLeftOf(cursor);
     
     cmd.createLeftOf(cursor);
+    cursor.controller.removeGhost();
   };
 
   _.focus = function() {

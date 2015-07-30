@@ -103,7 +103,11 @@ var SupSub = P(MathCommand, function(_, super_) {
       if(el.length > 0) {
         var topBlock = this.jQ;
         var topOffset = topBlock.position();
-        el.css({top: Math.ceil(topOffset.top + topBlock.height()) + 'px'});
+        if(!this.controller) this.getController();
+        var scrollTop = this.controller.element ? this.controller.element.workspace.jQ.scrollTop() : 0;
+        if(topBlock.closest('.tutorial_block').length)
+          scrollTop = topBlock.closest('.tutorial_block').scrollTop();
+        el.css({top: Math.ceil(topOffset.top + topBlock.height() + scrollTop) + 'px'});
       }
     }
   };

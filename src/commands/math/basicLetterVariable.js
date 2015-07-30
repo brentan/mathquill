@@ -26,8 +26,12 @@ var Variable = P(Symbol, function(_, super_) {
       }
       cursor.insRightOf(cursor.parent.parent);
     }
-    if((to_remove[to_remove.length - 1][L] === 0) && (to_remove[0][R] === 0) && (to_remove[to_remove.length - 1].parent === this.controller.root) && SwiftCalcs.elements[str] && this.controller.element && this.controller.element.changeToText)
-      return this.controller.element.changeToText(str); // If this is only thing in box, and if this matches a swiftcalcs option, we change to it
+    if((to_remove[0][R] === 0) && (to_remove[to_remove.length - 1].parent === this.controller.root) && this.controller.element && this.controller.element.changeToText) {
+      // If this is only thing in box, and if this matches a swiftcalcs option, we change to it
+      if((to_remove[to_remove.length - 1][L] === 0) && SwiftCalcs.elements[str]) return this.controller.element.changeToText(str);
+      var current_output = this.controller.API.text();
+      if(current_output.match(/^[a-z][a-z0-9_]* := [a-z0-9\.-]+$/i) && this.controller.element.changeToText(current_output)) return;
+    }
     var block = OperatorName();
     block.createLeftOf(cursor);
     for(var i = 0; i < to_remove.length; i++) {
@@ -169,9 +173,11 @@ var Variable = P(Symbol, function(_, super_) {
         var word = $(this).attr('data-word');
         var to_replace = _this.fullWord()[1];
         var right_of = to_replace[0][L];
+        var left_of = to_replace[to_replace.length-1][R];
         var right_end_of = to_replace[0].parent;
         for(var i = 0; i < to_replace.length; i++) to_replace[i].remove();
         if(right_of) _this.controller.cursor.insRightOf(right_of);
+        else if(left_of) _this.controller.cursor.insLeftOf(left_of);
         else _this.controller.cursor.insAtRightEnd(right_end_of);
         _this.controller.API.typedText(word);
         if(_this.controller.cursor[L] instanceof Letter)

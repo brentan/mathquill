@@ -47,6 +47,7 @@ MathQuill.__options = Options.p;
 
 var AbstractMathQuill = P(function(_) {
   _.mathquill = true;
+  _.needs_touch = true;
   _.init = function() { throw "don't call me, I'm 'abstract'"; };
   _.initRoot = function(root, el, opts) {
     this.__options = Options();
@@ -57,8 +58,10 @@ var AbstractMathQuill = P(function(_) {
 
     var contents = el.contents().detach();
     root.jQ =
-      $('<span class="mq-root-block"/>').attr(mqBlockId, root.id).appendTo(el);
+      $('<span class="mq-root-block"/>').attr(mqBlockId, root.id).attr('data-ghost', '').addClass('show_ghost').appendTo(el);
     this.latex(contents.text());
+    if(opts && opts.ghost && (contents.text().trim() == ''))
+      this.setGhost(opts.ghost);
 
     this.revert = function() {
       return el.empty().unbind('.mathquill')
@@ -110,21 +113,6 @@ var AbstractMathQuill = P(function(_) {
 });
 MathQuill.prototype = AbstractMathQuill.prototype;
 
-MathQuill.StaticMath = APIFnFor(P(AbstractMathQuill, function(_, super_) { // BRENTAN: Likely does not work...take a look at some point.  Is static needed?  Or can we use workspace.LatexToHtml for all 'static' needs?
-  _.init = function(el) {
-    this.initRoot(MathBlock(), el.addClass('mq-math-mode'));
-    this.__controller.editable = false;
-    this.__controller.editablesTextareaEvents();
-  };
-  _.latex = function() {
-    var returned = super_.latex.apply(this, arguments);
-    if (arguments.length > 0) {
-      this.__controller.root.postOrder('registerInnerField', this.innerFields = []);
-    }
-    return returned;
-  };
-}));
-
 var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.initRootAndEvents = function(root, el, opts) {
     this.initRoot(root, el, opts);
@@ -175,7 +163,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     return this;
   };
   _.setExpressionMode = function(val) { 
-    this.__controller.expression_mode = val;
+    this.__controller.API.__options.expression_mode = val;
   }
   _.setAutocomplete = function(list) {
     this.__options.autocomplete = list.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
@@ -261,7 +249,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         if(blur_me) this.blur();
         break;
       case 'textMode':
-        if(this.text().trim() == '')
+        if((this.text().trim() == '') && this.__controller.element.changeToText)
           this.__controller.element.changeToText('');
         else 
           this.__controller.element.AppendText();
@@ -284,6 +272,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         if (cursor.selection) cmd.replaces(cursor.replaceSelection());
         cmd.createLeftOf(cursor);
         this.__controller.notifyElementOfChange();
+        this.__controller.removeGhost();
       }
       else /* TODO: API needs better error reporting */;
     }
@@ -348,6 +337,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
       this.__controller.notifyElementOfChange(); 
     }
     return this; 
+  }
+  _.setGhost = function(text) {
+    this.__controller.root.jQ.attr('data-ghost', text); 
+    return this;
   }
   _.copy = function(e) { this.__controller.copy(e); return this; }
   _.paste = function(text) { 
