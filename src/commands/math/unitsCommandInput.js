@@ -7,7 +7,7 @@
  // BRENTAN: Temperature is not well handled by giac, due to confusion over absolute or relative.  Add something in 'text' that converts C -> K and F -> R, and add a warning to the output box or something
 
 var Unit = LatexCmds.Unit = 
-CharCmds["'"] = P(DerivedMathCommand, function(_, super_) {
+CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
   _.ctrlSeq = 'Unit{...}{...}';
   _.replaces = function(replacedFragment) {
     replacedFragment.disown();

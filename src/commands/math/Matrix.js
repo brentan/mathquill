@@ -372,3 +372,19 @@ var MatrixMathBlock = P(MathBlock, function(_, super_) {
     }
   };
 });
+
+// Create the matrix assessor command '..'
+LatexCmds['…'] = P(VanillaSymbol, function(_, super_) {  
+  _.init = function() {
+    super_.init.call(this, '…', '<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>', '..');
+  }
+  _.text = function(opts) {
+    var out = '';
+    if(!this[L] || (this[L] instanceof BinaryOperator))
+      out += 'i__s';
+    out += '..';
+    if(!this[R] || (this[R] instanceof BinaryOperator))
+      out += 'i__e';
+    return out;
+  }
+});

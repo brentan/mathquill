@@ -75,6 +75,8 @@ var AbstractMathQuill = P(function(_) {
       var optVal = opts[opt], processor = optionProcessors[opt];
       this.__options[opt] = (processor ? processor(optVal) : optVal);
     }
+    if(this.__options['default']) this.touched = true;
+    if(this.__options['noWidth']) this.setWidth = false;
     return this;
   };
   _.setElement = function(el) { this.__controller.element = el; this.__controller.showPopups = true; return this; };
@@ -82,11 +84,16 @@ var AbstractMathQuill = P(function(_) {
   _.setUnitMode = function(val) { this.__controller.unitMode = val; return this; };
   _.setStaticMode = function(val) { this.__controller.staticMode = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
-  _.text = function() { 
-    var opts = this.__options;
+  _.text = function(opts) { 
+    if(opts)
+      opts = jQuery.extend(opts, this.__options);
+    else
+      opts = this.__options;
     if(this.__controller.unitMode)
-      opts = jQuery.extend({unitMode: true}, opts);
-    return this.__controller.exportText(opts); 
+      opts.unitMode = true;
+    var out = this.__controller.exportText(opts); 
+    if(opts['default'] && (out.trim() == '')) return opts['default'];
+    return out;
   };
   _.setWidth = function(w) {
     this.jQ.css('maxWidth', w + 'px');

@@ -30,7 +30,7 @@ var Variable = P(Symbol, function(_, super_) {
       // If this is only thing in box, and if this matches a swiftcalcs option, we change to it
       if((to_remove[to_remove.length - 1][L] === 0) && SwiftCalcs.elements[str]) return this.controller.element.changeToText(str);
       var current_output = this.controller.API.text();
-      if(current_output.match(/^[a-z][a-z0-9_]* := [a-z0-9\.-]+$/i) && this.controller.element.changeToText(current_output)) return;
+      if(current_output.match(/^[^=]* := [a-z0-9\.-]+$/i) && this.controller.element.changeToText(current_output)) return;
     }
     var block = OperatorName();
     block.createLeftOf(cursor);
@@ -320,6 +320,8 @@ optionProcessors.unitList = function(units) {
   };
   return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.sort(sortFunction).concat(symbols_prefix.sort(sortFunction)) }
 }
+
+LatexCmds["'"] = bind(Letter, "'");
 
 LatexCmds.µ = P(VanillaSymbol, function(_, super_) {  //Do this for units, so that mu becomes a letter in the unit box
   _.init = function() {

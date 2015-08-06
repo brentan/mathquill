@@ -405,15 +405,15 @@ var VanillaSymbol = P(Symbol, function(_, super_) {
     super_.init.call(this, ch, '<span>'+(html || ch)+'</span>', (textTemplate || ch));
   };
   _.createLeftOf = function(cursor) {
-    if(this.ctrlSeq === '.') {
-      if((cursor[L] === 0 ) || (cursor[L] instanceof BinaryOperator)) //Implicit multiplication will take care of other cases and 'make' cursor[L] a binaryoperator
-        VanillaSymbol('0').createLeftOf(cursor);
-      else if((cursor[L] !== 0) && (cursor[L].ctrlSeq === '.')) {// ellipses
-        cursor[L].ctrlSeq = '…';
-        cursor[L].jQ.html('<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>');
-        cursor[L].textTemplate = '..';
-        return;
-      } 
+    if((this.ctrlSeq === '.') && cursor[L] && (cursor[L].ctrlSeq === '.')) {// ellipses
+      LatexCmds['…']().createLeftOf(cursor);
+      cursor[L][L].remove();
+      return;
+    } else if(this.ctrlSeq.match(/^[0-9]$/) && cursor[L] && (cursor[L].ctrlSeq === '.') && ((cursor[L][L] === 0) || !cursor[L][L].ctrlSeq.match(/^[0-9]$/))) {
+      // See if we need to add a '0' before the decimal point to make things look pretty
+      cursor.insLeftOf(cursor[L]);
+      VanillaSymbol('0').createLeftOf(cursor);
+      cursor.insRightOf(cursor[R]);
     }
     super_.createLeftOf.call(this, cursor);
   }
@@ -463,7 +463,7 @@ var MathBlock = P(MathElement, function(_, super_) {
           var current_output = ctrlr.API.text();
           if((current_output == '') || (current_output.match(/^[a-z0-9\.-]*$/i) && SwiftCalcs.elements[current_output])) 
             return ctrlr.element.changeToText(current_output);
-          if(current_output.match(/^[a-z][a-z0-9_]* := [a-z0-9\.-]+$/i) && ctrlr.element.changeToText(current_output)) 
+          if(current_output.match(/^[^=]* := [a-z0-9\.-]+$/i) && ctrlr.element.changeToText(current_output)) 
             return;
         } 
         // Test for autocommands 
@@ -479,9 +479,8 @@ var MathBlock = P(MathElement, function(_, super_) {
       if(cursor[L] instanceof Letter)
         cursor[L].autoOperator(cursor);
     } else if(key === 'Enter') {
-      if((ctrlr.cursor.parent == ctrlr.root) && !(ctrlr.cursor[L]) && (ctrlr.element) && (ctrlr.element.PrependBlankItem)) {
+      if((ctrlr.cursor.parent == ctrlr.root) && !(ctrlr.cursor[L]) && (ctrlr.element) && (ctrlr.element.PrependBlankItem) && ctrlr.element.PrependBlankItem(ctrlr.API)) {
         // Enter pressed with cursor in initial position.  
-        ctrlr.element.PrependBlankItem();
         e.preventDefault();
         return;
       }
@@ -526,7 +525,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     return node.seek(pageX, cursor);
   };
   _.flash = function() {
-    var el = this.jQ.closest('.sc_element');
+    var el = this.jQ.closest('.sc_element, .white');
     el.stop().css("background-color", "#ffe0e0").animate({ backgroundColor: "#FFFFFF"}, {complete: function() { $(this).css('background-color','')} , duration: 400 });
   }
   _.write = function(cursor, ch, replacedFragment) {
@@ -628,6 +627,7 @@ MathQuill.MathField = APIFnFor(P(EditableField, function(_, super_) {
   _.latex = function(latex) {
     if (arguments.length > 0) {
       this.__controller.renderLatexMath(latex);
+      if(latex.trim() !== '') this.__controller.removeGhost();
       if (this.__controller.blurred) { this.__controller.cursor.hide().parent.blur(); this.__controller.closePopup(); }
       return this;
     }
