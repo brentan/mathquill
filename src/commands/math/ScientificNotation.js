@@ -15,7 +15,7 @@ var ScientificNotation = LatexCmds.scientificNotation = LatexCmds.scientificNota
     super_.init.call(this);
   };
   _.text = function(opts) {
-    return this.blocks[0].text(opts) + 'e' + this.blocks[1].text(opts);
+    return this.blocks[0].text(opts) + '*1e' + this.blocks[1].text(opts);
   }
   _.latex = function() {
     return '\\scientificNotation{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
@@ -25,13 +25,6 @@ var ScientificNotation = LatexCmds.scientificNotation = LatexCmds.scientificNota
     this.upInto = this.ends[R];
     this.ends[L].upOutOf = this.ends[R];
     this.ends[R].downOutOf = this.ends[L];
-    this.ends[L].write = function(cursor, ch) {
-      if (!RegExp(/[0-9]/).test(ch)) {
-        cursor.insRightOf(this.parent);
-        cursor.parent.write(cursor, ch);
-      } else
-        MathBlock.p.write.apply(this, arguments);
-    };
     this.ends[R].write = function(cursor, ch) {
       if (!RegExp(/[0-9\+\-]/).test(ch)) {
         cursor.insRightOf(this.parent);

@@ -13,7 +13,6 @@ var Controller = P(function(_) {
     this.unitMode = false;
     this.root = root;
     this.container = container;
-    this.expression_mode = false;  
 
     API.__controller = root.controller = this;
 
@@ -30,12 +29,8 @@ var Controller = P(function(_) {
   };
 
   _.notifyElementOfChange = function() {
-    if(!this.unitMode && this.element && this.element.changed)
+    if(!this.unitMode && !this.staticMode && this.element && this.element.changed)
       this.element.changed(this.API);
-  }
-  _.notifyElementofBlur = function() {
-    if(!this.unitMode && this.element && this.element.mathquillBlurred)
-      this.element.mathquillBlurred(this.API);
   }
 
   var notifyees = [];
@@ -46,9 +41,9 @@ var Controller = P(function(_) {
     }
     return this;
   };
-
+  _.showPopups = false;
   _.createPopup = function(html, top, left, onclick) {
-    if(!this.element) return; // Do not create popups for blocks that dont have an attached element (aka blocks that are output only)
+    if(!this.showPopups) return; // Do not create popups for blocks that dont have an attached element (aka blocks that are output only)
     var el = this.container.children('.mq-popup').first();
     if(el.length == 0) {
       el = $("<div class='mq-popup mq-autocomplete'></div>");
@@ -66,4 +61,12 @@ var Controller = P(function(_) {
   _.closePopup = function() {
     this.container.children('.mq-popup').remove();
   };
+  _.current_tooltip = false;
+  _.destroyTooltip = function() {
+    if(this.current_tooltip && this.element && (this.element.workspace.tooltip_holder === this.current_tooltip))
+      SwiftCalcs.destroyHelpPopup();
+    else if(this.current_tooltip && !this.element) 
+      SwiftCalcs.destroyHelpPopup();
+    this.current_tooltip = false;
+  }
 });

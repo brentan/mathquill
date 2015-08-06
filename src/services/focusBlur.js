@@ -15,7 +15,10 @@ Controller.open(function(_) {
         cursor.select();
       } else
         cursor.show();
-      if(ctrlr.element) ctrlr.element.workspace.attachToolbar(ctrlr.API, ctrlr.element.workspace.mathToolbar());
+      if(ctrlr.element) {
+        ctrlr.element.workspace.attachToolbar(ctrlr.API, ctrlr.element.workspace.toolbar.mathToolbar());
+        if(ctrlr.staticMode) ctrlr.element.workspace.blurToolbar(this.API);
+      }
     };
     ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
       ctrlr.blurred = true;
@@ -23,6 +26,7 @@ Controller.open(function(_) {
         ctrlr.element.unitChosen(ctrlr.API.latex());
         return;
       }
+      ctrlr.destroyTooltip();
       if(ctrlr.element) ctrlr.element.workspace.blurToolbar(ctrlr.API);
       if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
       root.postOrder('intentionalBlur'); // none, intentional blur: #264

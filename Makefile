@@ -3,7 +3,7 @@
 #
 
 # inputs
-VERSION = 1_03
+VERSION = 1_04
 SRC_DIR = ./src
 INTRO = $(SRC_DIR)/intro.js
 OUTRO = $(SRC_DIR)/outro.js
@@ -53,15 +53,16 @@ BASIC_CSS = $(BUILD_DIR)/mathquill-basic.css
 BUILD_TEST = $(BUILD_DIR)/mathquill.test.js
 UGLY_JS = $(BUILD_DIR)/mathquill$(VERSION).min.js
 UGLY_BASIC_JS = $(BUILD_DIR)/mathquill-basic.min.js
-CLEAN += $(BUILD_DIR)/*
+UGLY_JS_MAP_URL = mathquill$(VERSION).js.map
+UGLY_JS_MAP = $(BUILD_DIR)/$(UGLY_JS_MAP_URL)
+CLEAN += $(BUILD_DIR)/*$(VERSION).*
 
 DISTDIR = ./mathquill-$(VERSION)
 DIST = $(DISTDIR).tgz
-CLEAN += $(DIST)
 
 # programs and flags
 UGLIFY ?= ./node_modules/.bin/uglifyjs
-UGLIFY_OPTS ?= --mangle --compress hoist_vars=true
+UGLIFY_OPTS ?= --mangle --compress hoist_vars=true --source-map $(UGLY_JS_MAP) --source-map-url $(UGLY_JS_MAP_URL) --source-map-include-sources
 
 LESSC ?= ./node_modules/.bin/lessc
 LESS_OPTS ?=
@@ -99,9 +100,9 @@ gem: font css uglify
 basic: $(UGLY_BASIC_JS) $(BASIC_CSS)
 # app is used to build and auto-copy the js files to the swift calcs repo
 app: css js
-	rm -rf ./$(APP_DIR)/public/mathquill*.js
+	rm -rf ./$(APP_DIR)/public/libraries/mathquill*.js
 	cp -f $(BUILD_DIR)/mathquill$(VERSION).css ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
-	cp -f $(BUILD_DIR)/mathquill$(VERSION).js ./$(APP_DIR)/public/mathquill$(VERSION).js
+	cp -f $(BUILD_DIR)/mathquill$(VERSION).js ./$(APP_DIR)/public/libraries/mathquill$(VERSION).js
 	rm -rf ./$(APP_DIR)/app/assets/fonts
 	cp -r $(FONT_SOURCE) ./$(APP_DIR)/app/assets/fonts
 	# Convert css to scss and use font-url to take advantage of the asset pipeline in rails 4
@@ -109,9 +110,11 @@ app: css js
 	rm ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
 # app is used to build and auto-copy the minified js files to the swift calcs repo
 app_ugly: css uglify
-	rm -rf ./$(APP_DIR)/public/mathquill*.js
+	rm -rf ./$(APP_DIR)/public/libraries/mathquill*.js
+	rm -rf ./$(APP_DIR)/public/libraries/mathquill*.js.map
 	cp -f $(BUILD_DIR)/mathquill$(VERSION).css ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
-	cp -f $(BUILD_DIR)/mathquill$(VERSION).min.js ./$(APP_DIR)/public/mathquill$(VERSION).js
+	cp -f $(BUILD_DIR)/mathquill$(VERSION).min.js ./$(APP_DIR)/public/libraries/mathquill$(VERSION).js
+	cp -f $(BUILD_DIR)/mathquill$(VERSION).js.map ./$(APP_DIR)/public/libraries/mathquill$(VERSION).js.map
 	rm -rf ./$(APP_DIR)/app/assets/fonts
 	cp -r $(FONT_SOURCE) ./$(APP_DIR)/app/assets/fonts
 	# Convert css to scss and use font-url to take advantage of the asset pipeline in rails 4
@@ -133,7 +136,7 @@ $(BUILD_JS): $(INTRO) $(SOURCES_FULL) $(OUTRO) $(BUILD_DIR_EXISTS)
 	cat $^ | ./script/escape-non-ascii > $@
 
 $(UGLY_JS): $(BUILD_JS) $(NODE_MODULES_INSTALLED)
-	$(UGLIFY) $(UGLIFY_OPTS) < $< > $@
+	$(UGLIFY) $< $(UGLIFY_OPTS) -o $@
 
 $(BASIC_JS): $(INTRO) $(SOURCES_BASIC) $(OUTRO) $(BUILD_DIR_EXISTS)
 	cat $^ | ./script/escape-non-ascii > $@

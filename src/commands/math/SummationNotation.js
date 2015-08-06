@@ -92,10 +92,11 @@ var SummationNotation = P(MathCommand, function(_, super_) {
       }).then(string('\\right)')).result(self);
   };
   _.finalizeTree = function() {
-    this.downInto = this.ends[L];
-    this.upInto = this.ends[R];
-    this.ends[L].upOutOf = this.ends[R];
-    this.ends[R].downOutOf = this.ends[L];
+    if(!this.hide_limits) {
+      this.blocks[0].upOutOf = this.blocks[2];
+      this.blocks[1].upOutOf = this.blocks[2];
+      this.blocks[2].downOutOf = this.blocks[0];
+    }
   };
 });
 

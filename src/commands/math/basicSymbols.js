@@ -4,7 +4,7 @@
 
 // VanillaSymbol's
 LatexCmds[' '] = LatexCmds.space = bind(VanillaSymbol, '\\ ', ' ');
-LatexCmds[','] = bind(VanillaSymbol, ',', ',&nbsp;');
+LatexCmds[','] = bind(BinaryOperator, ',', ',&nbsp;');
 LatexCmds.whitespace = bind(VanillaSymbol, '\\space ', '&nbsp;');
 
 LatexCmds.backslash = bind(VanillaSymbol,'\\backslash ','\\');
@@ -269,16 +269,16 @@ var Equality = P(Inequality, function(_, super_) {
       cursor[L].swap(false);
       return;
     } 
-    if (!cursor.controller.expression_mode && (cursor[L] instanceof Equality) && cursor[L].strict) {
+    if (!cursor.controller.API.__options.expression_mode && (cursor[L] instanceof Equality) && cursor[L].strict) {
       cursor[L].swap(false);
       return;
     }
-    if(cursor.controller.expression_mode)
+    if(cursor.controller.API.__options.expression_mode)
       this.swap(false);
     super_.createLeftOf.apply(this, arguments);
   };
   _.deleteTowards = function(dir, cursor) {
-    if (!cursor.controller.expression_mode && (dir === L) && !this.strict) {
+    if (!cursor.controller.API.__options.expression_mode && (dir === L) && !this.strict) {
       this.swap(true);
       return;
     }

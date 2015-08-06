@@ -296,6 +296,7 @@ Controller.open(function(_) {
     if (cursor[R].siblingDeleted) cursor[R].siblingDeleted(cursor.options, L);
     cursor.parent.bubble('reflow');
     cursor.workingGroupChange();
+    cursor.controller.reviveGhost();
 
     return this;
   };

@@ -13,6 +13,10 @@
     &:after {
       content: '';
     }
+    &.show_ghost:after {
+      color: #dddddd;
+      content: attr(data-ghost);
+    }
   }
   .mq-cursor {
     border-left: 1px solid black;
@@ -68,6 +72,12 @@
 .mq-math-mode .mq-empty:after {
   visibility: hidden;
   content: 'c';
+}
+.mq-editable-field.mq-empty.show_ghost:after,
+.mq-editable-field.mq-text-mode.show_ghost:after,
+.mq-math-mode .mq-empty.show_ghost:after {
+  visibility: visible;
+  content: attr(data-ghost);
 }
 
 // separated from above because unrecognized pseudoclasses

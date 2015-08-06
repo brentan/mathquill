@@ -26,6 +26,12 @@ var Variable = P(Symbol, function(_, super_) {
       }
       cursor.insRightOf(cursor.parent.parent);
     }
+    if((to_remove[0][R] === 0) && (to_remove[to_remove.length - 1].parent === this.controller.root) && this.controller.element && this.controller.element.changeToText) {
+      // If this is only thing in box, and if this matches a swiftcalcs option, we change to it
+      if((to_remove[to_remove.length - 1][L] === 0) && SwiftCalcs.elements[str]) return this.controller.element.changeToText(str);
+      var current_output = this.controller.API.text();
+      if(current_output.match(/^[^=]* := [a-z0-9\.-]+$/i) && this.controller.element.changeToText(current_output)) return;
+    }
     var block = OperatorName();
     block.createLeftOf(cursor);
     for(var i = 0; i < to_remove.length; i++) {
@@ -43,6 +49,7 @@ var Variable = P(Symbol, function(_, super_) {
       to_remove[i].jQ.prependTo(block.ends[L].jQ);
     }
     block.ends[L].jQ.removeClass('mq-empty');
+    cursor.workingGroupChange();
   };
   _.fullWord = function() {
     var word = this.text({})+'';
@@ -158,15 +165,19 @@ var Variable = P(Symbol, function(_, super_) {
       var leftOffset = leftBlock.position();
       var topOffset = topBlock.position();
       var scrollTop = this.controller.element ? this.controller.element.workspace.jQ.scrollTop() : 0;
+      if(topBlock.closest('.tutorial_block').length)
+        scrollTop = topBlock.closest('.tutorial_block').scrollTop();
       var _this = this;
       var onclick = function(e) {
         e.preventDefault();
         var word = $(this).attr('data-word');
         var to_replace = _this.fullWord()[1];
         var right_of = to_replace[0][L];
+        var left_of = to_replace[to_replace.length-1][R];
         var right_end_of = to_replace[0].parent;
         for(var i = 0; i < to_replace.length; i++) to_replace[i].remove();
         if(right_of) _this.controller.cursor.insRightOf(right_of);
+        else if(left_of) _this.controller.cursor.insLeftOf(left_of);
         else _this.controller.cursor.insAtRightEnd(right_end_of);
         _this.controller.API.typedText(word);
         if(_this.controller.cursor[L] instanceof Letter)
@@ -288,6 +299,7 @@ optionProcessors.unitList = function(units) {
   var by_symbol = {};
   var names = [];
   var symbols = [];
+  var symbols_prefix = [];
   var prefix = {micro: 'µ', yocto: 'y', zepto: 'z', atto: 'a', femto: 'f', pico: 'p', nano: 'n', milli: 'm', centi: 'c', deci: 'd', deca: 'D', hecto: 'h', kilo: 'k', mega: 'M', giga: 'G', tera: 'T', peta: 'P', exa: 'E', zetta: 'Z', yotta: 'Y' };
   for(var i = 0; i < units.length; i++) {
     names.push(units[i].name);
@@ -297,7 +309,7 @@ optionProcessors.unitList = function(units) {
     if(units[i].prefix) {
       for(var key in prefix) {
         names.push(key + units[i].name);
-        symbols.push(prefix[key] + units[i].symbol);
+        symbols_prefix.push(prefix[key] + units[i].symbol);
         by_name[key + units[i].name] = prefix[key] + units[i].symbol;
         by_symbol[prefix[key] + units[i].symbol] = key + units[i].name;
       }
@@ -306,8 +318,10 @@ optionProcessors.unitList = function(units) {
   var sortFunction = function (a, b) {
     return a.toLowerCase().localeCompare(b.toLowerCase());
   };
-  return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.sort(sortFunction) }
+  return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.sort(sortFunction).concat(symbols_prefix.sort(sortFunction)) }
 }
+
+LatexCmds["'"] = bind(Letter, "'");
 
 LatexCmds.µ = P(VanillaSymbol, function(_, super_) {  //Do this for units, so that mu becomes a letter in the unit box
   _.init = function() {

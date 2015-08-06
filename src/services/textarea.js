@@ -39,6 +39,7 @@ Controller.open(function(_) {
         setTimeout(function() {
           ctrlr.notify('edit'); // deletes selection if present
           cursor.parent.bubble('reflow');
+          cursor.controller.reviveGhost();
         });
       }
     };
@@ -51,9 +52,21 @@ Controller.open(function(_) {
     this.scrollHoriz();
   };
   _.paste = function(text) {
-    this.notifyElementOfChange();
-    if (text.slice(0,6) === 'latex{' && text.slice(-1) === '}') 
-      text = text.slice(6, -1);
-    this.writeLatex(text).blur();
+    if(text) {
+      this.notifyElementOfChange();
+      if (text.slice(0,6) === 'latex{' && text.slice(-1) === '}') 
+        text = text.slice(6, -1);
+      this.writeLatex(text).blur();
+    }
   };
+  _.removeGhost = function() {
+    if(this.root.ends[L] != 0)
+      this.root.jQ.removeClass('show_ghost');
+    return this;
+  }
+  _.reviveGhost = function() {
+    if(this.root.ends[L] == 0)
+      this.root.jQ.addClass('show_ghost');
+    return this;
+  }
 });
