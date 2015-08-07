@@ -51,8 +51,8 @@ var Controller = P(function(_) {
     }
     el.css({top: Math.ceil(top) + 'px', left: Math.floor(left) + 'px'});
     el.html(html);
-    if(this.element && ((left + el.width()) > this.element.workspace.jQ.width())) // Adjust left if needed
-      el.css({left: Math.floor(max(0,this.element.workspace.jQ.width() - el.width())) + 'px'});
+    if(this.element && ((left + el.width()) > this.element.worksheet.jQ.width())) // Adjust left if needed
+      el.css({left: Math.floor(max(0,this.element.worksheet.jQ.width() - el.width())) + 'px'});
     el.find('li').mouseenter(function() {  // We dont use CSS hover because the class is how we keep track of which item is 'active'
       $(this).closest('ul').find('li').removeClass('mq-popup-selected');
       $(this).addClass('mq-popup-selected');
@@ -63,7 +63,7 @@ var Controller = P(function(_) {
   };
   _.current_tooltip = false;
   _.destroyTooltip = function() {
-    if(this.current_tooltip && this.element && (this.element.workspace.tooltip_holder === this.current_tooltip))
+    if(this.current_tooltip && this.element && (this.element.worksheet.tooltip_holder === this.current_tooltip))
       SwiftCalcs.destroyHelpPopup();
     else if(this.current_tooltip && !this.element) 
       SwiftCalcs.destroyHelpPopup();

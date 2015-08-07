@@ -104,7 +104,7 @@ var SupSub = P(MathCommand, function(_, super_) {
         var topBlock = this.jQ;
         var topOffset = topBlock.position();
         if(!this.controller) this.getController();
-        var scrollTop = this.controller.element ? this.controller.element.workspace.jQ.scrollTop() : 0;
+        var scrollTop = this.controller.element ? this.controller.element.worksheet.jQ.scrollTop() : 0;
         if(topBlock.closest('.tutorial_block').length)
           scrollTop = topBlock.closest('.tutorial_block').scrollTop();
         el.css({top: Math.ceil(topOffset.top + topBlock.height() + scrollTop) + 'px'});
