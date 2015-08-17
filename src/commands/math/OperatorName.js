@@ -86,7 +86,7 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
     if(this.controller.current_tooltip === this) return this;
     if(this.controller.API.__options.helpList && this.controller.API.__options.helpList[command]) {
       this.controller.current_tooltip = this;
-      if(this.controller.element) this.controller.element.workspace.tooltip_holder = this;
+      if(this.controller.element) this.controller.element.worksheet.tooltip_holder = this;
       var html = this.controller.API.__options.helpList[command];
       SwiftCalcs.createHelpPopup(html);
       return this;

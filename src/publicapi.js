@@ -146,14 +146,14 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
       var top = this.jQ.position().top;
       var bottom = top + this.jQ.height();
       var to_move_top = Math.min(0, top);
-      var to_move_bot = Math.max(0, bottom - this.__controller.element.workspace.jQ.height()+20);
+      var to_move_bot = Math.max(0, bottom - this.__controller.element.worksheet.jQ.height()+20);
       if((to_move_bot > 0) && (to_move_top < 0)) {
         if(dir === R)
-          this.__controller.element.workspace.jQ.scrollTop(this.__controller.element.workspace.jQ.scrollTop() + to_move_bot);
+          this.__controller.element.worksheet.jQ.scrollTop(this.__controller.element.worksheet.jQ.scrollTop() + to_move_bot);
         else
-          this.__controller.element.workspace.jQ.scrollTop(this.__controller.element.workspace.jQ.scrollTop() + to_move_top);
+          this.__controller.element.worksheet.jQ.scrollTop(this.__controller.element.worksheet.jQ.scrollTop() + to_move_top);
       } else
-        this.__controller.element.workspace.jQ.scrollTop(this.__controller.element.workspace.jQ.scrollTop() + to_move_top + to_move_bot);
+        this.__controller.element.worksheet.jQ.scrollTop(this.__controller.element.worksheet.jQ.scrollTop() + to_move_top + to_move_bot);
     }
     return this;
   }

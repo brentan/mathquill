@@ -164,7 +164,7 @@ var Variable = P(Symbol, function(_, super_) {
       var topBlock = letters[letters.length - 1].jQ;
       var leftOffset = leftBlock.position();
       var topOffset = topBlock.position();
-      var scrollTop = this.controller.element ? this.controller.element.workspace.jQ.scrollTop() : 0;
+      var scrollTop = this.controller.element ? this.controller.element.worksheet.jQ.scrollTop() : 0;
       if(topBlock.closest('.tutorial_block').length)
         scrollTop = topBlock.closest('.tutorial_block').scrollTop();
       var _this = this;
