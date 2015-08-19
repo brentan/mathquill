@@ -15,6 +15,7 @@ Node.open(function(_) {
     switch (key) {
     case 'Ctrl-Shift-Backspace':
     case 'Ctrl-Backspace':
+      ctrlr.scheduleUndoPoint();
       while (cursor[L] || cursor.selection) {
         ctrlr.backspace();
       }
@@ -22,6 +23,7 @@ Node.open(function(_) {
 
     case 'Shift-Backspace':
     case 'Backspace':
+      ctrlr.scheduleUndoPoint();
       ctrlr.backspace();
       break;
 
@@ -162,6 +164,7 @@ Node.open(function(_) {
 
     case 'Shift-Del':
     case 'Del':
+      ctrlr.scheduleUndoPoint();
       ctrlr.deleteForward();
       break;
 

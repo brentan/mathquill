@@ -164,6 +164,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if(this.__controller.staticMode) return this;
     if (latex.slice(0,6) === 'latex{' && latex.slice(-1) === '}') 
       latex = latex.slice(6, -1);
+    this.__controller.scheduleUndoPoint();
     this.__controller.writeLatex(latex);
     this.__controller.notifyElementOfChange();
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
@@ -208,6 +209,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
+        this.__controller.scheduleUndoPoint();
         mat.insertColumn(this.__controller.cursor, cmd === 'matrix_add_column_before' ? L : R);
         this.__controller.notifyElementOfChange();
         break;
@@ -216,6 +218,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
+        this.__controller.scheduleUndoPoint();
         mat.insertRow(this.__controller.cursor, cmd === 'matrix_add_row_before' ? L : R);
         this.__controller.notifyElementOfChange();
         break;
@@ -223,6 +226,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
+        this.__controller.scheduleUndoPoint();
         mat.deleteColumn(this.__controller.cursor);
         this.__controller.notifyElementOfChange();
         break;
@@ -230,6 +234,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
+        this.__controller.scheduleUndoPoint();
         mat.deleteRow(this.__controller.cursor);
         this.__controller.notifyElementOfChange();
         break;
@@ -276,6 +281,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
       var klass = LatexCmds[cmd];
       if (klass) {
         cmd = klass(cmd);
+        this.__controller.scheduleUndoPoint();
         if (cursor.selection) cmd.replaces(cursor.replaceSelection());
         cmd.createLeftOf(cursor);
         this.__controller.notifyElementOfChange();
@@ -283,7 +289,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
       }
       else /* TODO: API needs better error reporting */;
     }
-    else cursor.parent.write(cursor, cmd, cursor.replaceSelection());
+    else {
+      this.__controller.scheduleUndoPoint();
+      cursor.parent.write(cursor, cmd, cursor.replaceSelection());
+    }
     if (ctrlr.blurred) cursor.hide().parent.blur();
     return this;
   };
@@ -294,6 +303,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     return this;
   };
   _.clearSelection = function() {
+    this.__controller.setUndoPoint();
     this.__controller.cursor.clearSelection();
     this.__controller.notifyElementOfChange();
     return this;
@@ -332,6 +342,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.typedText = function(text) {
     if(this.__controller.staticMode) return this;
+    this.__controller.scheduleUndoPoint();
     this.__controller.notifyElementOfChange();
     for (var i = 0; i < text.length; i += 1) this.__controller.typedText(text.charAt(i));
     return this;
@@ -340,6 +351,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if(this.__controller.staticMode) {
       this.copy(e);
     } else {
+      this.__controller.setUndoPoint();
       this.__controller.cut(e); 
       this.__controller.notifyElementOfChange(); 
     }
@@ -352,6 +364,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.copy = function(e) { this.__controller.copy(e); return this; }
   _.paste = function(text) { 
     if(this.__controller.staticMode) return this;
+    this.__controller.setUndoPoint();
     this.__controller.paste(text); 
     this.__controller.closePopup(); 
     return this; 
@@ -378,6 +391,13 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   }
   _.mouseOut = function(e) {
     this.__controller.mouseOut(e);
+  }
+  // Undo/Redo manager API points
+  _.restoreState = function(d) {
+    this.__controller.restoreState(d);
+  }
+  _.currentState = function() {
+    return this.__controller.currentState();
   }
 });
 
