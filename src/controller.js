@@ -33,21 +33,15 @@ var Controller = P(function(_) {
       this.element.changed(this.API);
   }
 
-  _.undoTimer = false;
-  _.undoHash = false;
   _.scheduleUndoPoint = function() {
-    if(this.undoTimer)
-      window.clearTimeout(this.undoTimer);
-    else 
-      this.undoHash = this.currentState();
-    this.undoTimer = window.setTimeout(function(_this) { return function() { _this.setUndoPoint(_this.undoHash); }; }(this), 1000);
-  }
-  _.setUndoPoint = function(hash) {
-    if(this.undoTimer)
-      window.clearTimeout(this.undoTimer);
-    this.undoTimer = false;
+    if(this.staticMode) return;
     if(this.element && this.element.worksheet) 
-      this.element.worksheet.setUndoPoint(this, hash);
+      this.element.worksheet.scheduleUndoPoint(this);
+  }
+  _.setUndoPoint = function() {
+    if(this.staticMode) return;
+    if(this.element && this.element.worksheet) 
+      this.element.worksheet.setUndoPoint(this);
   }
   _.currentState = function() {
     return {
@@ -57,8 +51,8 @@ var Controller = P(function(_) {
   }
   _.restoreState = function(data) {
     this.API.select();
-    this.typedText('0');
-    this.backspace();
+    this.cursor.deleteSelection();
+    this.API.moveToLeftEnd();
     this.writeLatex(data.latex.slice(6, -1));
     if(data.cursor.anticursor) {
       var el = this.root;

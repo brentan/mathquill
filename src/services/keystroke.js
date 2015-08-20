@@ -15,7 +15,6 @@ Node.open(function(_) {
     switch (key) {
     case 'Ctrl-Shift-Backspace':
     case 'Ctrl-Backspace':
-      ctrlr.scheduleUndoPoint();
       while (cursor[L] || cursor.selection) {
         ctrlr.backspace();
       }
@@ -23,7 +22,6 @@ Node.open(function(_) {
 
     case 'Shift-Backspace':
     case 'Backspace':
-      ctrlr.scheduleUndoPoint();
       ctrlr.backspace();
       break;
 
@@ -164,7 +162,6 @@ Node.open(function(_) {
 
     case 'Shift-Del':
     case 'Del':
-      ctrlr.scheduleUndoPoint();
       ctrlr.deleteForward();
       break;
 
@@ -289,10 +286,16 @@ Controller.open(function(_) {
     var cursor = this.cursor;
 
     var hadSelection = cursor.selection;
+    if(hadSelection) cursor.controller.scheduleUndoPoint();
     this.notify('edit'); // deletes selection if present
     if (!hadSelection) {
-      if (cursor[dir]) cursor[dir].deleteTowards(dir, cursor);
-      else cursor.parent.deleteOutOf(dir, cursor);
+      if (cursor[dir]) {
+        cursor.controller.scheduleUndoPoint();
+        cursor[dir].deleteTowards(dir, cursor);
+      } else {
+        if(cursor.parent != cursor.controller.root) cursor.controller.scheduleUndoPoint();
+        cursor.parent.deleteOutOf(dir, cursor);
+      }
     }
 
     if (cursor[L].siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);
