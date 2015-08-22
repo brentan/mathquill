@@ -87,6 +87,7 @@ var Controller = P(function(_) {
       if(data.cursor.anticursor) this.cursor.select();
     }
     this.cursor.workingGroupChange();
+    this.notifyElementOfChange();
   }
 
   var notifyees = [];
