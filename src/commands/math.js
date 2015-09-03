@@ -503,13 +503,18 @@ var MathBlock = P(MathElement, function(_, super_) {
   // and selection of the MathQuill tree, these all take in a direction and
   // the cursor
   _.moveOutOf = function(dir, cursor, updown) {
-    if(cursor.controller.unitMode && (this.parent instanceof Unit)) return;
+    if(cursor.controller.captiveUnitMode && (this.parent instanceof Unit)) return;
+    if(cursor.controller.units_only && (this.parent instanceof Unit)) {
+      cursor.insDirOf(dir, this.parent);
+      cursor.controller.moveDir(dir);
+      return;
+    }
     var updownInto = updown && this.parent[updown+'Into'];
     if (!updownInto && this[dir]) cursor.insAtDirEnd(-dir, this[dir]);
     else cursor.insDirOf(dir, this.parent);
   };
   _.selectOutOf = function(dir, cursor) {
-    if(cursor.controller.unitMode && (this.parent instanceof Unit)) return;
+    if((cursor.controller.units_only || cursor.controller.captiveUnitMode) && (this.parent instanceof Unit)) return;
     cursor.insDirOf(dir, this.parent);
   };
   _.deleteOutOf = function(dir, cursor) {

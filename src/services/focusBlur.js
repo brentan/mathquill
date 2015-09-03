@@ -3,7 +3,7 @@ Controller.open(function(_) {
     var ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
     ctrlr.focus = function() {
       ctrlr.blurred = false;
-      if(ctrlr.unitMode) return;
+      if(ctrlr.captiveUnitMode) return;
       if(ctrlr.element) ctrlr.element.setFocusedItem(ctrlr.API);
       ctrlr.container.addClass('mq-focused');
       if (!cursor.parent)
@@ -22,7 +22,7 @@ Controller.open(function(_) {
     };
     ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
       ctrlr.blurred = true;
-      if(ctrlr.unitMode) {
+      if(ctrlr.captiveUnitMode) {
         ctrlr.element.unitChosen(ctrlr.API.latex());
         return;
       }
@@ -38,7 +38,7 @@ Controller.open(function(_) {
     };
     ctrlr.windowBlur = function() {
       ctrlr.blurred = true;
-      if(ctrlr.unitMode) {
+      if(ctrlr.captiveUnitMode) {
         ctrlr.element.unitChosen(ctrlr.API.latex());
         return;
       }

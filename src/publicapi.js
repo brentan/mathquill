@@ -81,7 +81,8 @@ var AbstractMathQuill = P(function(_) {
   };
   _.setElement = function(el) { this.__controller.element = el; this.__controller.showPopups = true; return this; };
   _.showPopups = function() { this.__controller.showPopups = true; return this; };
-  _.setUnitMode = function(val) { this.__controller.unitMode = val; return this; };
+  _.setUnitMode = function(val) { this.__controller.captiveUnitMode = val; return this; };
+  _.setUnitsOnly = function(val) { this.__controller.units_only = val; return this; };
   _.setStaticMode = function(val) { this.__controller.staticMode = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
   _.text = function(opts) { 
@@ -89,8 +90,10 @@ var AbstractMathQuill = P(function(_) {
       opts = jQuery.extend(opts, this.__options);
     else
       opts = this.__options;
-    if(this.__controller.unitMode)
-      opts.unitMode = true;
+    if(this.__controller.captiveUnitMode)
+      opts.captiveUnitMode = true;
+    if(this.__controller.units_only)
+      opts.units_only = true;
     var out = this.__controller.exportText(opts); 
     if(opts['default'] && (out.trim() == '')) return opts['default'];
     return out;
@@ -128,12 +131,19 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.focus = function(dir) { 
     //The other hacky unit mode thing.  If the parent element is in unitmode but im not, ignore focus events
-    if(!this.__controller.unitMode && this.__controller.element && this.__controller.element.unitMode) return this;
+    if(!this.__controller.captiveUnitMode && this.__controller.element && this.__controller.element.captiveUnitMode) return this;
     this.jQ.find('.mq-selection').removeClass('mq-selection');
     this.__controller.focus(); 
-    if(dir && (dir < 2))
-      this.moveToDirEnd(dir);
-    else if(dir) {
+    if(dir && (dir < 2)) {
+      if(this.__controller.units_only || this.__controller.captiveUnitMode) {
+        this.moveToDirEnd(R);
+        this.keystroke('Left',{preventDefault: function() { } });
+        if(dir == L) {
+          while(this.__controller.cursor[L]) this.__controller.cursor.insLeftOf(this.__controller.cursor[L]);
+        }
+      } else
+        this.moveToDirEnd(dir);
+    } else if(dir) {
       this.__controller.seek(false, dir, 0);
     } else if(this.__controller.cursor.anticursor)
       this.__controller.cursor.select();
@@ -191,7 +201,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.command = function(cmd, option) {
     if(this.__controller.staticMode) return this;
     // A bit hacky...but if attached element is in 'unitMode', pass the command on to that element
-    if(!this.__controller.unitMode && this.__controller.element && this.__controller.element.unitMode) return this.__controller.element.unitMode.command(cmd, option);
+    if(!this.__controller.captiveUnitMode && this.__controller.element && this.__controller.element.unitMode) return this.__controller.element.unitMode.command(cmd, option);
 
     // Are we in a unit box?  If so, we limit our options
     if(this.__controller.cursor.parent.unit || (this.__controller.cursor.parent.parent && this.__controller.cursor.parent.parent.unit)) {

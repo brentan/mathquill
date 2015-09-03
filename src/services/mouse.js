@@ -67,7 +67,7 @@ Controller.open(function(_) {
     }
     var node = nodeId ? Node.byId[nodeId] : this.root;
     pray('nodeId is the id of some Node that exists', node);
-    if(this.unitMode) {
+    if(this.captiveUnitMode || this.units_only) {
       // In unit mode, selection is limited to the unit block
       if(!node.unit && !(node.parent && node.parent.unit) && !(node.parent && node.parent.parent && node.parent.parent.unit)) 
         node = Node.byId[this.root.jQ.find('.mq-unit').first().attr(mqBlockId)];

@@ -61,7 +61,8 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
       } 
     });
     this.ends[R].deleteOutOf = function(dir, cursor) {
-      if(cursor.controller.unitMode) return;
+      if(cursor.controller.captiveUnitMode) return;
+      if(cursor.controller.units_only) return;
       for(var el= this.ends[L]; el !== 0; el = el[R])
         el.remove();
       cursor.insAtRightEnd(this);
@@ -73,7 +74,9 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
       cursor.insAtRightEnd(this);
       cursor.unwrapGramp();
     };
-    if(this.getController().unitMode) 
+    if(this.getController().captiveUnitMode) 
+      this.ends[L].jQ.hide();
+    if(this.getController().units_only) 
       this.ends[L].jQ.hide();
   };
   _.createLeftOf = function(cursor) {
@@ -136,7 +139,7 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
     return '\\Unit{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
   }
   _.text = function(opts) { 
-    if(opts.unitMode) return this.blocks[1].text(jQuery.extend({unit: true}, opts));
+    if(opts.captiveUnitMode || opts.units_only) return this.blocks[1].text(jQuery.extend({unit: true}, opts));
     return this.blocks[0].text(opts) + '*(' + this.blocks[1].text(jQuery.extend({unit: true}, opts)) + ')';
   }
 });
