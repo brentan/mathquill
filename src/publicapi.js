@@ -81,7 +81,8 @@ var AbstractMathQuill = P(function(_) {
   };
   _.setElement = function(el) { this.__controller.element = el; this.__controller.showPopups = true; return this; };
   _.showPopups = function() { this.__controller.showPopups = true; return this; };
-  _.setUnitMode = function(val) { this.__controller.unitMode = val; return this; };
+  _.setUnitMode = function(val) { this.__controller.captiveUnitMode = val; return this; };
+  _.setUnitsOnly = function(val) { this.__controller.units_only = val; return this; };
   _.setStaticMode = function(val) { this.__controller.staticMode = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
   _.text = function(opts) { 
@@ -89,8 +90,10 @@ var AbstractMathQuill = P(function(_) {
       opts = jQuery.extend(opts, this.__options);
     else
       opts = this.__options;
-    if(this.__controller.unitMode)
-      opts.unitMode = true;
+    if(this.__controller.captiveUnitMode)
+      opts.captiveUnitMode = true;
+    if(this.__controller.units_only)
+      opts.units_only = true;
     var out = this.__controller.exportText(opts); 
     if(opts['default'] && (out.trim() == '')) return opts['default'];
     return out;
@@ -128,12 +131,19 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.focus = function(dir) { 
     //The other hacky unit mode thing.  If the parent element is in unitmode but im not, ignore focus events
-    if(!this.__controller.unitMode && this.__controller.element && this.__controller.element.unitMode) return this;
+    if(!this.__controller.captiveUnitMode && this.__controller.element && this.__controller.element.captiveUnitMode) return this;
     this.jQ.find('.mq-selection').removeClass('mq-selection');
     this.__controller.focus(); 
-    if(dir && (dir < 2))
-      this.moveToDirEnd(dir);
-    else if(dir) {
+    if(dir && (dir < 2)) {
+      if(this.__controller.units_only || this.__controller.captiveUnitMode) {
+        this.moveToDirEnd(R);
+        this.keystroke('Left',{preventDefault: function() { } });
+        if(dir == L) {
+          while(this.__controller.cursor[L]) this.__controller.cursor.insLeftOf(this.__controller.cursor[L]);
+        }
+      } else
+        this.moveToDirEnd(dir);
+    } else if(dir) {
       this.__controller.seek(false, dir, 0);
     } else if(this.__controller.cursor.anticursor)
       this.__controller.cursor.select();
@@ -164,6 +174,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if(this.__controller.staticMode) return this;
     if (latex.slice(0,6) === 'latex{' && latex.slice(-1) === '}') 
       latex = latex.slice(6, -1);
+    this.__controller.scheduleUndoPoint();
     this.__controller.writeLatex(latex);
     this.__controller.notifyElementOfChange();
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
@@ -190,7 +201,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.command = function(cmd, option) {
     if(this.__controller.staticMode) return this;
     // A bit hacky...but if attached element is in 'unitMode', pass the command on to that element
-    if(!this.__controller.unitMode && this.__controller.element && this.__controller.element.unitMode) return this.__controller.element.unitMode.command(cmd, option);
+    if(!this.__controller.captiveUnitMode && this.__controller.element && this.__controller.element.unitMode) return this.__controller.element.unitMode.command(cmd, option);
 
     // Are we in a unit box?  If so, we limit our options
     if(this.__controller.cursor.parent.unit || (this.__controller.cursor.parent.parent && this.__controller.cursor.parent.parent.unit)) {
@@ -208,6 +219,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
+        this.__controller.scheduleUndoPoint();
         mat.insertColumn(this.__controller.cursor, cmd === 'matrix_add_column_before' ? L : R);
         this.__controller.notifyElementOfChange();
         break;
@@ -216,6 +228,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
+        this.__controller.scheduleUndoPoint();
         mat.insertRow(this.__controller.cursor, cmd === 'matrix_add_row_before' ? L : R);
         this.__controller.notifyElementOfChange();
         break;
@@ -223,6 +236,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
+        this.__controller.scheduleUndoPoint();
         mat.deleteColumn(this.__controller.cursor);
         this.__controller.notifyElementOfChange();
         break;
@@ -230,6 +244,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         var mat = 0;
         for(mat = this.__controller.cursor; mat !== 0; mat = mat.parent) if(mat instanceof Matrix) break;
         if(!mat) return;
+        this.__controller.scheduleUndoPoint();
         mat.deleteRow(this.__controller.cursor);
         this.__controller.notifyElementOfChange();
         break;
@@ -276,6 +291,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
       var klass = LatexCmds[cmd];
       if (klass) {
         cmd = klass(cmd);
+        this.__controller.scheduleUndoPoint();
         if (cursor.selection) cmd.replaces(cursor.replaceSelection());
         cmd.createLeftOf(cursor);
         this.__controller.notifyElementOfChange();
@@ -283,7 +299,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
       }
       else /* TODO: API needs better error reporting */;
     }
-    else cursor.parent.write(cursor, cmd, cursor.replaceSelection());
+    else {
+      this.__controller.scheduleUndoPoint();
+      cursor.parent.write(cursor, cmd, cursor.replaceSelection());
+    }
     if (ctrlr.blurred) cursor.hide().parent.blur();
     return this;
   };
@@ -294,6 +313,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     return this;
   };
   _.clearSelection = function() {
+    this.__controller.setUndoPoint();
     this.__controller.cursor.clearSelection();
     this.__controller.notifyElementOfChange();
     return this;
@@ -332,6 +352,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.typedText = function(text) {
     if(this.__controller.staticMode) return this;
+    this.__controller.scheduleUndoPoint();
     this.__controller.notifyElementOfChange();
     for (var i = 0; i < text.length; i += 1) this.__controller.typedText(text.charAt(i));
     return this;
@@ -340,6 +361,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if(this.__controller.staticMode) {
       this.copy(e);
     } else {
+      this.__controller.setUndoPoint();
       this.__controller.cut(e); 
       this.__controller.notifyElementOfChange(); 
     }
@@ -352,6 +374,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.copy = function(e) { this.__controller.copy(e); return this; }
   _.paste = function(text) { 
     if(this.__controller.staticMode) return this;
+    this.__controller.setUndoPoint();
     this.__controller.paste(text); 
     this.__controller.closePopup(); 
     return this; 
@@ -378,6 +401,13 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   }
   _.mouseOut = function(e) {
     this.__controller.mouseOut(e);
+  }
+  // Undo/Redo manager API points
+  _.restoreState = function(d) {
+    this.__controller.restoreState(d);
+  }
+  _.currentState = function() {
+    return this.__controller.currentState();
   }
 });
 

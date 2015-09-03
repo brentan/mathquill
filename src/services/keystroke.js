@@ -286,10 +286,16 @@ Controller.open(function(_) {
     var cursor = this.cursor;
 
     var hadSelection = cursor.selection;
+    if(hadSelection) cursor.controller.scheduleUndoPoint();
     this.notify('edit'); // deletes selection if present
     if (!hadSelection) {
-      if (cursor[dir]) cursor[dir].deleteTowards(dir, cursor);
-      else cursor.parent.deleteOutOf(dir, cursor);
+      if (cursor[dir]) {
+        cursor.controller.scheduleUndoPoint();
+        cursor[dir].deleteTowards(dir, cursor);
+      } else {
+        if(cursor.parent != cursor.controller.root) cursor.controller.scheduleUndoPoint();
+        cursor.parent.deleteOutOf(dir, cursor);
+      }
     }
 
     if (cursor[L].siblingDeleted) cursor[L].siblingDeleted(cursor.options, R);

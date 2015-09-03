@@ -23,8 +23,9 @@ var Cursor = P(Point, function(_) {
 
     this.upDownCache = {};
   };
-
+  var shown = false;
   _.show = function() {
+    shown = true;
     if(this.controller.staticMode) return this;
     this.jQ = this._jQ.removeClass('mq-blink');
     if ('intervalId' in this) //already was shown, just restart interval
@@ -45,6 +46,7 @@ var Cursor = P(Point, function(_) {
     return this;
   };
   _.hide = function() {
+    shown = false;
     var mathField = this.container;
     if(this[L] instanceof Letter)
       this[L].autoOperator(this);
@@ -59,6 +61,39 @@ var Cursor = P(Point, function(_) {
     this.jQ = $();
     return this;
   };
+  _.getAbsolutePosition = function() {
+    // Returns the absolute cursor position, based on the relationship to root.  This can be used to 
+    // re-establish the correct cursor and anticursor locations at a later date for an element
+    // with the same latex structure but different elements
+    if(!shown && !this.anticursor) return {};
+    var getLocation = function(item, root) {
+      var out = [];
+      if(item[L]) {
+        out.push('insRightOf');
+        var el = item[L];
+      } else if(item[R]) {
+        out.push('insLeftOf')
+        var el = item[R];
+      } else {
+        out.push('insAtLeftEnd')
+        var el = item.parent;
+      }
+      while(el != root) {
+        if(el[L]) {
+          out.push('L');
+          el = el[L]
+        } else {
+          out.push('endsL')
+          el = el.parent;
+        }
+      }
+      return out.reverse();
+    }
+    if(this.anticursor)
+      return { cursor: getLocation(this, this.controller.root), anticursor: getLocation(this.anticursor, this.controller.root) }
+    else
+      return { cursor: getLocation(this, this.controller.root) }
+  }
 
   _.withDirInsertAt = function(dir, parent, withDir, oppDir) {
     if (parent !== this.parent && this.parent.blur) this.parent.blur();

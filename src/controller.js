@@ -10,7 +10,8 @@ var Controller = P(function(_) {
   _.init = function(API, root, container) {
     this.API = API;
     this.element = 0;
-    this.unitMode = false;
+    this.captiveUnitMode = false;
+    this.units_only = false;
     this.root = root;
     this.container = container;
 
@@ -29,8 +30,65 @@ var Controller = P(function(_) {
   };
 
   _.notifyElementOfChange = function() {
-    if(!this.unitMode && !this.staticMode && this.element && this.element.changed)
+    if(!this.captiveUnitMode && !this.staticMode && this.element && this.element.changed)
       this.element.changed(this.API);
+  }
+
+  _.scheduleUndoPoint = function() {
+    if(this.staticMode) return;
+    if(this.element && this.element.worksheet) 
+      this.element.worksheet.scheduleUndoPoint(this);
+  }
+  _.setUndoPoint = function() {
+    if(this.staticMode) return;
+    if(this.element && this.element.worksheet) 
+      this.element.worksheet.setUndoPoint(this);
+  }
+  _.currentState = function() {
+    return {
+        latex: this.API.toString(),
+        cursor: this.cursor.getAbsolutePosition()
+    };
+  }
+  _.restoreState = function(data) {
+    this.API.select();
+    this.cursor.deleteSelection();
+    this.API.moveToLeftEnd();
+    this.writeLatex(data.latex.slice(6, -1));
+    if(data.cursor.anticursor) {
+      var el = this.root;
+      for(var i = 0; i < data.cursor.anticursor.length; i++) {
+        switch(data.cursor.anticursor[i]) {
+          case 'L':
+            el = el[R];
+            break;
+          case 'endsL':
+            el = el.ends[L];
+            break;
+          default:
+            this.cursor[data.cursor.anticursor[i]](el);
+        }
+      }
+      this.cursor.startSelection();
+    }
+    if(data.cursor.cursor) {
+      var el = this.root;
+      for(var i = 0; i < data.cursor.cursor.length; i++) {
+        switch(data.cursor.cursor[i]) {
+          case 'L':
+            el = el[R];
+            break;
+          case 'endsL':
+            el = el.ends[L];
+            break;
+          default:
+            this.cursor[data.cursor.cursor[i]](el);
+        }
+      }
+      if(data.cursor.anticursor) this.cursor.select();
+    }
+    this.cursor.workingGroupChange();
+    this.notifyElementOfChange();
   }
 
   var notifyees = [];
