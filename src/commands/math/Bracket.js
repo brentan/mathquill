@@ -44,7 +44,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     // Brackets are a tricky one...they may represent matrix indeces on a variable name, in which
     // case we want to use [], or they may just be a 'pretty' bracket, in which case we want to use
     // ().  Vectors should already be transformed into Matrix by use of ','
-    if((this.ctrlSeq !== '\\left[') || (this[L] instanceof Variable))
+    if((this.ctrlSeq !== '\\left[') || (this[L] instanceof Variable) || ((this[L] instanceof SupSub) && (this[L].supsub == 'sub')))
       return this.sides[L].textTemplate + this.ends[L].text(opts) + this.sides[R].textTemplate;
     else
       return '(' + this.ends[L].text(opts) + ')';
