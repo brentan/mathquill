@@ -546,16 +546,25 @@ var MathBlock = P(MathElement, function(_, super_) {
       cmd = ScientificNotation(ch);
     } else if(ch.match(/^[0-9\.]$/) && !(cursor.parent && cursor.parent.unit) && !(cursor.parent && cursor.parent.parent && cursor.parent.parent.unit) && ((cursor[L] instanceof Variable) || (cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')))) // Numbers after letters are 'letters' as they are part of a var name
       cmd = Letter(ch);
-    else if (cmd = CharCmds[ch] || LatexCmds[ch])
-      cmd = cmd(ch);
     else if(ch === '#') {
       if((cursor.controller.exportText() == '') && cursor.controller.element && cursor.controller.element.changeToText)
         return window.setTimeout(function() { cursor.controller.element.changeToText('#'); }, 10);
       else
         return this.flash();
-    } else
+    } else if (cmd = CharCmds[ch] || LatexCmds[ch])
+      cmd = cmd(ch);
+    else
       cmd = VanillaSymbol(ch);
 
+    // Transform percentage into mod if needed
+    if(cursor[L] && (cursor[L] instanceof Percent) && !ch.match(/^(\+|\-|\*|\^|\/)$/)) {
+      var per = cursor[L];
+      var mod = Modulus();
+      mod.createLeftOf(cursor);
+      cursor.insAtLeftEnd(per.ends[L]);
+      cursor.unwrapGramp();
+      cursor.insAtRightEnd(mod.ends[R]);
+    }
     // Units...if we are in a unit box, drastically reduce what we are allowed to type (other things will push us out of the box)
     if(cursor.parent && cursor.parent.parent && cursor.parent.parent.unitsup) {
       // We are in a deep fraction in a unit
@@ -586,7 +595,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     }
 
     // Test for implicit multiplication
-    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !cursor[L].ctrlSeq.match(/^[\,…\.]$/) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
+    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof OperatorName) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !(cursor[L].ctrlSeq && cursor[L].ctrlSeq.match(/^[\,…\.]$/)) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
       LatexCmds.cdot().implicit().createLeftOf(cursor);
     else if(!(ch.match(/^[\,]$/i) || cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket) && (ch !== '.'))))
       LatexCmds.cdot().implicit().createLeftOf(cursor);
