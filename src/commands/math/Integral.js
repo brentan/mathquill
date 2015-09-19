@@ -2,7 +2,7 @@
 var Integral = P(MathCommand, function(_, super_) {
   _.init = function(ch) {
     var htmlTemplate =
-        '<span><span class="mq-large-operator mq-non-leaf">'
+        '<span style="margin-top:0.9em;"><span class="mq-large-operator mq-non-leaf" style="display:block;float:left;position:relative;top:-0.9em;">'
         +   '<span class="mq-to">&nbsp;<span>&1</span></span>'
         +   '<big>&int;</big>'
         +   '<span class="mq-from"><span>&0</span></span>'

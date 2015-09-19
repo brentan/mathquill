@@ -4,7 +4,8 @@ var SummationNotation = P(MathCommand, function(_, super_) {
   _.hide_limits = false;
   _.init = function(ch, html) {
     var htmlTemplate =
-        '<span><span class="mq-large-operator mq-non-leaf">'
+        '<span' + (this.hide_limits ? '' : ' style="margin-top:0.9em;"') + '><span class="mq-large-operator mq-non-leaf" style="display:block;float:left;'
+        +   (this.hide_limits ? '' : 'position:relative;top:-0.9em;') + '">'
         +   (this.hide_limits ? '' : '<span class="mq-to"><span>&2</span></span>')
         +   '<big>'+html+'</big>'
         +   '<span class="mq-from"><span>&0</span>' + (this.hide_limits ? '' : '=<span>&1</span>') + '</span>'
