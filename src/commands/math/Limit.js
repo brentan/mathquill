@@ -4,7 +4,7 @@ var Limit = P(MathCommand, function(_, super_) {
   _.init = function(ch, direction) {
     this.direction = direction;
     var htmlTemplate =
-        '<span><span class="mq-large-operator mq-non-leaf">'
+        '<span style="margin-top:0.4em;"><span class="mq-large-operator mq-non-leaf" style="display:block;float:left;position:relative;top:-0.4em;">'
         +   '<big>lim</big>'
         +   '<span class="mq-from"><span>&0</span>&#8594;<span>&1</span>' + (direction == 0 ? '' : (direction == 1 ? '+' : '-')) + '</span>'
         + '</span>'

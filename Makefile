@@ -3,7 +3,7 @@
 #
 
 # inputs
-VERSION = 1_05
+VERSION = 1_07
 SRC_DIR = ./src
 INTRO = $(SRC_DIR)/intro.js
 OUTRO = $(SRC_DIR)/outro.js
@@ -114,7 +114,7 @@ app_ugly: css uglify
 	rm -rf ./$(APP_DIR)/public/libraries/mathquill*.js.map
 	cp -f $(BUILD_DIR)/mathquill$(VERSION).css ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
 	cp -f $(BUILD_DIR)/mathquill$(VERSION).min.js ./$(APP_DIR)/public/libraries/mathquill$(VERSION).js
-	cp -f $(BUILD_DIR)/mathquill$(VERSION).js.map ./$(APP_DIR)/public/libraries/mathquill$(VERSION).js.map
+	#cp -f $(BUILD_DIR)/mathquill$(VERSION).js.map ./$(APP_DIR)/public/libraries/mathquill$(VERSION).js.map
 	rm -rf ./$(APP_DIR)/app/assets/fonts
 	cp -r $(FONT_SOURCE) ./$(APP_DIR)/app/assets/fonts
 	# Convert css to scss and use font-url to take advantage of the asset pipeline in rails 4
