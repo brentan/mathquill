@@ -49,7 +49,7 @@ var Cursor = P(Point, function(_) {
     shown = false;
     var mathField = this.container;
     if(this[L] instanceof Letter)
-      this[L].autoOperator(this);
+      this[L].autoOperator(this, (this.parent && (this.parent.parent instanceof OperatorName)) ? true : undefined);
     mathField.find(".active_block").replaceWith(function() {
       return $( this ).contents();
     });

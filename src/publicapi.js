@@ -258,7 +258,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         }
         for(unit = this.__controller.cursor; unit !== 0; unit = unit.parent) if(unit instanceof Unit) break;
         if(!unit) {
-          unit = Unit().createLeftOf(this.__controller.cursor);
+          var to_replace = this.__controller.cursor.show().replaceSelection();
+          unit = Unit();
+          if(to_replace) unit.replaces(to_replace);
+          unit.createLeftOf(this.__controller.cursor);
           leave_unit = true;
         }
         this.typedText(option);
