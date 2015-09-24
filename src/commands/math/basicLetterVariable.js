@@ -415,3 +415,13 @@ LatexCmds.f = P(Letter, function(_, super_) {
       super_.createLeftOf.call(this, cursor);
   };
 });
+LatexCmds[' '] = LatexCmds.space = P(Letter, function(_, super_) {
+  _.htmlTemplate = [''];
+  _.init = function() {
+    super_.init.call(this, '', '', '');
+  }
+  _.text = function(opts) {
+    if(opts.show_spaces) return ' ';
+    return '';
+  }
+});

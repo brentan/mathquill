@@ -3,7 +3,6 @@
  ********************************/
 
 // VanillaSymbol's
-LatexCmds[' '] = LatexCmds.space = bind(VanillaSymbol, '\\ ', ' ');
 LatexCmds[','] = bind(BinaryOperator, ',', ',&nbsp;');
 LatexCmds.whitespace = bind(VanillaSymbol, '\\space ', '&nbsp;');
 

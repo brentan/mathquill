@@ -465,6 +465,13 @@ var MathBlock = P(MathElement, function(_, super_) {
             return ctrlr.element.changeToText(current_output);
           if(current_output.match(/^[^=]* := [a-z0-9\.-]+$/i) && ctrlr.element.changeToText(current_output)) 
             return;
+          if(ctrlr.lastKeySpacebar) // Double space signals textbox conversion
+            return ctrlr.element.changeToText(ctrlr.API.text({show_spaces: true}));
+          if(key == 'Spacebar') {
+            var space = LatexCmds.space();
+            space.createLeftOf(cursor);
+            ctrlr.element.notifyChangeToText(space);
+          }
         } 
         // Test for autocommands 
         if(cursor[L] instanceof Letter)
