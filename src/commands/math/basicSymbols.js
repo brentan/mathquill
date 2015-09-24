@@ -268,20 +268,25 @@ var Equality = P(Inequality, function(_, super_) {
       cursor[L].swap(false);
       return;
     } 
-    if (!cursor.controller.API.__options.expression_mode && (cursor[L] instanceof Equality) && cursor[L].strict) {
-      cursor[L].swap(false);
+    if(cursor[L] instanceof Equality) {
+      cursor[L].swap(!cursor[L].strict);
       return;
     }
-    if(cursor.controller.API.__options.expression_mode)
+    var assignment = false;
+    if(!cursor.controller.API.__options.expression_mode && (cursor.parent == cursor.controller.root)) {
+      if((cursor[L] instanceof OperatorName) && (cursor[L][L] === 0)) assignment = true;
+      var start_test = cursor[L];
+      var all_letters = true;
+      if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
+      if(start_test === 0) all_letters = false;
+      for(var l = start_test; l !== 0; l = l[L]) {
+        if(!(l instanceof Letter)) { all_letters = false; break }
+      }
+      if(all_letters) assignment = true;
+    } 
+    if(!assignment)
       this.swap(false);
     super_.createLeftOf.apply(this, arguments);
-  };
-  _.deleteTowards = function(dir, cursor) {
-    if (!cursor.controller.API.__options.expression_mode && (dir === L) && !this.strict) {
-      this.swap(true);
-      return;
-    }
-    super_.deleteTowards.apply(this, arguments);
   };
 });
 var equal = { ctrlSeq: '\\eq ', html: '=', text: ' == ',

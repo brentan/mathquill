@@ -505,7 +505,8 @@ var MathBlock = P(MathElement, function(_, super_) {
       else
         ctrlr.closePopup();
       return out;
-    }
+    } else if((key == '=') && ctrlr.element && ctrlr.element.notifyEqualSign) 
+      window.setTimeout(function() { ctrlr.element.notifyEqualSign(ctrlr.root.ends[R]); }, 50);
     return super_.keystroke.apply(this, arguments);
   };
 
