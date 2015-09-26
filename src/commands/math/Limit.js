@@ -64,6 +64,9 @@ var Limit = P(MathCommand, function(_, super_) {
       });
     }).then(string('\\right)')).result(self);
   };
+  _.finalizeTree = function() {
+    this.ends[L].suppressAutoUnit = true;
+  }
 });
 
 LatexCmds.limit = bind(Limit,'\\limit ', 0);

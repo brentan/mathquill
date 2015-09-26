@@ -52,6 +52,7 @@ var Derivative = P(MathCommand, function(_, super_) {
     this.upInto = this.ends[R];
     this.ends[R].upOutOf = this.ends[L];
     this.ends[L].downOutOf = this.ends[R];
+    this.ends[R].suppressAutoUnit = true;
   };
 });
 
@@ -118,6 +119,7 @@ var MultiDerivative = P(Derivative, function(_, super_) {
     this.ends[L].downOutOf = this.ends[L][R];
     this.ends[L][R].upOutOf = this.ends[L];
     this.ends[L][R].downOutOf = this.ends[R];
+    this.ends[R].suppressAutoUnit = true;
     var _this = this;
     this.ends[L].write = function(cursor, ch, replacedFragment) {
       if (ch.match(/^[0-9]$/i)) {

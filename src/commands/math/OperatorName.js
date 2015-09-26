@@ -94,4 +94,7 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
     this.controller.destroyTooltip();
     return false;
   }
+  _.finalizeTree = function() {
+    this.ends[R].suppressAutoUnit = true;
+  }
 });

@@ -42,7 +42,7 @@ var SupSub = P(MathCommand, function(_, super_) {
         this.elementWise = true;
         cursor.insRightOf(ins);
       }
-      if((cursor[L] instanceof Fraction) || (cursor[L] instanceof DerivedMathCommand)) {
+      if(((cursor[L] instanceof Fraction) || (cursor[L] instanceof DerivedMathCommand)) && !(cursor[L] instanceof Unit)) {
         // Some items should be wrapped in brackets before we add the exponent
         var bracket = CharCmds['(']();
         var to_move = cursor[L];

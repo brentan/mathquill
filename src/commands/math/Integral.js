@@ -75,6 +75,7 @@ var Integral = P(MathCommand, function(_, super_) {
     this.upInto = this.ends[R];
     this.ends[L].upOutOf = this.ends[R];
     this.ends[R].downOutOf = this.ends[L];
+    this.ends[R].suppressAutoUnit = true;
   };
 });
 
@@ -143,6 +144,7 @@ var IntegralNoLimit = P(MathCommand, function(_, super_) {
     this.upInto = this.ends[R];
     this.ends[L].upOutOf = this.ends[R];
     this.ends[R].downOutOf = this.ends[L];
+    this.ends[R].suppressAutoUnit = true;
   };
 });
 

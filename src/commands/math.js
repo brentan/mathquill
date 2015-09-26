@@ -475,7 +475,7 @@ var MathBlock = P(MathElement, function(_, super_) {
         } 
         // Test for autocommands 
         if(cursor[L] instanceof Letter)
-          cursor[L].autoOperator(cursor, (cursor.parent && (cursor.parent.parent instanceof OperatorName)) ? true : undefined);
+          cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
         if(cursor.parent !== ctrlr.root)
           ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
       }
@@ -484,7 +484,7 @@ var MathBlock = P(MathElement, function(_, super_) {
       // Test for autocommands 
       var cursor = ctrlr.cursor;
       if(cursor[L] instanceof Letter)
-        cursor[L].autoOperator(cursor, (cursor.parent && (cursor.parent.parent instanceof OperatorName)) ? true : undefined);
+        cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
     } else if(key === 'Enter') {
       if((ctrlr.cursor.parent == ctrlr.root) && !(ctrlr.cursor[L]) && (ctrlr.element) && (ctrlr.element.PrependBlankItem) && ctrlr.element.PrependBlankItem(ctrlr.API)) {
         // Enter pressed with cursor in initial position.  
@@ -492,8 +492,8 @@ var MathBlock = P(MathElement, function(_, super_) {
         return;
       }
       var cursor = ctrlr.cursor;
-      if(cursor[L] instanceof Letter)
-        cursor[L].autoOperator(cursor, (cursor.parent && (cursor.parent.parent instanceof OperatorName)) ? true : undefined);
+      if((ctrlr.container.children('.mq-popup').length == 0) && (cursor[L] instanceof Letter))
+        cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
     } else if((key === 'Backspace') || (key === 'Del')) {
       ctrlr.notifyElementOfChange();
       var out = super_.keystroke.apply(this, arguments);
@@ -595,11 +595,11 @@ var MathBlock = P(MathElement, function(_, super_) {
 
     // Test for autocommands 
     if(!(cmd instanceof Variable) && (cursor[L] instanceof Letter)) {
-      if((cmd instanceof Bracket) && (cmd.side === L))
-        cursor[L].autoOperator(cursor, false); 
-      else if(((cmd instanceof Equality) && (cmd.ctrlSeq == '=')) ||
-        ((ch == ',') && (cursor.parent && (cursor.parent.parent instanceof OperatorName))) ||
-        ((ch == ')') && (cursor.parent && (cursor.parent.parent instanceof OperatorName))) )
+      if((cmd instanceof Bracket) && (cmd.side === L)) {
+        if(cursor[L].autoOperator(cursor, false)) return;
+      } else if(((cmd instanceof Equality) && (cmd.ctrlSeq == '=')) ||
+        ((ch == ',') && cursor.parent && cursor.parent.suppressAutoUnit) ||
+        ((ch == ')') && cursor.parent && cursor.parent.suppressAutoUnit) )
         cursor[L].autoOperator(cursor, true); 
       else
         cursor[L].autoOperator(cursor);

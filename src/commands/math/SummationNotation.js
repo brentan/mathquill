@@ -97,6 +97,7 @@ var SummationNotation = P(MathCommand, function(_, super_) {
       this.blocks[0].upOutOf = this.blocks[2];
       this.blocks[1].upOutOf = this.blocks[2];
       this.blocks[2].downOutOf = this.blocks[0];
+      this.ends[L].suppressAutoUnit = true;
     }
   };
 });
