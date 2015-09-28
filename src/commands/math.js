@@ -465,10 +465,17 @@ var MathBlock = P(MathElement, function(_, super_) {
             return ctrlr.element.changeToText(current_output);
           if(current_output.match(/^[^=]* := [a-z0-9\.-]+$/i) && ctrlr.element.changeToText(current_output)) 
             return;
+          if(ctrlr.lastKeySpacebar) // Double space signals textbox conversion
+            return ctrlr.element.changeToText(ctrlr.API.text({show_spaces: true}));
+          if(key == 'Spacebar') {
+            var space = LatexCmds.space();
+            space.createLeftOf(cursor);
+            ctrlr.element.notifyChangeToText(space);
+          }
         } 
         // Test for autocommands 
         if(cursor[L] instanceof Letter)
-          cursor[L].autoOperator(cursor);
+          cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
         if(cursor.parent !== ctrlr.root)
           ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
       }
@@ -477,13 +484,16 @@ var MathBlock = P(MathElement, function(_, super_) {
       // Test for autocommands 
       var cursor = ctrlr.cursor;
       if(cursor[L] instanceof Letter)
-        cursor[L].autoOperator(cursor);
+        cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
     } else if(key === 'Enter') {
       if((ctrlr.cursor.parent == ctrlr.root) && !(ctrlr.cursor[L]) && (ctrlr.element) && (ctrlr.element.PrependBlankItem) && ctrlr.element.PrependBlankItem(ctrlr.API)) {
         // Enter pressed with cursor in initial position.  
         e.preventDefault();
         return;
       }
+      var cursor = ctrlr.cursor;
+      if((ctrlr.container.children('.mq-popup').length == 0) && (cursor[L] instanceof Letter))
+        cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
     } else if((key === 'Backspace') || (key === 'Del')) {
       ctrlr.notifyElementOfChange();
       var out = super_.keystroke.apply(this, arguments);
@@ -495,7 +505,8 @@ var MathBlock = P(MathElement, function(_, super_) {
       else
         ctrlr.closePopup();
       return out;
-    }
+    } else if((key == '=') && ctrlr.element && ctrlr.element.notifyEqualSign) 
+      window.setTimeout(function() { ctrlr.element.notifyEqualSign(ctrlr.root.ends[R]); }, 50);
     return super_.keystroke.apply(this, arguments);
   };
 
@@ -584,8 +595,14 @@ var MathBlock = P(MathElement, function(_, super_) {
 
     // Test for autocommands 
     if(!(cmd instanceof Variable) && (cursor[L] instanceof Letter)) {
-      if(cursor[L].autoOperator(cursor) && (cmd instanceof Bracket) && (cmd.side === L))
-        return;
+      if((cmd instanceof Bracket) && (cmd.side === L)) {
+        if(cursor[L].autoOperator(cursor, false)) return;
+      } else if(((cmd instanceof Equality) && (cmd.ctrlSeq == '=')) ||
+        ((ch == ',') && cursor.parent && cursor.parent.suppressAutoUnit) ||
+        ((ch == ')') && cursor.parent && cursor.parent.suppressAutoUnit) )
+        cursor[L].autoOperator(cursor, true); 
+      else
+        cursor[L].autoOperator(cursor);
     }
 
     // Only allow variables (letters basically) in a operatorname

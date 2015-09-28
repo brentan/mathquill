@@ -4,8 +4,10 @@
  ****************************************/
 
 Controller.open(function(_) {
+  _.lastKeySpacebar = false;
   _.keystroke = function(key, evt) {
     this.cursor.parent.keystroke(key, evt, this);
+    this.lastKeySpacebar = (key == 'Spacebar');
   };
 });
 

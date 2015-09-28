@@ -181,7 +181,7 @@ var Variable = P(Symbol, function(_, super_) {
         else _this.controller.cursor.insAtRightEnd(right_end_of);
         _this.controller.API.typedText(word);
         if(_this.controller.cursor[L] instanceof Letter)
-          _this.controller.cursor[L].autoOperator(_this.controller.cursor);
+          _this.controller.cursor[L].autoOperator(_this.controller.cursor, false);
         if(word[word.length - 1] === '.')
           FunctionCommand(true).createLeftOf(_this.controller.cursor);
         _this.controller.closePopup();
@@ -220,7 +220,7 @@ var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { 
     return super_.init.call(this, this.letter = ch); 
   };
-  _.autoOperator = function(cursor) {
+  _.autoOperator = function(cursor, unit_conversion) {
     if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) return false;
     var autoCmds = cursor.options.autoCommands;
     // join together longest sequence of letters
@@ -228,6 +228,7 @@ var Letter = P(Variable, function(_, super_) {
     while (l instanceof Letter) {
       str = l.letter + str, l = l[L], i += 1;
     }
+    var left_of = l;
     // check for an autocommand, going thru substrings longest to shortest
     if(str.length > 1) {
       if (autoCmds.hasOwnProperty(str)) {
@@ -236,6 +237,55 @@ var Letter = P(Variable, function(_, super_) {
         cursor[L] = l[L];
         LatexCmds[str](str).createLeftOf(cursor);
         return true;
+      }
+    }
+    var try_unit_converstion = true;
+    if(unit_conversion === false) try_unit_converstion = false;
+    if((unit_conversion === true) && !((left_of instanceof BinaryOperator) && (left_of.ctrlSeq == '\\cdot '))) try_unit_converstion = false;
+    if(try_unit_converstion && str.length) {
+      var unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
+      var create_unit = function(_this, symb) {
+        var change_to_unit = true;
+        var wordList = _this.controller.element ? _this.controller.element.autocomplete() : (_this.controller.API.__options.autocomplete || []);
+        // If this is a function definition, we also need to add in the local variables for this function
+        if((_this.controller.root.ends[L] instanceof OperatorName) && (_this.controller.root.ends[L][R] instanceof Equality) && (_this.controller.root.ends[L][R].ctrlSeq == '=')) {
+          var local_vars = _this.controller.root.ends[L].text().replace(/^[a-zA-Z0-9_]\((.*)\)$/,"$1").split(",");
+          for(var j = 0; j < local_vars.length; j++) 
+            wordList.push(local_vars[j].trim());
+        }
+        for(var j = 0; j < wordList.length; j++) {
+          if(wordList[j] == str) { change_to_unit = false; break; }
+        }
+        if(change_to_unit) {
+          var unit = Unit();
+          for (var i = 1, l = cursor[L]; i < str.length; i += 1, l = l[L]);
+          Fragment(l, cursor[L]).remove();
+          cursor[L] = l[L];
+          if((cursor[L] instanceof BinaryOperator) && (cursor[L].ctrlSeq == '\\cdot ')) {
+            cursor[L] = cursor[L][L];
+            l[L].remove();
+          }
+          unit.createLeftOf(cursor);
+          for(var i = 0; i < symb.length; i++) 
+            Letter(symb[i]).createLeftOf(cursor);
+          _this.controller.closePopup();
+          unit.jQ.find('.mq-florin').removeClass('.mq-florin').html('f'); // change florin to 'f'
+          cursor.insRightOf(unit);
+          return true;
+        }
+        return false;
+      }
+      for(var i = 0; i < unitList.symbols.length; i++) {
+        if(str == unitList.symbols[i]) {
+          if(create_unit(this, unitList.symbols[i])) return true;
+        } 
+      }
+      for(var i = 0; i < unitList.names.length; i++) { 
+        if(str.toLowerCase() == unitList.names[i].toLowerCase()) {
+          if(create_unit(this, unitList.name_to_symbol[unitList.names[i]])) return true;
+        } else if(str.toLowerCase() == (unitList.names[i].toLowerCase() + 's')) {
+          if(create_unit(this, unitList.name_to_symbol[unitList.names[i]])) return true;
+        }
       }
     }
     return false;
@@ -364,4 +414,14 @@ LatexCmds.f = P(Letter, function(_, super_) {
     else
       super_.createLeftOf.call(this, cursor);
   };
+});
+LatexCmds[' '] = LatexCmds.space = P(Letter, function(_, super_) {
+  _.htmlTemplate = [''];
+  _.init = function() {
+    super_.init.call(this, '', '', '');
+  }
+  _.text = function(opts) {
+    if(opts.show_spaces) return ' ';
+    return '';
+  }
 });

@@ -8,12 +8,11 @@
 
 var Unit = LatexCmds.Unit = 
 CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
-  _.ctrlSeq = 'Unit{...}{...}';
-  _.replaces = function(replacedFragment) {
-    replacedFragment.disown();
+  _.ctrlSeq = 'Unit{...}';
+  _.replaces = function(replacedFragment) { 
     this._replacedFragment = replacedFragment;
   };
-  _.htmlTemplate = '<span><span>&0</span><span class="mq-unit mq-non-leaf">&1</span></span>';
+  _.htmlTemplate = '<span><span class="mq-unit mq-non-leaf">&0</span></span>';
   _.finalizeTree = function() {
     // Change any fancy 'f' back into normal f
     this.jQ.find('.mq-florin').removeClass('.mq-florin').html('f');
@@ -68,6 +67,61 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
       cursor.insAtRightEnd(this);
       cursor.unwrapGramp();
     };
+  };
+  _.createLeftOf = function(cursor) {
+    if (this._replacedFragment) {
+      var add_parens = false;
+      this._replacedFragment.each(function(el) {
+        if(el instanceof BinaryOperator) add_parens = true;
+      });
+      if(add_parens) {
+        var parens = CharCmds['(']();
+        parens.replaces(this._replacedFragment);
+        parens.createLeftOf(cursor);
+        cursor.insRightOf(parens);
+      } else {
+        cursor.clearSelection();
+        cursor.insRightOf(this._replacedFragment.ends[R]);
+        this._replacedFragment.clear();
+      }
+      this._replacedFragment = undefined;
+      super_.createLeftOf.call(this, cursor);
+    } else {
+      // See if im being added next to a number or other item, or if I should prepend a '1'
+      var implicit_one = false;
+      if((cursor[L] == 0) || (cursor[L] instanceof BinaryOperator)) {
+        implicit_one = VanillaSymbol('1');
+        implicit_one.createLeftOf(cursor);
+      }
+      super_.createLeftOf.call(this, cursor);
+      if(implicit_one && (this.getController().captiveUnitMode || this.getController().units_only)) implicit_one.remove();
+    }
+    cursor.insAtRightEnd(this.ends[R]);
+    cursor.workingGroupChange();
+    return this;
+  };
+  _.latex = function() {
+    return '\\Unit{' + this.blocks[0].latex() + '}';
+  }
+  _.text = function(opts) { 
+    if(opts.captiveUnitMode || opts.units_only) return this.blocks[0].text(jQuery.extend({unit: true}, opts));
+    if((this[L] == 0) || (this[L] instanceof BinaryOperator))
+      return '1*(' + this.blocks[0].text(jQuery.extend({unit: true}, opts)) + ')';
+    else
+      return '*(' + this.blocks[0].text(jQuery.extend({unit: true}, opts)) + ')';
+  }
+});
+
+var CombinedUnit = LatexCmds.CombinedUnit = 
+P(Unit, function(_, super_) {
+  _.ctrlSeq = 'CombinedUnit{...}{...}';
+  _.replaces = function(replacedFragment) {
+    replacedFragment.disown();
+    this._replacedFragment = replacedFragment;
+  };
+  _.htmlTemplate = '<span><span>&0</span><span class="mq-unit mq-non-leaf">&1</span></span>';
+  _.finalizeTree = function() {
+    super_.finalizeTree.call(this);
     this.ends[L].deleteOutOf = function(dir, cursor) {
       for(var el= this.parent.ends[R].ends[L]; el !== 0; el = el[R])
         el.remove();
@@ -78,18 +132,15 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
       this.ends[L].jQ.hide();
     if(this.getController().units_only) 
       this.ends[L].jQ.hide();
-  };
+  }
   _.createLeftOf = function(cursor) {
     if (this._replacedFragment) {
-
       // Determine if the fragment is just numbers.  If so, add units
       var just_a_number = true;
-      for(var el = this._replacedFragment.ends[L]; el !== 0; el = el[R]) {
-        if(!((el instanceof VanillaSymbol) && el.ctrlSeq.match(/[0-9\.]/))) {
+      this._replacedFragment.each(function(el) {
+        if(!((el instanceof VanillaSymbol) && el.ctrlSeq.match(/[0-9\.]/))) 
           just_a_number = false;
-          break;
-        }
-      }
+      });
       // Determine if its scientific notation ONLY
       if((this._replacedFragment.ends[L] === this._replacedFragment.ends[R]) && (this._replacedFragment.ends[L] instanceof ScientificNotation)) just_a_number = true;
       if(just_a_number) {
@@ -136,7 +187,7 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
     return this;
   };
   _.latex = function() {
-    return '\\Unit{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
+    return '\\CombinedUnit{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
   }
   _.text = function(opts) { 
     if(opts.captiveUnitMode || opts.units_only) return this.blocks[1].text(jQuery.extend({unit: true}, opts));
