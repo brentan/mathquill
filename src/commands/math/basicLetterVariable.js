@@ -215,7 +215,8 @@ optionProcessors.autoCommands = function(cmds) {
   //dict._maxLength = maxLength;
   return dict;
 };
-
+var show_s_unit_message = true;
+var show_m_unit_message = true;
 var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { 
     return super_.init.call(this, this.letter = ch); 
@@ -242,7 +243,7 @@ var Letter = P(Variable, function(_, super_) {
     var try_unit_converstion = true;
     if(unit_conversion === false) try_unit_converstion = false;
     if((unit_conversion === true) && !((left_of instanceof BinaryOperator) && (left_of.ctrlSeq == '\\cdot '))) try_unit_converstion = false;
-    if(try_unit_converstion && str.length) {
+    if(try_unit_converstion && (str.length > 1)) {
       var unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
       var create_unit = function(_this, symb) {
         var change_to_unit = true;
@@ -275,6 +276,7 @@ var Letter = P(Variable, function(_, super_) {
         }
         return false;
       }
+      if((str == 'sec') && create_unit(this, 's')) return true; // Override command for seconds
       for(var i = 0; i < unitList.symbols.length; i++) {
         if(str == unitList.symbols[i]) {
           if(create_unit(this, unitList.symbols[i])) return true;
@@ -286,6 +288,18 @@ var Letter = P(Variable, function(_, super_) {
         } else if(str.toLowerCase() == (unitList.names[i].toLowerCase() + 's')) {
           if(create_unit(this, unitList.name_to_symbol[unitList.names[i]])) return true;
         }
+      }
+    } else if(try_unit_converstion && str.length) {
+      // We don't auto-convert 1 character things because there are too many false positives.  But we warn on 's' and 'm' as these
+      // are both common variable names AND common unit assessors 
+      // BRENTAN: Future, add option to select default option for converting s and m to units?
+      if(show_s_unit_message && (str == 's')) {
+        SwiftCalcs.createTooltip("<<Did you mean seconds?>>\n<i>s</i> is a common variable name and Swift Calcs does not auto-convert it to <i>seconds</i>.  Looking for the seconds unit?  Try typing <[sec]>.", cursor[L].jQ);
+        show_s_unit_message = false;
+      }
+      if(show_m_unit_message && (str == 'm')) {
+        SwiftCalcs.createTooltip("<<Did you mean meters?>>\n<i>m</i> is a common variable name and Swift Calcs does not auto-convert it to <i>meters</i>.  Looking for the meters unit?  Try typing <[meter]>.", cursor[L].jQ);
+        show_m_unit_message = false;
       }
     }
     return false;
