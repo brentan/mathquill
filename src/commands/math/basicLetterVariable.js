@@ -385,7 +385,18 @@ optionProcessors.unitList = function(units) {
   return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.sort(sortFunction).concat(symbols_prefix.sort(sortFunction)) }
 }
 
-LatexCmds["'"] = bind(Letter, "'");
+LatexCmds["'"] = P(Letter, function(_, super_) {
+  _.init = function() {
+    super_.init.call(this, "'");
+  }
+  _.createLeftOf = function(cursor) {
+    if((cursor[L] instanceof BinaryOperator) || (cursor[L].ctrlSeq == '\\cdot '))
+      var to_remove = cursor[L];
+    var to_return = super_.createLeftOf.call(this, cursor);
+    if(to_remove) to_remove.remove();
+    return to_return;
+  }
+});
 
 LatexCmds.µ = P(VanillaSymbol, function(_, super_) {  //Do this for units, so that mu becomes a letter in the unit box
   _.init = function() {
