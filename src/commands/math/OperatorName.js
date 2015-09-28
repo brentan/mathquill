@@ -23,6 +23,7 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
     var before = '';
     if(this[L] && !(this[L] instanceof BinaryOperator))
       before = '*'; //BRENTAN: This needs lots of testing to make sure it doesnt add a '*' in situations where it shouldn't!
+    if((this.blocks[0].text(opts)+"").match(/^'+$/)) before = '';
     return before + this.blocks[0].text(opts) + '(' + this.blocks[1].text(opts) + ')';
   };
   _.latex = function() {
