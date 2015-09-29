@@ -465,12 +465,23 @@ var MathBlock = P(MathElement, function(_, super_) {
             return ctrlr.element.changeToText(current_output);
           if(current_output.match(/^[^=]* := [a-z0-9\.-]+$/i) && ctrlr.element.changeToText(current_output)) 
             return;
-          if(ctrlr.lastKeySpacebar) // Double space signals textbox conversion
-            return ctrlr.element.changeToText(ctrlr.API.text({show_spaces: true}));
+          if(ctrlr.lastKeySpacebar) {// Double space signals textbox conversion
+            ctrlr.root.ends[R].remove(); // Remove last space
+            return ctrlr.element.changeToText(ctrlr.API.text({show_spaces: true})+"&nbsp;");
+          }
           if(key == 'Spacebar') {
-            var space = LatexCmds.space();
-            space.createLeftOf(cursor);
-            ctrlr.element.notifyChangeToText(space);
+            var addSpace = function() {
+              var space = LatexCmds.space();
+              space.createLeftOf(cursor);
+              ctrlr.element.notifyChangeToText(space);
+            }
+            if(cursor[L] instanceof Letter) {
+              if(cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined))
+                window.setTimeout(function() { ctrlr.lastKeySpacebar = false; });
+              else 
+                addSpace();
+            } else 
+              addSpace();
           }
         } 
         // Test for autocommands 
