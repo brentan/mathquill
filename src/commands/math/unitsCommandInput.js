@@ -104,7 +104,7 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
     return '\\Unit{' + this.blocks[0].latex() + '}';
   }
   _.text = function(opts) { 
-    if(opts.captiveUnitMode || opts.units_only) return this.blocks[0].text(jQuery.extend({unit: true}, opts));
+    if(opts && (opts.captiveUnitMode || opts.units_only)) return this.blocks[0].text(jQuery.extend({unit: true}, opts));
     if((this[L] == 0) || (this[L] instanceof BinaryOperator))
       return '1*(' + this.blocks[0].text(jQuery.extend({unit: true}, opts)) + ')';
     else
