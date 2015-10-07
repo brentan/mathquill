@@ -446,7 +446,7 @@ LatexCmds[' '] = LatexCmds.space = P(Letter, function(_, super_) {
     super_.init.call(this, '', '', '');
   }
   _.text = function(opts) {
-    if(opts.show_spaces) return ' ';
+    if(opts && opts.show_spaces) return ' ';
     return '';
   }
 });
