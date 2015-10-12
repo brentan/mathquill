@@ -95,7 +95,7 @@ var AbstractMathQuill = P(function(_) {
     if(this.__controller.units_only)
       opts.units_only = true;
     var out = this.__controller.exportText(opts); 
-    if(opts['check_for_array'] && !out.match(/^[ ]*\[.*\][ ]*$/))
+    if(opts['check_for_array'] && !out.match(/^[ ]*\[.*\][ ]*$/) && out.match(/,/))
       out = '[' + out + ']'; 
     if(opts['default'] && (out.trim() == '')) return opts['default'];
     return out;
