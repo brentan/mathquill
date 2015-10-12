@@ -76,6 +76,13 @@ var Integral = P(MathCommand, function(_, super_) {
     this.ends[L].upOutOf = this.ends[R];
     this.ends[R].downOutOf = this.ends[L];
     this.ends[R].suppressAutoUnit = true;
+    this.ends[R].write = function(cursor, ch) {
+      if (!RegExp(/[a-z0-9_]/).test(ch)) {
+        cursor.insRightOf(this.parent);
+        cursor.parent.write(cursor, ch);
+      } else
+        MathBlock.p.write.apply(this, arguments);
+    }
   };
 });
 
@@ -145,6 +152,13 @@ var IntegralNoLimit = P(MathCommand, function(_, super_) {
     this.ends[L].upOutOf = this.ends[R];
     this.ends[R].downOutOf = this.ends[L];
     this.ends[R].suppressAutoUnit = true;
+    this.ends[R].write = function(cursor, ch) {
+      if (!RegExp(/[a-z0-9_]/).test(ch)) {
+        cursor.insRightOf(this.parent);
+        cursor.parent.write(cursor, ch);
+      } else
+        MathBlock.p.write.apply(this, arguments);
+    }
   };
 });
 

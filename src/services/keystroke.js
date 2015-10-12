@@ -234,7 +234,11 @@ Controller.open(function(_) {
     return this.notify('move');
   };
   _.moveLeft = function() { return this.moveDir(L); };
-  _.moveRight = function() { return this.moveDir(R); };
+  _.moveRight = function() { 
+    if(this.cursor[L] instanceof Letter) 
+      this.cursor[L].autoOperator(this.cursor, (this.cursor.parent && this.cursor.parent.suppressAutoUnit) ? true : undefined);
+    return this.moveDir(R); 
+  };
 
   /**
    * moveUp and moveDown have almost identical algorithms:
