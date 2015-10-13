@@ -42,7 +42,7 @@ Controller.open(function(_) {
         ctrlr.element.unitChosen(ctrlr.API.latex());
         return;
       }
-      if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
+      //if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API); // Window blur should refocus this on next focus, so we need this to stay...why was this added?
       if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
       cursor.hide().parent.blur(); // synchronous with/in the same frame as
       ctrlr.closePopup();
