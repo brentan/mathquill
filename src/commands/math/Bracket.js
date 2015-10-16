@@ -79,7 +79,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
       if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof Variable) && (this.side === L)) 
         return cursor[L].autoUnItalicize(cursor);
       else if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof VanillaSymbol) && (cursor[L].ctrlSeq.match(/^[0-9]$/)) && (this.side === L)) 
-        LatexCmds.cdot().implicit().createLeftOf(cursor);\
+        LatexCmds.cdot().implicit().createLeftOf(cursor);
       else if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof SupSub) && (this.side === L) && (cursor[L].supsub === 'sub') && (cursor[L]['sub'].ends[R] instanceof Variable)) {
         cursor.insAtRightEnd(cursor[L]['sub'])
         return cursor[L].autoUnItalicize(cursor); 
