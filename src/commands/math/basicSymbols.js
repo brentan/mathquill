@@ -278,6 +278,8 @@ var Equality = P(Inequality, function(_, super_) {
       var start_test = cursor[L];
       var all_letters = true;
       if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
+      else if((start_test instanceof Bracket) && (start_test.sides[L].ctrlSeq == '[')) start_test = start_test[L];
+      else if((start_test instanceof Matrix) && (start_test.row == 1)) start_test = start_test[L];
       if(start_test === 0) all_letters = false;
       for(var l = start_test; l !== 0; l = l[L]) {
         if(!(l instanceof Variable) && !(l instanceof NonSymbolaSymbol)) { all_letters = false; break }
