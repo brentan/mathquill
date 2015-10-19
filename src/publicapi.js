@@ -95,6 +95,9 @@ var AbstractMathQuill = P(function(_) {
     if(this.__controller.units_only)
       opts.units_only = true;
     var out = this.__controller.exportText(opts); 
+    // Transform 1...2 and 1, 3...6 into appropriate emgiac 'matrix()' call
+    console.log(out);
+    out = out.replace(/([a-z0-9_.]+) *, *([a-z0-9_.]+) *\.\.\. *([a-z0-9_.]+)/ig, " makevector(seq($1, $3, $2-$1))").replace(/([a-z0-9_.]+) *\.\.\. *([a-z0-9_.]+)/ig, " makevector(seq($1, $2, 1))")
     if(opts['check_for_array'] && !out.match(/\[.*\]/) && out.match(/,/))
       out = '[' + out + ']'; 
     if(opts['default'] && (out.trim() == '')) return opts['default'];
