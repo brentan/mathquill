@@ -379,12 +379,17 @@ LatexCmds['…'] = P(VanillaSymbol, function(_, super_) {
     super_.init.call(this, '…', '<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>', '..');
   }
   _.text = function(opts) {
-    var out = '';
-    if(!this[L] || (this[L] instanceof BinaryOperator))
-      out += 'i__s';
-    out += '..';
-    if(!this[R] || (this[R] instanceof BinaryOperator))
-      out += 'i__e';
-    return out;
+    if((this.parent && this.parent.parent && (this.parent.parent instanceof Matrix) && (this.parent.parent.row == 1)) || (this.parent && this.parent.parent && (this.parent.parent instanceof Bracket) && (this.parent.parent.sides[L].ctrlSeq == '['))) {
+      var out = '';
+      if(!this[L] || (this[L] instanceof BinaryOperator))
+        out += 'i__s';
+      out += '..';
+      if(!this[R] || (this[R] instanceof BinaryOperator))
+        out += 'i__e';
+      return out;
+    } else {
+      // Not in a matrix assessor.  In this context, turn into a matrix of increasing numbers
+      return '...';
+    }
   }
 });
