@@ -18,6 +18,7 @@ var SupSub = P(MathCommand, function(_, super_) {
     if(this.supsub === 'sub') {
       // Only add subscript to a variable name (aka letter) 
       if (!(cursor[L] instanceof Variable)) return cursor.parent.flash();
+      cursor[L].autoOperator(cursor, false);
       // Inserting in a string for some reason...
       if((cursor[L] instanceof Variable) && (cursor[R] instanceof Variable)) {
         var cdot = LatexCmds.cdot()
