@@ -102,17 +102,26 @@ function bind(cons /*, args... */) {
 }
 
 /**
- * a development-only debug method.  This definition and all
- * calls to `pray` will be stripped from the minified
- * build of mathquill.
- *
- * This function must be called by name to be removed
- * at compile time.  Do not define another function
+ * debug method.  Do not define another function
  * with the same name, and only call this function by
  * name.
  */
-function pray(message, cond) {
-  if (!cond) throw new Error('prayer failed: '+message);
+var report_extra = true;
+function pray(message, cond, controller) {
+  if (!cond) {
+    if(Rollbar) {
+      try {
+        throw new Error('Mathquill Error: '+message);
+      } catch(err) {
+        if(controller && report_extra) {
+          report_extra = false;
+          Rollbar.scope({ math_text: controller.API.text(), latex: controller.API.latex(), last_action: controller.API.last_action}).error(err);
+          report_extra = true;
+        } else
+          Rollbar.error(err);
+      }
+    } 
+  }
 }
 
 /*!

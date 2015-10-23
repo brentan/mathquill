@@ -47,6 +47,7 @@ MathQuill.__options = Options.p;
 
 var AbstractMathQuill = P(function(_) {
   _.mathquill = true;
+  _.last_action = 'none';
   _.needs_touch = true;
   _.init = function() { throw "don't call me, I'm 'abstract'"; };
   _.initRoot = function(root, el, opts) {
@@ -175,6 +176,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.windowBlur = function() { this.__controller.windowBlur(); return this; };
   _.inFocus = function() { return !this.__controller.blurred; };
   _.write = function(latex) {
+    this.last_action = 'write: ' + latex;
     if(this.__controller.staticMode) return this;
     if (latex.slice(0,6) === 'latex{' && latex.slice(-1) === '}') 
       latex = latex.slice(6, -1);
@@ -203,6 +205,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     return this;
   }
   _.command = function(cmd, option) {
+    this.last_action = 'command: ' + cmd;
     if(this.__controller.staticMode) return this;
     // A bit hacky...but if attached element is in 'unitMode', pass the command on to that element
     if(!this.__controller.captiveUnitMode && this.__controller.element && this.__controller.element.unitMode) return this.__controller.element.unitMode.command(cmd, option);
@@ -292,6 +295,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     }
   }
   _.cmd = function(cmd) {
+    this.last_action = 'cmd: ' + cmd;
     var ctrlr = this.__controller.notify(), cursor = ctrlr.cursor.show();
     if (/^\\[a-z]+$/i.test(cmd)) {
       cmd = cmd.slice(1);
@@ -353,11 +357,13 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.moveToRightEnd = function() { return this.moveToDirEnd(R); };
 
   _.keystroke = function(key, evt) {
+    this.last_action = 'keystroke: ' + key;
     if(this.__controller.staticMode) return this;
     this.__controller.keystroke(key, evt);
     return this;
   };
   _.typedText = function(text) {
+    this.last_action = 'typedText: ' + text;
     if(this.__controller.staticMode) return this;
     this.__controller.scheduleUndoPoint();
     this.__controller.notifyElementOfChange();
@@ -380,6 +386,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   }
   _.copy = function(e) { this.__controller.copy(e); return this; }
   _.paste = function(text) { 
+    this.last_action = 'paste: ' + text;
     if(this.__controller.staticMode) return this;
     this.__controller.setUndoPoint();
     this.__controller.paste(text); 
@@ -398,22 +405,28 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     return undefined;
   }
   _.mouseDown = function(e) {
+    this.last_action = 'mouseDown';
     this.__controller.mouseDown(e);
   }
   _.mouseMove = function(e) {
+    this.last_action = 'mouseMove';
     this.__controller.mouseMove(e);
   }
   _.mouseUp = function(e) {
+    this.last_action = 'mouseUp';
     this.__controller.mouseUp(e);
   }
   _.mouseOut = function(e) {
+    this.last_action = 'mouseOut';
     this.__controller.mouseOut(e);
   }
   // Undo/Redo manager API points
   _.restoreState = function(d) {
+    this.last_action = 'restoreState';
     this.__controller.restoreState(d);
   }
   _.currentState = function() {
+    this.last_action = 'currentState';
     return this.__controller.currentState();
   }
 });
