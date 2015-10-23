@@ -262,7 +262,7 @@ var Cursor = P(Point, function(_) {
       }
     }
     this.controller.destroyTooltip();
-    pray('cursor and anticursor in the same tree', lca);
+    pray('cursor and anticursor in the same tree', lca, this.controller);
     // The cursor and the anticursor should be in the same tree, because the
     // mousemove handler attached to the document, unlike the one attached to
     // the root HTML DOM element, doesn't try to get the math tree node of the

@@ -96,8 +96,11 @@ var Node = P(function(_) {
   };
   _.getController = function() {
     if(this.controller) return this.controller;
-    this.controller = this.parent.getController();
-    return this.controller;
+    if(this.parent) {
+      this.controller = this.parent.getController();
+      return this.controller;
+    }
+    return false;
   }
 
   _.dispose = function() { delete Node.byId[this.id]; };
@@ -199,14 +202,22 @@ var Node = P(function(_) {
 });
 
 function prayWellFormed(parent, leftward, rightward) {
-  pray('a parent is always present', parent);
+  if(parent && parent.getController)
+    var controller = parent.getController();
+  else if(leftward && leftward.getController)
+    var controller = leftward.getController();
+  else if(rightward && rightward.getController)
+    var controller = rightward.getController();
+  else
+    var controller = undefined;
+  pray('a parent is always present', parent, controller);
   pray('leftward is properly set up', (function() {
     // either it's empty and `rightward` is the left end child (possibly empty)
     if (!leftward) return parent.ends[L] === rightward;
 
     // or it's there and its [R] and .parent are properly set up
     return leftward[R] === rightward && leftward.parent === parent;
-  })());
+  })(), controller);
 
   pray('rightward is properly set up', (function() {
     // either it's empty and `leftward` is the right end child (possibly empty)
@@ -214,7 +225,7 @@ function prayWellFormed(parent, leftward, rightward) {
 
     // or it's there and its [L] and .parent are properly set up
     return rightward[L] === leftward && rightward.parent === parent;
-  })());
+  })(), controller);
 }
 
 

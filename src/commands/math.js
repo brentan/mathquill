@@ -286,7 +286,7 @@ var MathCommand = P(MathElement, function(_, super_) {
     var cmdId = ' mathquill-command-id=' + cmd.id;
     var tokens = cmd.htmlTemplate.match(/<[^<>]+>|[^<>]+/g);
 
-    pray('no unmatched angle brackets', tokens.join('') === this.htmlTemplate);
+    pray('no unmatched angle brackets', tokens.join('') === this.htmlTemplate, this.getController());
 
     // add cmdId to all top-level tags
     for (var i = 0, token = tokens[0]; token; i += 1, token = tokens[i]) {
@@ -296,7 +296,7 @@ var MathCommand = P(MathElement, function(_, super_) {
       }
       // top-level open tags
       else if (token.charAt(0) === '<') {
-        pray('not an unmatched top-level close tag', token.charAt(1) !== '/');
+        pray('not an unmatched top-level close tag', token.charAt(1) !== '/', this.getController());
 
         tokens[i] = token.slice(0,-1) + cmdId + '>';
 
@@ -304,7 +304,7 @@ var MathCommand = P(MathElement, function(_, super_) {
         var nesting = 1;
         do {
           i += 1, token = tokens[i];
-          pray('no missing close tags', token);
+          pray('no missing close tags', token, this.getController());
           // close tags
           if (token.slice(0,2) === '</') {
             nesting -= 1;
@@ -669,6 +669,7 @@ MathQuill.MathField = APIFnFor(P(EditableField, function(_, super_) {
     this.jQ = el;
   };
   _.latex = function(latex) {
+    this.last_action = 'latex: ' + latex;
     if (arguments.length > 0) {
       this.__controller.renderLatexMath(latex);
       if(latex.trim() !== '') this.__controller.removeGhost();
