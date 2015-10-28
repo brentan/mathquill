@@ -24,7 +24,7 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   _.finalizeTree = function() {
     this.ends[R].write = function(cursor, ch) {
       if(!RegExp(/[A-Za-z0-9_\(]/).test(ch)) {
-        if(cursor[L] instanceof Variable) cursor[L].autoOperator(cursor, false);
+        if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor, false);
         cursor.insRightOf(this.parent);
         cursor.parent.write(cursor, ch);
       } else

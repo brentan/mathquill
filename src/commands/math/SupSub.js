@@ -82,11 +82,11 @@ var SupSub = P(MathCommand, function(_, super_) {
     this.ends[L].write = function(cursor, ch) {
       if((supsub == 'sub') && (ch === '_')) return this.flash();
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
-        if(cursor[L] instanceof Variable) cursor[L].autoOperator(cursor);
+        if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor);
         cursor.insRightOf(this.parent);
         cursor.parent.write(cursor, ch);
       } else if ((supsub == 'sub') && !RegExp(/[A-Za-z0-9]/).test(ch)) {
-        if(cursor[L] instanceof Variable) cursor[L].autoOperator(cursor, false);
+        if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor, false);
         cursor.insRightOf(this.parent);
         cursor.parent.write(cursor, ch);
       } else
