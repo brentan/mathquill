@@ -167,6 +167,8 @@ var Variable = P(Symbol, function(_, super_) {
       var scrollTop = this.controller.element ? this.controller.element.worksheet.jQ.scrollTop() : 0;
       if(topBlock.closest('.tutorial_block').length)
         scrollTop = topBlock.closest('.tutorial_block').scrollTop();
+      if(topBlock.closest('.sidebar').length) 
+        scrollTop = topBlock.closest('.sidebar').scrollTop();
       var _this = this;
       var onclick = function(e) {
         e.preventDefault();
