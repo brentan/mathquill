@@ -93,15 +93,15 @@ var Variable = P(Symbol, function(_, super_) {
     var letters = output[1];
     var matchList = [];
     var regex = new RegExp("^" + word + ".*$", "i");
+    var capitalize = function(s) {
+      return s[0].toUpperCase() + s.slice(1);
+    };
     if((this.parent.unit) || (this.parent.parent && this.parent.parent.unit)) {
       // Units
       if(word.length == 1) regex = new RegExp("^" + word + "$", ""); // Exact match for 1 letter autocomplete (for things like 'm' -> meter)
       if(word.length > 0) {
         prefix_to_ignore = ['micro', 'yocto', 'zepto', 'atto', 'femto', 'pico', 'nano', 'milli', 'centi', 'deci', 'deca', 'hecto', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa', 'zetta', 'yotta'];
         skip_this = false;
-        var capitalize = function(s) {
-          return s[0].toUpperCase() + s.slice(1);
-        };
         for(var i = 0; i < prefix_to_ignore.length; i++) 
           if(prefix_to_ignore[i].match(regex)) { skip_this = true; break; }
         if(!skip_this) {
@@ -126,6 +126,7 @@ var Variable = P(Symbol, function(_, super_) {
           // In a FunctionCommand, we only autocomplete the method calls that are public for that object
           wordList = this.parent.parent.getObject().propertyList;
           commandList = this.parent.parent.getObject().methodList;
+          unitList = {names: [], symbols: []};
           pretext = this.parent.parent.objectName();
           pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>.' : (pretext + '.');
         } else {
@@ -133,6 +134,7 @@ var Variable = P(Symbol, function(_, super_) {
           // Get the provided list of words and commands to autocomplete
           wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete || [];
+          unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
         }
         var formatter = function(text, self) {
           var autoCommands = Object.keys(self.controller.API.__options.autoCommands);
@@ -153,6 +155,8 @@ var Variable = P(Symbol, function(_, super_) {
           if(wordList[i].match(regex)) matchList.push("<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], this) + "</i></span></li>");
         for(var i = 0; i < commandList.length; i++)
           if(commandList[i].match(regex)) matchList.push("<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>");
+        for(var i = 0; i < unitList.names.length; i++)
+          if(unitList.names[i].match(regex)) matchList.push("<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]) + ")</span></li>");
       }
     }
     if(matchList.length > 0) {
@@ -181,6 +185,11 @@ var Variable = P(Symbol, function(_, super_) {
         if(right_of) _this.controller.cursor.insRightOf(right_of);
         else if(left_of) _this.controller.cursor.insLeftOf(left_of);
         else _this.controller.cursor.insAtRightEnd(right_end_of);
+        if($(this).attr('data-make-unit') == '1') {
+          if(_this.controller.cursor[L] && (_this.controller.cursor[L].ctrlSeq == '\\cdot '))
+            _this.controller.API.keystroke('Backspace', {preventDefault: function() {} });
+          _this.controller.API.typedText('"');
+        }
         _this.controller.API.typedText(word);
         if(_this.controller.cursor[L] instanceof Letter)
           _this.controller.cursor[L].autoOperator(_this.controller.cursor, false);
@@ -189,6 +198,7 @@ var Variable = P(Symbol, function(_, super_) {
         _this.controller.closePopup();
         if((word[word.length - 1] !== '(') && (word[word.length - 1] !== '.') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
           _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
+        if($(this).attr('data-make-unit') == '1') _this.controller.API.keystroke('Right', {preventDefault: function() {} });
         _this.controller.cursor.workingGroupChange();
       };
       this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset.top + topBlock.height() + scrollTop, leftOffset.left, onclick);
@@ -245,6 +255,7 @@ var Letter = P(Variable, function(_, super_) {
     var try_unit_converstion = true;
     if(unit_conversion === false) try_unit_converstion = false;
     if((unit_conversion === true) && !((left_of instanceof BinaryOperator) && (left_of.ctrlSeq == '\\cdot '))) try_unit_converstion = false;
+    if(cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub == 'sub')) try_unit_converstion = false;
     if(try_unit_converstion && (str.length > 1)) {
       var unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
       var create_unit = function(_this, symb) {
@@ -399,7 +410,6 @@ LatexCmds["'"] = P(Letter, function(_, super_) {
     return to_return;
   }
 });
-
 LatexCmds.µ = P(VanillaSymbol, function(_, super_) {  //Do this for units, so that mu becomes a letter in the unit box
   _.init = function() {
     super_.init.call(this, 'µ');
