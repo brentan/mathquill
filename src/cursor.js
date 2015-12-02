@@ -97,8 +97,8 @@ var Cursor = P(Point, function(_) {
 
   _.withDirInsertAt = function(dir, parent, withDir, oppDir) {
     if (parent !== this.parent && this.parent.blur) this.parent.blur();
-    if(parent.unit) parent.unit.focus();
-    if(parent.parent && parent.parent.unit) parent.parent.unit.focus();
+    if(parent && parent.unit) parent.unit.focus();
+    if(parent && parent.parent && parent.parent.unit) parent.parent.unit.focus();
     this.parent = parent;
     this[dir] = withDir;
     this[-dir] = oppDir;
