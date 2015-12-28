@@ -307,12 +307,12 @@ var Letter = P(Variable, function(_, super_) {
       // are both common variable names AND common unit assessors 
       // BRENTAN: Future, add option to select default option for converting s and m to units?
       if(this.controller.element && this.controller.element.worksheet.loaded && show_s_unit_message && (str == 's')) {
-        SwiftCalcs.createTooltip("<<Did you mean seconds?>>\n<i>s</i> is a common variable name and Swift Calcs does not auto-convert it to <i>seconds</i>.  Looking for the seconds unit?  Try typing <[sec]>.", cursor[L].jQ);
-        show_s_unit_message = false;
+        if (SwiftCalcs.createTooltip("<<Did you mean seconds?>>\n<i>s</i> is a common variable name and Swift Calcs does not auto-convert it to <i>seconds</i>.  Looking for the seconds unit?  Try typing <[sec]>.", cursor[L].jQ))
+          show_s_unit_message = false;
       }
       if(this.controller.element && this.controller.element.worksheet.loaded && show_m_unit_message && (str == 'm')) {
-        SwiftCalcs.createTooltip("<<Did you mean meters?>>\n<i>m</i> is a common variable name and Swift Calcs does not auto-convert it to <i>meters</i>.  Looking for the meters unit?  Try typing <[meter]>.", cursor[L].jQ);
-        show_m_unit_message = false;
+        if (SwiftCalcs.createTooltip("<<Did you mean meters?>>\n<i>m</i> is a common variable name and Swift Calcs does not auto-convert it to <i>meters</i>.  Looking for the meters unit?  Try typing <[meter]>.", cursor[L].jQ))
+          show_m_unit_message = false;
       }
     }
     return false;
