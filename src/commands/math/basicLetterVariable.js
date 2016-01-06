@@ -233,11 +233,12 @@ var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { 
     return super_.init.call(this, this.letter = ch); 
   };
-  _.autoOperator = function(cursor, unit_conversion) {
+  _.autoOperator = function(cursor, unit_conversion, allow_left_right) {
     if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) return false;
     var autoCmds = cursor.options.autoCommands;
     // join together longest sequence of letters
     var str = cursor[L].letter, l = cursor[L][L], i = 1;
+    if((cursor[R] instanceof Letter) && (allow_left_right !== true)) return false;
     while (l instanceof Letter) {
       str = l.letter + str, l = l[L], i += 1;
     }

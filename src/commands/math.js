@@ -612,8 +612,8 @@ var MathBlock = P(MathElement, function(_, super_) {
         ((ch == ',') && cursor.parent && cursor.parent.suppressAutoUnit) ||
         ((ch == ')') && cursor.parent && cursor.parent.suppressAutoUnit) )
         cursor[L].autoOperator(cursor, true); 
-      else
-        cursor[L].autoOperator(cursor);
+      else 
+        cursor[L].autoOperator(cursor, undefined, true);   //cursor[L].autoOperator(cursor);
     }
 
     // Only allow variables (letters basically) in a operatorname
