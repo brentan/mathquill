@@ -82,7 +82,8 @@ var AbstractMathQuill = P(function(_) {
   };
   _.setElement = function(el) { this.__controller.element = el; this.__controller.showPopups = true; return this; };
   _.showPopups = function() { this.__controller.showPopups = true; return this; };
-  _.setUnitMode = function(val) { this.__controller.captiveUnitMode = val; return this; };
+  _.setUnitMode = function(val) { this.__controller.captiveUnitMode = val; this.__controller.captiveMode = val; return this; };
+  _.setCaptiveMode = function(val) { this.__controller.captiveMode = val; return this; };
   _.setUnitsOnly = function(val) { this.__controller.units_only = val; return this; };
   _.setStaticMode = function(val) { this.__controller.staticMode = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
@@ -93,6 +94,8 @@ var AbstractMathQuill = P(function(_) {
       opts = this.__options;
     if(this.__controller.captiveUnitMode)
       opts.captiveUnitMode = true;
+    if(this.__controller.captiveMode)
+      opts.captiveMode = true;
     if(this.__controller.units_only)
       opts.units_only = true;
     var out = this.__controller.exportText(opts); 

@@ -11,6 +11,7 @@ var Controller = P(function(_) {
     this.API = API;
     this.element = 0;
     this.captiveUnitMode = false;
+    this.captiveMode = false;
     this.units_only = false;
     this.root = root;
     this.container = container;
@@ -30,7 +31,7 @@ var Controller = P(function(_) {
   };
 
   _.notifyElementOfChange = function() {
-    if(!this.captiveUnitMode && !this.staticMode && this.element && this.element.changed)
+    if(!this.captiveMode && !this.staticMode && this.element && this.element.changed)
       this.element.changed(this.API);
   }
 

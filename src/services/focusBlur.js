@@ -3,7 +3,7 @@ Controller.open(function(_) {
     var ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
     ctrlr.focus = function() {
       ctrlr.blurred = false;
-      if(ctrlr.captiveUnitMode) return;
+      if(ctrlr.captiveMode) return;
       if(ctrlr.element) ctrlr.element.setFocusedItem(ctrlr.API);
       ctrlr.container.addClass('mq-focused');
       if (!cursor.parent)
@@ -22,8 +22,8 @@ Controller.open(function(_) {
     };
     ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
       ctrlr.blurred = true;
-      if(ctrlr.captiveUnitMode) {
-        ctrlr.element.unitChosen(ctrlr.API.latex());
+      if(ctrlr.captiveMode) {
+        ctrlr.element.itemChosen(ctrlr.API.latex());
         return;
       }
       ctrlr.destroyTooltip();
@@ -38,8 +38,8 @@ Controller.open(function(_) {
     };
     ctrlr.windowBlur = function() {
       ctrlr.blurred = true;
-      if(ctrlr.captiveUnitMode) {
-        ctrlr.element.unitChosen(ctrlr.API.latex());
+      if(ctrlr.captiveMode) {
+        ctrlr.element.itemChosen(ctrlr.API.latex());
         return;
       }
       //if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API); // Window blur should refocus this on next focus, so we need this to stay...why was this added?
