@@ -233,11 +233,12 @@ var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { 
     return super_.init.call(this, this.letter = ch); 
   };
-  _.autoOperator = function(cursor, unit_conversion) {
+  _.autoOperator = function(cursor, unit_conversion, allow_left_right) {
     if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) return false;
     var autoCmds = cursor.options.autoCommands;
     // join together longest sequence of letters
     var str = cursor[L].letter, l = cursor[L][L], i = 1;
+    if((cursor[R] instanceof Letter) && (allow_left_right !== true)) return false;
     while (l instanceof Letter) {
       str = l.letter + str, l = l[L], i += 1;
     }
@@ -307,12 +308,12 @@ var Letter = P(Variable, function(_, super_) {
       // are both common variable names AND common unit assessors 
       // BRENTAN: Future, add option to select default option for converting s and m to units?
       if(this.controller.element && this.controller.element.worksheet.loaded && show_s_unit_message && (str == 's')) {
-        SwiftCalcs.createTooltip("<<Did you mean seconds?>>\n<i>s</i> is a common variable name and Swift Calcs does not auto-convert it to <i>seconds</i>.  Looking for the seconds unit?  Try typing <[sec]>.", cursor[L].jQ);
-        show_s_unit_message = false;
+        if (SwiftCalcs.createTooltip("<<Did you mean seconds?>>\n<i>s</i> is a common variable name and Swift Calcs does not auto-convert it to <i>seconds</i>.  Looking for the seconds unit?  Try typing <[sec]>.", cursor[L].jQ))
+          show_s_unit_message = false;
       }
       if(this.controller.element && this.controller.element.worksheet.loaded && show_m_unit_message && (str == 'm')) {
-        SwiftCalcs.createTooltip("<<Did you mean meters?>>\n<i>m</i> is a common variable name and Swift Calcs does not auto-convert it to <i>meters</i>.  Looking for the meters unit?  Try typing <[meter]>.", cursor[L].jQ);
-        show_m_unit_message = false;
+        if (SwiftCalcs.createTooltip("<<Did you mean meters?>>\n<i>m</i> is a common variable name and Swift Calcs does not auto-convert it to <i>meters</i>.  Looking for the meters unit?  Try typing <[meter]>.", cursor[L].jQ))
+          show_m_unit_message = false;
       }
     }
     return false;

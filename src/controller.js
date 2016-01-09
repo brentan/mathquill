@@ -11,6 +11,7 @@ var Controller = P(function(_) {
     this.API = API;
     this.element = 0;
     this.captiveUnitMode = false;
+    this.captiveMode = false;
     this.units_only = false;
     this.root = root;
     this.container = container;
@@ -30,7 +31,7 @@ var Controller = P(function(_) {
   };
 
   _.notifyElementOfChange = function() {
-    if(!this.captiveUnitMode && !this.staticMode && this.element && this.element.changed)
+    if(!this.captiveMode && !this.staticMode && this.element && this.element.changed)
       this.element.changed(this.API);
   }
 
@@ -109,10 +110,11 @@ var Controller = P(function(_) {
     }
     el.css({top: Math.ceil(top) + 'px', left: Math.floor(left) + 'px'});
     el.html(html);
-    if(this.element && ((left + el.width()) > this.element.worksheet.jQ.width())) // Adjust left if needed
-      el.css({left: Math.floor(max(0,this.element.worksheet.jQ.width() - el.width())) + 'px'});
-    if(this.root.jQ.closest('.sidebar').length && ((left + el.width()) > this.root.jQ.closest('.sidebar').width())) // Adjust left if needed
-      el.css({left: Math.floor(max(0,this.root.jQ.closest('.sidebar').width() - el.width() - 6)) + 'px'});
+    if(this.element && this.element.worksheet) {
+      var worksheet_right_edge = this.element.worksheet.jQ.width() + this.element.worksheet.jQ.offset().left;
+      if((left + el.width()) > worksheet_right_edge) // Adjust left if needed
+        el.css({left: Math.floor(max(0,worksheet_right_edge - el.width())) + 'px'});
+    }
     el.find('li').mouseenter(function() {  // We dont use CSS hover because the class is how we keep track of which item is 'active'
       $(this).closest('ul').find('li').removeClass('mq-popup-selected');
       $(this).addClass('mq-popup-selected');

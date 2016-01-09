@@ -89,7 +89,7 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
       this.controller.current_tooltip = this;
       if(this.controller.element) this.controller.element.worksheet.tooltip_holder = this;
       var html = this.controller.API.__options.helpList[command];
-      SwiftCalcs.createHelpPopup(html);
+      SwiftCalcs.createHelpPopup(html, this.jQ.find('.mq-operator-name'));
       return this;
     }
     this.controller.destroyTooltip();
