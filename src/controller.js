@@ -110,9 +110,11 @@ var Controller = P(function(_) {
     }
     el.css({top: Math.ceil(top) + 'px', left: Math.floor(left) + 'px'});
     el.html(html);
-    var worksheet_right_edge = this.element.worksheet.jQ.width() + this.element.worksheet.jQ.offset().left;
-    if(this.element && ((left + el.width()) > worksheet_right_edge)) // Adjust left if needed
-      el.css({left: Math.floor(max(0,worksheet_right_edge - el.width())) + 'px'});
+    if(this.element && this.element.worksheet) {
+      var worksheet_right_edge = this.element.worksheet.jQ.width() + this.element.worksheet.jQ.offset().left;
+      if((left + el.width()) > worksheet_right_edge) // Adjust left if needed
+        el.css({left: Math.floor(max(0,worksheet_right_edge - el.width())) + 'px'});
+    }
     el.find('li').mouseenter(function() {  // We dont use CSS hover because the class is how we keep track of which item is 'active'
       $(this).closest('ul').find('li').removeClass('mq-popup-selected');
       $(this).addClass('mq-popup-selected');
