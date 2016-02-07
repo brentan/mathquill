@@ -321,9 +321,9 @@ var Letter = P(Variable, function(_, super_) {
   _.createLeftOf = function(cursor) {
     if((this.ctrlSeq == 'u') && (cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) && !(cursor[L] instanceof Variable) && !(cursor[L] && (cursor[L].ctrlSeq == 'µ'))) 
       Letter('µ').createLeftOf(cursor);
-    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof Variable)) {
+    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof Variable) && (this.ctrlSeq != '.')) {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
-    } else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof SupSub) && cursor[L][L].supsub === 'sub') {
+    } else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof SupSub) && (this.ctrlSeq != '.') && cursor[L][L].supsub === 'sub') {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
     } else
       super_.createLeftOf.apply(this, arguments);

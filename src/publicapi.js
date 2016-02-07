@@ -87,25 +87,32 @@ var AbstractMathQuill = P(function(_) {
   _.setUnitsOnly = function(val) { this.__controller.units_only = val; return this; };
   _.setStaticMode = function(val) { this.__controller.staticMode = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
-  _.text = function(opts) { 
+  var setOpts = function(opts, _this) {
     if(opts)
-      opts = jQuery.extend(opts, this.__options);
+      opts = jQuery.extend(opts, _this.__options);
     else
-      opts = this.__options;
-    if(this.__controller.captiveUnitMode)
+      opts = _this.__options;
+    if(_this.__controller.captiveUnitMode)
       opts.captiveUnitMode = true;
-    if(this.__controller.captiveMode)
+    if(_this.__controller.captiveMode)
       opts.captiveMode = true;
-    if(this.__controller.units_only)
+    if(_this.__controller.units_only)
       opts.units_only = true;
+    return opts;
+  }
+  _.text = function(opts) { 
+    opts = setOpts(opts, this);
     var out = this.__controller.exportText(opts); 
     // Transform 1...2 and 1, 3...6 into appropriate emgiac 'matrix()' call
-    out = out.replace(/([a-z0-9_.]+) *, *([a-z0-9_.]+) *\.\.\. *([a-z0-9_.]+)/ig, " makevector(seq($1, $3, $2-$1))").replace(/([a-z0-9_.]+) *\.\.\. *([a-z0-9_.]+)/ig, " makevector(seq($1, $2, 1))")
+    out = out.replace(/(-?[a-z0-9_.]+) *, *(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $3, $2-$1))").replace(/(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $2, 1))")
     if(opts['check_for_array'] && !out.match(/\[.*\]/) && out.match(/,/))
       out = '[' + out + ']'; 
     if(opts['default'] && (out.trim() == '')) return opts['default'];
     return out;
   };
+  _.highlightError = function(error_index, opts) {
+    if(error_index < 0) return this;
+  }
   _.setWidth = function(w) {
     this.jQ.css('maxWidth', w + 'px');
     return this;

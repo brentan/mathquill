@@ -399,15 +399,16 @@ var Symbol = P(MathCommand, function(_, super_) {
   _.text = function(){ return this.textTemplate; };
   _.placeCursor = noop;
   _.isEmpty = function(){ return true; };
-});
-var VanillaSymbol = P(Symbol, function(_, super_) {
-  _.init = function(ch, html, textTemplate) {
-    super_.init.call(this, ch, '<span>'+(html || ch)+'</span>', (textTemplate || ch));
-  };
   _.createLeftOf = function(cursor) {
     if((this.ctrlSeq === '.') && cursor[L] && (cursor[L].ctrlSeq === '.')) {// ellipses
-      LatexCmds['…']().createLeftOf(cursor);
-      cursor[L][L].remove();
+      if((cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof Matrix) && (cursor.parent.parent.row == 1)) || (cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof Bracket) && (cursor.parent.parent.sides[L].ctrlSeq == '['))) {
+        // Created with a matrix assessor, so assume we want 1..3 syntax.  NOTE this also grabs single brackets when used like parenthesis...
+        LatexCmds['…']().createLeftOf(cursor);
+        cursor[L][L].remove();
+      } else {
+        // Not inside a matrix, so assume we want a different syntax, namely makevector(seq(a..b,p))
+        LatexCmds['ellipses']().createLeftOf(cursor);
+      }
       return;
     } else if(this.ctrlSeq.match(/^[0-9]$/) && cursor[L] && (cursor[L].ctrlSeq === '.') && ((cursor[L][L] === 0) || !cursor[L][L].ctrlSeq.match(/^[0-9]$/))) {
       // See if we need to add a '0' before the decimal point to make things look pretty
@@ -417,6 +418,11 @@ var VanillaSymbol = P(Symbol, function(_, super_) {
     }
     super_.createLeftOf.call(this, cursor);
   }
+});
+var VanillaSymbol = P(Symbol, function(_, super_) {
+  _.init = function(ch, html, textTemplate) {
+    super_.init.call(this, ch, '<span>'+(html || ch)+'</span>', (textTemplate || ch));
+  };
 });
 var BinaryOperator = P(Symbol, function(_, super_) {
   _.init = function(ctrlSeq, html, text) {
