@@ -32,6 +32,43 @@ var MathElement = P(Node, function(_, super_) {
     // This will likely need to be a passed in handler since evaluation etc lives outside the scope of mathquill
     return true;
   }
+  _.text = function(opts) {
+    var arr = this.textOutput(opts);
+    out = '';
+    for(var i = 0; i < arr.length; i++)
+      out += arr[i].text;
+    return out;
+  };
+  _.highlightError = function(opts, controller, tracker, error_index) {
+    if(tracker.block_found) return tracker;
+    var arr = this.textOutput(opts);
+    for(var i = 0; i < arr.length; i++) {
+      if((tracker.current_length + arr[i].text.length) > error_index) {
+        // FOUND THE BLOCK
+        if(arr[i].obj) {
+          // In a sub-block, so keep searching
+          tracker = arr[i].obj.highlightError(opts, controller, tracker, arr[i].offset ? (error_index + arr[i].offset) : error_index);
+        } else {
+          // This is the block.  Do something
+          tracker.block_found = true;
+          var offset = this.jQ.position();
+          var width = this.jQ.width();
+          var height = this.jQ.height();
+          var scrollTop = controller.element ? controller.element.worksheet.jQ.scrollTop() : 0;
+          if(this.jQ.closest('.tutorial_block').length)
+            scrollTop = this.jQ.closest('.tutorial_block').scrollTop();
+          if(this.jQ.closest('.sidebar').length) 
+            scrollTop = this.jQ.closest('.sidebar').scrollTop();
+          controller.createErrorUnderline(offset.top + height + scrollTop, offset.left, width);
+        }
+        break;
+      } else {
+        // Not there yet, add length and move to next
+        tracker.current_length += arr[i].text.length;
+      }
+    }
+    return tracker;
+  }
 });
 
 /**
@@ -328,17 +365,21 @@ var MathCommand = P(MathElement, function(_, super_) {
     });
   };
   _.textTemplate = [''];
-  _.text = function(opts) {
+  _.textOutput = function(opts) {
     var cmd = this, i = 0;
-    return cmd.foldChildren(cmd.textTemplate[i], function(text, child) {
+    return cmd.foldChildren([{text: cmd.textTemplate[i]}], function(text, child) {
       i += 1;
       var child_text = child.text(opts);
-      if (text && cmd.textTemplate[i] === '('
-          && child_text[0] === '(' && child_text.slice(-1) === ')')
-        return text + child_text.slice(1, -1) + cmd.textTemplate[i];
-      return text + child.text(opts) + (cmd.textTemplate[i] || '');
+      var offset = 0;
+      if (text && cmd.textTemplate[i] === '(' && child_text[0] === '(' && child_text.slice(-1) === ')') {
+        offset = 1;
+        child_text = child_text.slice(1, -1);
+      }
+      text.push({text: child_text, obj: child, offset: offset})
+      text.push({text: (cmd.textTemplate[i] || '')});
+      return text;
     });
-  };
+  }
   _.setUnit = function() {
     // determine if I'm in a unit, and do the same to all my children
     if(this.parent.unit) {
@@ -396,7 +437,7 @@ var Symbol = P(MathCommand, function(_, super_) {
   };
 
   _.latex = function(){ return this.ctrlSeq; };
-  _.text = function(){ return this.textTemplate; };
+  _.textOutput = function(){ return [{text: this.textTemplate}]; };
   _.placeCursor = noop;
   _.isEmpty = function(){ return true; };
   _.createLeftOf = function(cursor) {
@@ -444,14 +485,15 @@ var MathBlock = P(MathElement, function(_, super_) {
   };
   _.html = function() { return this.join('html'); };
   _.latex = function() { return this.join('latex'); };
-  _.text = function(opts) {
-    if ((this.ends[L] === 0) && (this.ends[R] === 0)) return '';
-    return this.ends[L] === this.ends[R] ?
-      this.ends[L].text(opts) :
-      this.foldChildren('', function(text, child) {
-        return text + child.text(opts);
-      })
-    ;
+  _.textOutput = function(opts) {
+    if ((this.ends[L] === 0) && (this.ends[R] === 0)) return [{text: ''}];
+    if(this.ends[L] === this.ends[R]) 
+      return [{text: this.ends[L].text(opts)}];
+    else 
+      return this.foldChildren([], function(text, child) {
+        text.push({text: child.text(opts), obj: child});
+        return text;
+      });
   };
 
   _.keystroke = function(key, e, ctrlr) {

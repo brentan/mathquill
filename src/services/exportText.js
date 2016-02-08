@@ -9,4 +9,12 @@ Controller.open(function(_, super_) {
       return text + child.text(opts);
     });
   };
+  _.highlightError = function(opts, error_index) {
+  	var controller = this;
+    var tracker = { error_index: error_index, current_length: 0, block_found: false };
+    var out = this.root.foldChildren(tracker, function(tracker, child) {
+    	return child.highlightError(opts, controller, tracker, tracker.error_index);
+    });
+    return out.block_found;
+  };
 });

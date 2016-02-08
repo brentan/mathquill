@@ -104,6 +104,7 @@ var AbstractMathQuill = P(function(_) {
     opts = setOpts(opts, this);
     var out = this.__controller.exportText(opts); 
     // Transform 1...2 and 1, 3...6 into appropriate emgiac 'matrix()' call
+      // KEPT FOR BACKWARDS COMPATIBILITY 2/7/16.  PROBABLY SHOULD BE REMOVE AT SOME POINT IN FUTURE
     out = out.replace(/(-?[a-z0-9_.]+) *, *(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $3, $2-$1))").replace(/(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $2, 1))")
     if(opts['check_for_array'] && !out.match(/\[.*\]/) && out.match(/,/))
       out = '[' + out + ']'; 
@@ -111,7 +112,18 @@ var AbstractMathQuill = P(function(_) {
     return out;
   };
   _.highlightError = function(error_index, opts) {
-    if(error_index < 0) return this;
+    if(error_index < 0) return false;
+    opts = setOpts(opts, this);
+    // If check for array is enabled, we have to see if it happened, and if so, update the error_index
+    if(opts['check_for_array']) {
+      opts['check_for_array'] = false;
+      var out = this.__controller.exportText(opts); 
+      if(!out.match(/\[.*\]/) && out.match(/,/))
+        error_index++;
+      opts['check_for_array'] = true;
+    }
+    // call highlightError
+    return this.__controller.highlightError(opts, error_index); 
   }
   _.setWidth = function(w) {
     this.jQ.css('maxWidth', w + 'px');

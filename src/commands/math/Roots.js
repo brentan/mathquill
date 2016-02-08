@@ -41,7 +41,7 @@ LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
   _.latex = function() {
     return '\\sqrt['+this.ends[L].latex()+']{'+this.ends[R].latex()+'}';
   };
-  _.text = function(opts) {
-    return ' ' + this.ends[R].text(opts) + '^(1/' + this.ends[L].text(opts) + ')';
+  _.textOutput = function(opts) {
+    return [{text:' '},{text: this.ends[R].text(opts), obj:this.ends[R]}, {text:'^(1/'}, {text:this.ends[L].text(opts), obj:this.ends[L]},{text:')'}];
   }
 });

@@ -28,8 +28,8 @@ var Integral = P(MathCommand, function(_, super_) {
     return this.ctrlSeq + '_{' + this.blocks[0].latex() +
         '}^{' + this.blocks[1].latex() + '}_{' + this.blocks[3].latex() +'}\\left({' + this.blocks[2].latex() + '}\\right)';
   };
-  _.text = function(opts) {
-    return ' int(' + this.blocks[2].text(opts) + ' , ' + this.blocks[3].text(opts) + ',' + this.blocks[0].text(opts) + ',' + this.blocks[1].text(opts) + ')';
+  _.textOutput = function(opts) {
+    return [{text:' int('},{text:this.blocks[2].text(opts), obj:this.blocks[2]},{text:' , '},{text:this.blocks[3].text(opts), obj:this.blocks[3]},{text:','},{text: this.blocks[0].text(opts), obj:this.blocks[0]},{text:','},{text:this.blocks[1].text(opts), obj:this.blocks[1]},{text:')'}];
   }
   _.parser = function() {
     var string = Parser.string;
@@ -116,8 +116,8 @@ var IntegralNoLimit = P(MathCommand, function(_, super_) {
     }
     return this.ctrlSeq + '_{' + this.blocks[1].latex() +'}\\left({' + this.blocks[0].latex() + '}\\right)';
   };
-  _.text = function(opts) {
-    return ' int(' + this.blocks[0].text(opts) + ' , ' + this.blocks[1].text(opts) + ')';
+  _.textOutput = function(opts) {
+    return [{text:' int('},{text:this.blocks[0].text(opts),obj:this.blocks[0]},{text:' , '},{text:this.blocks[1].text(opts), obj:this.blocks[1]},{text:')'}];
   }
   _.parser = function() {
     var string = Parser.string;

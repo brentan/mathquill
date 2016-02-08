@@ -25,11 +25,13 @@ var Limit = P(MathCommand, function(_, super_) {
     return this.ctrlSeq + '_{' + this.blocks[0].latex()  + '}^{' + this.blocks[1].latex() +
         '}\\left({' + this.blocks[2].latex() + '}\\right)';
   };
-  _.text = function(opts) {
-    var output = ' limit(' + this.blocks[2].text(opts) + ' , ' + this.blocks[0].text(opts) + ' , ' + this.blocks[1].text(opts);
+  _.textOutput = function(opts) {
+    var output = [{text:' limit('},{text:this.blocks[2].text(opts), obj:this.blocks[2]},{text:' , '},{text:this.blocks[0].text(opts), obj:this.blocks[0]},{text:' , '},{text:this.blocks[1].text(opts), obj:this.blocks[1]}];
     if(this.direction != 0)
-      output += ", " + this.direction;
-    return output + ')';
+      output.push({text: ", " + this.direction + ")"});
+    else
+      output.push({text: ")"});
+    return output;
   }
   _.parser = function() {
     var string = Parser.string;

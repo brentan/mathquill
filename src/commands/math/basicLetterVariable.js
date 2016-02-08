@@ -3,9 +3,10 @@ var Variable = P(Symbol, function(_, super_) {
   _.init = function(ch, html, text) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
   };
-  _.text = function(opts) {
-    if(opts && opts.unit && !(this[L] instanceof Variable) && !(this[L] && this[L].ctrlSeq == 'µ') && (this.ctrlSeq != '2')) return "_" + this.textTemplate;
-    return this.textTemplate;
+  _.textOutput = function(opts) {
+    var out = this.textTemplate;
+    if(opts && opts.unit && !(this[L] instanceof Variable) && !(this[L] && this[L].ctrlSeq == 'µ') && (this.ctrlSeq != '2')) out = "_" + out;
+    return [{text: out}];
   };
   _.autoUnItalicize = function(cursor) {
     // want longest possible operator names, so join together entire contiguous
@@ -458,8 +459,8 @@ LatexCmds[' '] = LatexCmds.space = P(Letter, function(_, super_) {
   _.init = function() {
     super_.init.call(this, '', '', '');
   }
-  _.text = function(opts) {
-    if(opts && opts.show_spaces) return ' ';
-    return '';
+  _.textOutput = function(opts) {
+    if(opts && opts.show_spaces) return [{text: ' '}];
+    return [];
   }
 });

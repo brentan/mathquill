@@ -120,25 +120,34 @@ var SupSub = P(MathCommand, function(_, super_) {
     }
     return latex('_', this.sub) + latex('^', this.sup);
   };
-  _.text = function(opts) {
+  _.textOutput = function(opts) {
     //subscript first
-    var tex = '';
+    var tex = [];
     if(this.sub) {
       // subscripts should create variable names like 'r_outer', not 'r_(outer)'
-      tex += '_' + (this.sub && (this.sub.ends[L] !== 0) && (this.sub.ends[L] === this.sub.ends[R]) ?
-          this.sub.ends[L].text(opts) :
-          this.sub.foldChildren('', function (text, child) {
-            return text + child.text(opts);
-          }));
+      tex.push({text: '_'});
+      if(this.sub && (this.sub.ends[L] !== 0) && (this.sub.ends[L] === this.sub.ends[R])) {
+        tex.push({text: this.sub.ends[L].text(opts), obj: this.sub.ends[L]});
+      } else {
+        tex = tex.concat(this.sub.foldChildren([], function (text, child) {
+          text.push({text: child.text(opts), obj: child});
+          return text;
+        }));
+      }
     }
     if(this.sup) {
-      if(this.elementWise) tex += '.';
-      tex += '^' + (this.sup && (this.sup.ends[L] !== 0) && this.sup.ends[L] === this.sup.ends[R] ?
-          '(' + this.sup.ends[L].text(opts) + ')' :
-      '(' + this.sup.foldChildren('', function (text, child) {
-        return text + child.text(opts);
-      })
-      + ')');
+      if(this.elementWise) tex.push({text:'.'});
+      tex.push({text:'^'});
+      tex.push({text:'('});
+      if(this.sup && (this.sup.ends[L] !== 0) && (this.sup.ends[L] === this.sup.ends[R])) {
+        tex.push({text:this.sup.ends[L].text(opts), obj:this.sup.ends[L]});
+      } else {
+        tex = tex.concat(this.sup.foldChildren([], function (text, child) {
+          text.push({text:child.text(opts), obj: child});
+          return text;
+        }));
+      }
+      tex.push({text:')'});
     }
     return tex;
   };

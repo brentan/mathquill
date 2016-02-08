@@ -29,11 +29,11 @@ var SummationNotation = P(MathCommand, function(_, super_) {
     else
       return this.ctrlSeq + '_{' + this.blocks[0].latex() + '}^{' + this.blocks[1].latex() + '}_{' + this.blocks[2].latex() + '}\\left({' + this.blocks[3].latex() + '}\\right)';
   };
-  _.text = function(opts) {
+  _.textOutput = function(opts) {
     if(this.hide_limits) 
-      return ' ' + (this.ctrlSeq == '\\sumn ' ? 'sum' : 'product') + '(' + this.blocks[1].text(opts) + ', ' + this.blocks[0].text(opts) + ')';
+      return [{text:(' ' + (this.ctrlSeq == '\\sumn ' ? 'sum' : 'product') + '(')},{text:this.blocks[1].text(opts), obj:this.blocks[1]},{text:', '},{text:this.blocks[0].text(opts), obj:this.blocks[0]},{text:')'}];
     else
-      return ' ' + (this.ctrlSeq == '\\sum ' ? 'sum' : 'product') + '(' + this.blocks[3].text(opts) + ', ' + this.blocks[0].text(opts) + ' , ' + this.blocks[1].text(opts) + ' , ' + this.blocks[2].text(opts) + ')';
+      return [{text:(' ' + (this.ctrlSeq == '\\sum ' ? 'sum' : 'product') + '(')},{text:this.blocks[3].text(opts), obj:this.blocks[3]},{text:', '},{text:this.blocks[0].text(opts), obj:this.blocks[0]},{text:' , '},{text:this.blocks[1].text(opts), obj:this.blocks[1]},{text:' , '},{text:this.blocks[2].text(opts), obj:this.blocks[2]},{text:')'}];
   }
   _.parser = function() {
     var string = Parser.string;

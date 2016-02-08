@@ -137,7 +137,13 @@ var Node = P(function(_) {
     cursor[dir] = node.adopt(cursor.parent, cursor[L], cursor[R]);
     return node;
   };
-  _.createLeftOf = function(el) { return this.createDir(L, el); };
+  _.createLeftOf = function(cursor) { 
+    if(cursor.controller.errorBlock) {
+      cursor.controller.errorBlock.remove();
+      cursor.controller.errorBlock = 0;
+    }
+    return this.createDir(L, cursor); 
+  };
 
   _.selectChildren = function(leftEnd, rightEnd) {
     return Selection(leftEnd, rightEnd);
@@ -190,6 +196,11 @@ var Node = P(function(_) {
   };
 
   _.disown = function() {
+    var controller = this.getController()
+    if(controller && controller.errorBlock) {
+      controller.errorBlock.remove();
+      controller.errorBlock = 0;
+    }
     Fragment(this, this).disown();
     return this;
   };

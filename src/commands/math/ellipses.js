@@ -4,7 +4,7 @@ LatexCmds['…'] = P(VanillaSymbol, function(_, super_) {
   _.init = function() {
     super_.init.call(this, '…', '<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>', '..');
   }
-  _.text = function(opts) {
+  _.textOutput = function(opts) {
     if((this.parent && this.parent.parent && (this.parent.parent instanceof Matrix) && (this.parent.parent.row == 1)) || (this.parent && this.parent.parent && (this.parent.parent instanceof Bracket) && (this.parent.parent.sides[L].ctrlSeq == '['))) {
       var out = '';
       if(!this[L] || (this[L] instanceof BinaryOperator))
@@ -12,10 +12,11 @@ LatexCmds['…'] = P(VanillaSymbol, function(_, super_) {
       out += '..';
       if(!this[R] || (this[R] instanceof BinaryOperator))
         out += 'i__e';
-      return out;
+      return [{text: out}];
     } else {
-      // Not in a matrix assessor.  In this context, turn into a matrix of increasing numbers
-      return '...';
+      // Not in a matrix assessor.  In this context, turn into a matrix of increasing numbers.
+      // KEPT FOR BACKWARDS COMPATIBILITY 2/7/16.  PROBABLY SHOULD BE REMOVE AT SOME POINT IN FUTURE
+      return [{text: '...'}];
     }
   }
 });
@@ -80,7 +81,7 @@ LatexCmds['ellipses'] = P(MathCommand, function(_, super_) {
     var height = this.contentjQ.outerHeight() / parseInt(this.contentjQ.css('fontSize'), 10);
     scale(this.delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
   };
-  _.text = function(opts) {
+  _.textOutput = function(opts) {
     // We use the makevector and seq commands in giac to transform this into a command.  One trick is that if the first argument
     // contains a ',', this indicates a sequence with more ordering (1,3..5) and we re-arrange to account for this
     var left = this.ends[L].text(opts) + '';
@@ -89,12 +90,12 @@ LatexCmds['ellipses'] = P(MathCommand, function(_, super_) {
       var start = left.replace(/^(.*),(.*)$/,"$1");
       var second = left.replace(/^(.*),(.*)$/,"$2");
       var end = this.ends[R].text(opts);
-      return "makevector(seq(f__x, f__x=(" + start + ")..(" + end + "),((" + second + ")-(" + start + "))))";
+      return [{text: "makevector(seq(f__x, f__x=("},{text: start, obj:this.ends[L]},{text:")..("},{text: end, obj:this.ends[R]},{text:"),(("},{text: second, obj: this.ends[L], offset:(start.length + 1)},{text:")-(" + start + "))))"}];
     } else {
       // unit step size assumed
       var start = left;
       var end = this.ends[R].text(opts);
-      return "makevector(seq(f__x, f__x=(" + start + ")..(" + end + ")))";
+      return [{text: "makevector(seq(f__x, f__x=("},{text: start, obj:this.ends[L]},{text:")..("},{text: end, obj:this.ends[R]},{text:")))"}];
     }
   }
 });

@@ -69,23 +69,30 @@ var Matrix =
         });
         return '\\begin{'+ctrlSeq+'}' + latex + '\\end{'+ctrlSeq+'}';
       };
-      _.text = function (opts) {
+      _.textOutput = function (opts) {
         var cells = [];
         this.eachChild(function (child) {
           if (child.ends[L])
-            cells.push(child.text(opts))
+            cells.push(child)
           else
-            cells.push(0);
+            cells.push(false);
         });
-        var out = '';
+        var out = (this.row > 1) ? [{text: '[[' }] : [{text: '['}];
         for(var i=0; i<cells.length;i++) {
           if((i > 0) && ((i % this.col) == 0))
-            out += '],[';
+            out.push({text:'],['});
           else if(i > 0)
-            out+=',';
-          out+=cells[i];
+            out.push({text:','});
+          if(cells[i] === false)
+            out.push({text: '0'});
+          else
+            out.push({text: cells[i].text(opts), obj: cells[i]});
         }
-        return (this.row > 1) ? ('[[' + out + ']]') : ('[' + out + ']')
+        if(this.row > 1) 
+          out.push({text:']]'});
+        else
+          out.push({text:']'});
+        return out;
       };
       _.nested = false; // Only used during parse command, where it is also set.  Using it elsewhere may result in erroneous result
       _.parser = function () {
