@@ -29,8 +29,8 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
       this.jQ = this.jQ.parent();
     }
   };
-  _.text = function(opts) {
-    return '((' + this.blocks[0].text(opts) + ')' + (this.elementWise ? '.' : '') + '/(' + this.blocks[1].text(opts) + '))';
+  _.textOutput = function(opts) {
+    return [{text:'(('},{text:this.blocks[0].text(opts), obj:this.blocks[0]},{text:(')' + (this.elementWise ? '.' : '') + '/(')},{text:this.blocks[1].text(opts), obj:this.blocks[1]},{text:'))'}];
   }
   _.latex = function() {
     return this.ctrlSeq + '{' + this.blocks[0].latex() + '}{' + (this.elementWise ? '.' : '') + this.blocks[1].latex() + '}';

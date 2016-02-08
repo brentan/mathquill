@@ -103,12 +103,12 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
   _.latex = function() {
     return '\\Unit{' + this.blocks[0].latex() + '}';
   }
-  _.text = function(opts) { 
-    if(opts && (opts.captiveUnitMode || opts.units_only)) return this.blocks[0].text(jQuery.extend({unit: true}, opts));
+  _.textOutput = function(opts) { 
+    if(opts && (opts.captiveUnitMode || opts.units_only)) return [{text:this.blocks[0].text(jQuery.extend({unit: true}, opts)), obj:this.blocks[0]}];
     if((this[L] == 0) || (this[L] instanceof BinaryOperator))
-      return '1*(' + this.blocks[0].text(jQuery.extend({unit: true}, opts)) + ')';
+      return [{text:'1*('},{text:this.blocks[0].text(jQuery.extend({unit: true}, opts)), obj:this.blocks[0]},{text:')'}];
     else
-      return '*(' + this.blocks[0].text(jQuery.extend({unit: true}, opts)) + ')';
+      return [{text:'*('},{text:this.blocks[0].text(jQuery.extend({unit: true}, opts)), obj:this.blocks[0]},{text:')'}];
   }
 });
 
@@ -189,8 +189,8 @@ P(Unit, function(_, super_) {
   _.latex = function() {
     return '\\CombinedUnit{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
   }
-  _.text = function(opts) { 
-    if(opts.captiveUnitMode || opts.units_only) return this.blocks[1].text(jQuery.extend({unit: true}, opts));
-    return this.blocks[0].text(opts) + '*(' + this.blocks[1].text(jQuery.extend({unit: true}, opts)) + ')';
+  _.textOutput = function(opts) { 
+    if(opts.captiveUnitMode || opts.units_only) return [{text:this.blocks[1].text(jQuery.extend({unit: true}, opts)), obj:this.blocks[1]}];
+    return [{text:this.blocks[0].text(opts), obj:this.blocks[0]},{text:'*('},{text:this.blocks[1].text(jQuery.extend({unit: true}, opts)),obj:this.blocks[1]},{text:')'}];
   }
 });

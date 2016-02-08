@@ -15,8 +15,8 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
       this.incorporate_previous = ch;
     super_.init.call(this);
   };
-  _.text = function(opts) {
-    return this.blocks[0].text(opts) + 'SWIFTCALCSMETHOD' + this.blocks[1].text(opts);
+  _.textOutput = function(opts) {
+    return [{text: this.blocks[0].text(opts), obj:this.blocks[0]},{text:'SWIFTCALCSMETHOD'},{text: this.blocks[1].text(opts), obj:this.blocks[1]}];
   }
   _.latex = function() {
     return '\\functionCommand{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';

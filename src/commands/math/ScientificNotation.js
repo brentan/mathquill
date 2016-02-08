@@ -14,8 +14,8 @@ var ScientificNotation = LatexCmds.scientificNotation = LatexCmds.scientificNota
       this.incorporate_previous = ch;
     super_.init.call(this);
   };
-  _.text = function(opts) {
-    return this.blocks[0].text(opts) + '*1e' + this.blocks[1].text(opts);
+  _.textOutput = function(opts) {
+    return [{text: this.blocks[0].text(opts), obj:this.blocks[0]}, {text:'*1e'}, {text: this.blocks[1].text(opts), obj: this.blocks[1]}];
   }
   _.latex = function() {
     return '\\scientificNotation{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';

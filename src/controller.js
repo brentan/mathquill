@@ -131,4 +131,14 @@ var Controller = P(function(_) {
       SwiftCalcs.destroyHelpPopup();
     this.current_tooltip = false;
   }
+  _.errorBlock = 0;
+  _.createErrorUnderline = function(top, left, width) {
+    if(this.errorBlock) 
+      this.errorBlock.remove();
+    // Make div and fill with HTML to make sure its long enough to underline what we need to underline
+    var el = $('<div/>').addClass('mq-error-block').html('⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎⋎');
+    el.css({top: Math.ceil(top) + 'px', left: Math.floor(left-5) + 'px', width: Math.floor(width + 12) + 'px'});
+    this.container.append(el);
+    this.errorBlock = el;
+  };
 });

@@ -19,12 +19,16 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
     var height = contentjQ.outerHeight() / parseInt(contentjQ.css('fontSize'), 10);
     scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
   };
-  _.text = function(opts) {
-    var before = '';
+  _.textOutput = function(opts) {
+    var out = [];
     if(this[L] && !(this[L] instanceof BinaryOperator))
-      before = '*'; //BRENTAN: This needs lots of testing to make sure it doesnt add a '*' in situations where it shouldn't!
-    if((this.blocks[0].text(opts)+"").match(/^'+$/)) before = '';
-    return before + this.blocks[0].text(opts) + '(' + this.blocks[1].text(opts) + ')';
+      out.push({text:'*'}); //BRENTAN: This needs lots of testing to make sure it doesnt add a '*' in situations where it shouldn't!
+    if((this.blocks[0].text(opts)+"").match(/^'+$/)) out = [];
+    out.push({text:this.blocks[0].text(opts), obj:this.blocks[0]});
+    out.push({text:'('});
+    out.push({text: this.blocks[1].text(opts), obj: this.blocks[1]});
+    out.push({text:')'});
+    return out;
   };
   _.latex = function() {
     if(BuiltInOpNames.hasOwnProperty(this.blocks[0].text())) //This is a built-in latex command

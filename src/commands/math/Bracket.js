@@ -40,14 +40,18 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
   _.latex = function() {
     return '\\left'+this.sides[L].ctrlSeq+this.ends[L].latex()+'\\right'+this.sides[R].ctrlSeq;
   };
-  _.text = function(opts) {
+  _.textOutput = function(opts) {
     // Brackets are a tricky one...they may represent matrix indeces on a variable name, in which
     // case we want to use [], or they may just be a 'pretty' bracket, in which case we want to use
     // ().  Vectors should already be transformed into Matrix by use of ','
-    if((this.ctrlSeq !== '\\left[') || (this[L] instanceof Variable) || ((this[L] instanceof SupSub) && (this[L].supsub == 'sub')))
-      return this.sides[L].textTemplate + this.ends[L].text(opts) + this.sides[R].textTemplate;
-    else
-      return '(' + this.ends[L].text(opts) + ')';
+    if((this.ctrlSeq !== '\\left[') || (this[L] instanceof Variable) || ((this[L] instanceof SupSub) && (this[L].supsub == 'sub'))) {
+      var left = this.sides[L].textTemplate;
+      var right = this.sides[R].textTemplate;
+    } else {
+      var left = '(';
+      var rights = ')';
+    }
+    return [{text: left}, {text: this.ends[L].text(opts), obj: this.ends[L]}, {text: right}]
   }
   _.oppBrack = function(node, expectedSide) {
     // node must be 1-sided bracket of expected side (if any, may be undefined),

@@ -69,23 +69,30 @@ var Matrix =
         });
         return '\\begin{'+ctrlSeq+'}' + latex + '\\end{'+ctrlSeq+'}';
       };
-      _.text = function (opts) {
+      _.textOutput = function (opts) {
         var cells = [];
         this.eachChild(function (child) {
           if (child.ends[L])
-            cells.push(child.text(opts))
+            cells.push(child)
           else
-            cells.push(0);
+            cells.push(false);
         });
-        var out = '';
+        var out = (this.row > 1) ? [{text: '[[' }] : [{text: '['}];
         for(var i=0; i<cells.length;i++) {
           if((i > 0) && ((i % this.col) == 0))
-            out += '],[';
+            out.push({text:'],['});
           else if(i > 0)
-            out+=',';
-          out+=cells[i];
+            out.push({text:','});
+          if(cells[i] === false)
+            out.push({text: '0'});
+          else
+            out.push({text: cells[i].text(opts), obj: cells[i]});
         }
-        return (this.row > 1) ? ('[[' + out + ']]') : ('[' + out + ']')
+        if(this.row > 1) 
+          out.push({text:']]'});
+        else
+          out.push({text:']'});
+        return out;
       };
       _.nested = false; // Only used during parse command, where it is also set.  Using it elsewhere may result in erroneous result
       _.parser = function () {
@@ -371,25 +378,4 @@ var MatrixMathBlock = P(MathBlock, function(_, super_) {
       }
     }
   };
-});
-
-// Create the matrix assessor command '..'
-LatexCmds['…'] = P(VanillaSymbol, function(_, super_) {  
-  _.init = function() {
-    super_.init.call(this, '…', '<span class="mq-nonSymbola" style="font-size:0.6em;">&#8230;</span>', '..');
-  }
-  _.text = function(opts) {
-    if((this.parent && this.parent.parent && (this.parent.parent instanceof Matrix) && (this.parent.parent.row == 1)) || (this.parent && this.parent.parent && (this.parent.parent instanceof Bracket) && (this.parent.parent.sides[L].ctrlSeq == '['))) {
-      var out = '';
-      if(!this[L] || (this[L] instanceof BinaryOperator))
-        out += 'i__s';
-      out += '..';
-      if(!this[R] || (this[R] instanceof BinaryOperator))
-        out += 'i__e';
-      return out;
-    } else {
-      // Not in a matrix assessor.  In this context, turn into a matrix of increasing numbers
-      return '...';
-    }
-  }
 });

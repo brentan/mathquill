@@ -175,5 +175,5 @@ LatexCmds.MathQuillMathField = P(MathCommand, function(_, super_) {
     innerFields.push(innerFields[this.name] = this.ends[L].controller.API);
   };
   _.latex = function(){ return this.ends[L].latex(); };
-  _.text = function(opts){ return this.ends[L].text(opts); };
+  _.textOutput = function(opts){ return [{text: this.ends[L].text(opts), obj: this.ends[L]}]; };
 });

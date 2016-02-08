@@ -3,9 +3,10 @@ var Variable = P(Symbol, function(_, super_) {
   _.init = function(ch, html, text) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
   };
-  _.text = function(opts) {
-    if(opts && opts.unit && !(this[L] instanceof Variable) && !(this[L] && this[L].ctrlSeq == 'µ') && (this.ctrlSeq != '2')) return "_" + this.textTemplate;
-    return this.textTemplate;
+  _.textOutput = function(opts) {
+    var out = this.textTemplate;
+    if(opts && opts.unit && !(this[L] instanceof Variable) && !(this[L] && this[L].ctrlSeq == 'µ') && (this.ctrlSeq != '2')) out = "_" + out;
+    return [{text: out}];
   };
   _.autoUnItalicize = function(cursor) {
     // want longest possible operator names, so join together entire contiguous
@@ -321,9 +322,9 @@ var Letter = P(Variable, function(_, super_) {
   _.createLeftOf = function(cursor) {
     if((this.ctrlSeq == 'u') && (cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) && !(cursor[L] instanceof Variable) && !(cursor[L] && (cursor[L].ctrlSeq == 'µ'))) 
       Letter('µ').createLeftOf(cursor);
-    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof Variable)) {
+    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof Variable) && (this.ctrlSeq != '.')) {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
-    } else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof SupSub) && cursor[L][L].supsub === 'sub') {
+    } else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof SupSub) && (this.ctrlSeq != '.') && cursor[L][L].supsub === 'sub') {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
     } else
       super_.createLeftOf.apply(this, arguments);
@@ -458,8 +459,8 @@ LatexCmds[' '] = LatexCmds.space = P(Letter, function(_, super_) {
   _.init = function() {
     super_.init.call(this, '', '', '');
   }
-  _.text = function(opts) {
-    if(opts && opts.show_spaces) return ' ';
-    return '';
+  _.textOutput = function(opts) {
+    if(opts && opts.show_spaces) return [{text: ' '}];
+    return [];
   }
 });
