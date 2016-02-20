@@ -43,6 +43,7 @@ var MathElement = P(Node, function(_, super_) {
     if(tracker.block_found) return tracker;
     var arr = this.textOutput(opts);
     for(var i = 0; i < arr.length; i++) {
+      arr[i].text += ''; // Ensure text is returned as stirng, not array
       if((tracker.current_length + arr[i].text.length) > error_index) {
         // FOUND THE BLOCK
         if(arr[i].obj) {

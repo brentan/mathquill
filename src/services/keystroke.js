@@ -288,6 +288,10 @@ Controller.open(function(_) {
 
   this.onNotify(function(e) { if (e === 'edit') this.show().deleteSelection(); });
   _.deleteDir = function(dir) {
+    if(this.errorBlock) {
+      this.errorBlock.remove();
+      this.errorBlock = 0;
+    }
     prayDirection(dir);
     var cursor = this.cursor;
 
