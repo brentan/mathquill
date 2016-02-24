@@ -17,9 +17,20 @@ var Integral = P(MathCommand, function(_, super_) {
   _.reflow = function() {
     var delimjQs = this.jQ.children(':first').children('big');
     var contentjQ = this.jQ.children(':last').children(':first');
+    var limitjQ = this.jQ.children(':first');
+    this.jQ.css('margin-top','0px').css('margin-bottom','0px');
+    limitjQ.css('top','0px');
+    contentjQ.css('top','0px');
     var height = contentjQ.outerHeight() / parseInt(contentjQ.css('fontSize'), 10);
-    //scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
-    //BRENTAN: Above scaling is wrong, and doesn't move the limits.  Needs to be fixed at some point
+    delimjQs.css('fontSize', 1.05*height + 'em');
+    var off1 = delimjQs.offset();
+    var off2 = contentjQ.offset();
+    if(off1.top < off2.top)
+      contentjQ.css('top',(off1.top - off2.top) + 'px').css('position','relative');
+    else {
+      limitjQ.css('top',(off2.top - off1.top) + 'px').css('position','relative');
+      this.jQ.css('margin-top', (off1.top - off2.top) + 'px').css('margin-bottom', (off2.top - off1.top) + 'px');
+    }
   };
   _.latex = function() {
     function simplify(latex) {
@@ -106,9 +117,16 @@ var IntegralNoLimit = P(MathCommand, function(_, super_) {
   _.reflow = function() {
     var delimjQs = this.jQ.children(':first').children('big');
     var contentjQ = this.jQ.children(':last').children(':first');
+    delimjQs.css('top','0px');
+    contentjQ.css('top','0px');
     var height = contentjQ.outerHeight() / parseInt(contentjQ.css('fontSize'), 10);
-    //scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
-    //BRENTAN: Above scaling is wrong, and doesn't move the limits.  Needs to be fixed at some point
+    delimjQs.css('fontSize', 1.05*height + 'em');
+    var off1 = delimjQs.offset();
+    var off2 = contentjQ.offset();
+    if(off1.top < off2.top)
+      contentjQ.css('top',(off1.top - off2.top) + 'px').css('position','relative');
+    else
+      delimjQs.css('top',(off2.top - off1.top) + 'px').css('position','relative');
   };
   _.latex = function() {
     function simplify(latex) {

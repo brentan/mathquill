@@ -18,10 +18,24 @@ var SummationNotation = P(MathCommand, function(_, super_) {
     Symbol.prototype.init.call(this, ch, htmlTemplate);
   };
   _.reflow = function() {
+    var sumjQ = this.jQ.children(':first').children('big');
     var delimjQs = this.jQ.children(':last').children(':first').add(this.jQ.children(':last').children(':last'));
     var contentjQ = this.jQ.children(':last').children(':eq(1)');
+    var limitjQ = this.jQ.children(':first');
+    this.jQ.css('margin-top','0px').css('margin-bottom','0px');
+    limitjQ.css('top','0px');
+    contentjQ.css('top','0px');
     var height = contentjQ.outerHeight() / parseInt(contentjQ.css('fontSize'), 10);
     scale(delimjQs, min(1 + .2*(height - 1), 1.2), 1.05*height);
+    sumjQ.css('fontSize', 1.05*height + 'em');
+    var off1 = sumjQ.offset();
+    var off2 = contentjQ.offset();
+    if(off1.top < off2.top)
+      contentjQ.css('top',(off1.top - off2.top) + 'px').css('position','relative');
+    else {
+      limitjQ.css('top',(off2.top - off1.top) + 'px').css('position','relative');
+      this.jQ.css('margin-top', (off1.top - off2.top) + 'px').css('margin-bottom', (off2.top - off1.top) + 'px');
+    }
   };
   _.latex = function() {
     if(this.hide_limits) 
