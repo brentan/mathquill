@@ -167,8 +167,11 @@ var Variable = P(Symbol, function(_, super_) {
       else
         var leftBlock = letters[0].jQ;
       var topBlock = letters[letters.length - 1].jQ;
-      var leftOffset = leftBlock.position();
-      var topOffset = topBlock.position();
+      var leftOffset = leftBlock.offset();
+      var topOffset = topBlock.offset();
+      var container_offset = this.controller.container.offset();
+      topOffset = topOffset.top - container_offset.top;
+      leftOffset = leftOffset.left - container_offset.left;
       var scrollTop = this.controller.element ? this.controller.element.worksheet.jQ.scrollTop() : 0;
       if(topBlock.closest('.tutorial_block').length)
         scrollTop = topBlock.closest('.tutorial_block').scrollTop();
@@ -202,7 +205,7 @@ var Variable = P(Symbol, function(_, super_) {
         if($(this).attr('data-make-unit') == '1') _this.controller.API.keystroke('Right', {preventDefault: function() {} });
         _this.controller.cursor.workingGroupChange();
       };
-      this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset.top + topBlock.height() + scrollTop, leftOffset.left, onclick);
+      this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset + topBlock.height() + scrollTop, leftOffset, onclick);
     } else
       this.controller.closePopup();
   };
