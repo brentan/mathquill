@@ -14,6 +14,7 @@ var Controller = P(function(_) {
     this.captiveMode = false;
     this.units_only = false;
     this.root = root;
+    this.mq_popup = [];
     this.container = container;
 
     API.__controller = root.controller = this;
@@ -103,11 +104,8 @@ var Controller = P(function(_) {
   _.showPopups = false;
   _.createPopup = function(html, top, left, onclick) {
     if(!this.showPopups) return; // Do not create popups for blocks that dont have an attached element (aka blocks that are output only)
-    var el = this.container.children('.mq-popup').first();
-    if(el.length == 0) {
-      el = $("<div class='mq-popup mq-autocomplete'></div>");
-      this.container.append(el);
-    }
+    this.closePopup();
+    var el = $("<div class='mq-math-mode mq-popup mq-autocomplete'></div>").appendTo('body');
     el.css({top: Math.ceil(top) + 'px', left: Math.floor(left) + 'px'});
     el.html(html);
     if(this.element && this.element.worksheet) {
@@ -119,9 +117,17 @@ var Controller = P(function(_) {
       $(this).closest('ul').find('li').removeClass('mq-popup-selected');
       $(this).addClass('mq-popup-selected');
     }).click(onclick);
+    if(this.root.jQ.closest('.popup_dialog').length)
+      el.css('z-index', '6000');
+    if(this.root.jQ.closest('.screen_explanation_content').length)
+      el.css('z-index', '60000');
+    this.mq_popup = el;
   };
   _.closePopup = function() {
-    this.container.children('.mq-popup').remove();
+    if(this.mq_popup.length > 0) {
+      this.mq_popup.remove();
+      this.mq_popup = [];
+    }
   };
   _.current_tooltip = false;
   _.destroyTooltip = function() {
