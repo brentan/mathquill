@@ -16,7 +16,7 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
   _.textTemplate = ['((', ')/(', '))'];
   _.finalizeTree = function() {
     this.setUnit();
-    this.jQ.closest('.mq-editable-field').children('.mq-popup').remove();
+    $('.mq-popup').remove();
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];
     if(this.blocks[1].ends[L] && (this.blocks[1].ends[L].ctrlSeq === '.')) {
