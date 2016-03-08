@@ -28,7 +28,7 @@ Node.open(function(_) {
       break;
 
     case 'Enter':
-      var el = ctrlr.mq_popup;
+      var el = ctrlr.mq_popup();
       if(el.length > 0) {
         //Find the element that is currently selected
         el.find('li.mq-popup-selected').click();
@@ -38,7 +38,7 @@ Node.open(function(_) {
 
     // Tab or Esc -> go one block right if it exists, else escape right.
     case 'Esc':
-      var el = ctrlr.mq_popup;
+      var el = ctrlr.mq_popup();
       if(el.length > 0) {
         //Close the popup
         ctrlr.closePopup();
@@ -47,7 +47,7 @@ Node.open(function(_) {
       ctrlr.escapeDir(R, key, e);
       return;
     case 'Tab':
-      var el = ctrlr.mq_popup;
+      var el = ctrlr.mq_popup();
       if(el.length > 0) {
         //Find the element that is currently selected
         el.find('li.mq-popup-selected').click();
@@ -123,7 +123,7 @@ Node.open(function(_) {
     case 'Ctrl-Left': break;
 
     case 'Right': 
-      var el = ctrlr.mq_popup;
+      var el = ctrlr.mq_popup();
       if(el.length > 0) {
         //Close the popup
         ctrlr.closePopup();
@@ -256,7 +256,7 @@ Controller.open(function(_) {
   _.moveDown = function() { return moveUpDown(this, 'down'); };
   function moveUpDown(self, dir) {
     // Test if a popup menu (autocomplete or units menu) is currently active
-    var el = self.mq_popup;
+    var el = self.mq_popup();
     if(el.length > 0) {
       //Find the element that is currently selected
       var current_selection = el.find('li.mq-popup-selected');

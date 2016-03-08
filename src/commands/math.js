@@ -115,8 +115,8 @@ var MathCommand = P(MathElement, function(_, super_) {
   _.createLeftOf = function(cursor) {
     var cmd = this;
 
-    if(!(this instanceof Variable) && (this.supsub !== 'sub'))
-      $('.mq-popup').remove();
+    if(!(this instanceof Variable) && (this.supsub !== 'sub')) 
+      cursor.controller.closePopup();
 
     // Test for matrix specific commands
     if((typeof cursor.parent !== 'undefined') &&
@@ -500,7 +500,7 @@ var MathBlock = P(MathElement, function(_, super_) {
   _.keystroke = function(key, e, ctrlr) {
     if (ctrlr.API.__options.spaceBehavesLikeTab
         && (key === 'Spacebar' || key === 'Shift-Spacebar')) {
-      var el = ctrlr.mq_popup;
+      var el = ctrlr.mq_popup();
       e.preventDefault();
       if(el.length > 0) {
         //Find the element that is currently selected
@@ -552,7 +552,7 @@ var MathBlock = P(MathElement, function(_, super_) {
         return;
       }
       var cursor = ctrlr.cursor;
-      if((ctrlr.mq_popup.length == 0) && (cursor[L] instanceof Letter))
+      if((ctrlr.mq_popup().length == 0) && (cursor[L] instanceof Letter))
         cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
     } else if((key === 'Backspace') || (key === 'Del')) {
       ctrlr.notifyElementOfChange();
