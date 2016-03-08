@@ -16,7 +16,8 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
   _.textTemplate = ['((', ')/(', '))'];
   _.finalizeTree = function() {
     this.setUnit();
-    $('.mq-popup').remove();
+    if(!this.controller) this.getController();
+    this.controller.closePopup();
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];
     if(this.blocks[1].ends[L] && (this.blocks[1].ends[L].ctrlSeq === '.')) {

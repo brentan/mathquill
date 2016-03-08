@@ -14,7 +14,7 @@ var Controller = P(function(_) {
     this.captiveMode = false;
     this.units_only = false;
     this.root = root;
-    this.mq_popup = [];
+    this.mq_popup_el = [];
     this.container = container;
 
     API.__controller = root.controller = this;
@@ -121,13 +121,21 @@ var Controller = P(function(_) {
       el.css('z-index', '6000');
     if(this.root.jQ.closest('.screen_explanation_content').length)
       el.css('z-index', '60000');
-    this.mq_popup = el;
+    this.mq_popup_el = el;
   };
   _.closePopup = function() {
-    if(this.mq_popup.length > 0) {
-      this.mq_popup.remove();
-      this.mq_popup = [];
+    if(this.mq_popup_el.length > 0) {
+      this.mq_popup_el.remove();
+      this.mq_popup_el = [];
     }
+  };
+  _.mq_popup = function() {
+    if(this.mq_popup_el.length > 0) {
+      if(this.mq_popup_el.hasClass('removed'))
+        this.mq_popup_el = [];
+      return this.mq_popup_el
+    } else
+      return [];
   };
   _.current_tooltip = false;
   _.destroyTooltip = function() {
