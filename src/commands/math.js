@@ -39,6 +39,10 @@ var MathElement = P(Node, function(_, super_) {
       out += arr[i].text;
     return out;
   };
+  _.insertFragment = function(replacedFragment) {
+    replacedFragment.adopt(this.ends[L], 0, 0);
+    replacedFragment.jQ.appendTo(this.ends[L].jQ);
+  }
   _.highlightError = function(opts, controller, tracker, error_index) {
     if(tracker.block_found) return tracker;
     var arr = this.textOutput(opts);
@@ -158,10 +162,7 @@ var MathCommand = P(MathElement, function(_, super_) {
 
     cmd.createBlocks();
     super_.createLeftOf.call(cmd, cursor);
-    if (replacedFragment) {
-      replacedFragment.adopt(cmd.ends[L], 0, 0);
-      replacedFragment.jQ.appendTo(cmd.ends[L].jQ);
-    }
+    if (replacedFragment) cmd.insertFragment(replacedFragment);
     cmd.finalizeInsert(cursor.options);
     cmd.placeCursor(cursor);
     if((this instanceof BinaryOperator) ||

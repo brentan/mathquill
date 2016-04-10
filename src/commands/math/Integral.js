@@ -14,6 +14,10 @@ var Integral = P(MathCommand, function(_, super_) {
         + '</span></span>';
     Symbol.prototype.init.call(this, ch, htmlTemplate);
   };
+  _.insertFragment = function(replacedFragment) {
+    replacedFragment.adopt(this.blocks[2], 0, 0);
+    replacedFragment.jQ.appendTo(this.blocks[2].jQ);
+  }
   _.reflow = function() {
     var delimjQs = this.jQ.children(':first').children('big');
     var contentjQ = this.jQ.children(':last').children(':first');

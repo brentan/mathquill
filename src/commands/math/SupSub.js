@@ -14,8 +14,17 @@ function insLeftOfMeUnlessAtEnd(cursor) {
 // BRENTAN: The exponent is not always high enough.  Something like ( cos(1+3)/4 / (4 + cos(1) / 2) ) will produce the low exponent.  Should eventually be fixed.
 var SupSub = P(MathCommand, function(_, super_) {
   _.ctrlSeq = '_{...}^{...}';
+  _.replaces = function(replacedFragment) {
+    this.replacedFragment = replacedFragment;
+  }
   _.createLeftOf = function(cursor) {
     if(this.supsub === 'sub') {
+      if(this.replacedFragment) { 
+        //Ignore highlighting
+        cursor.insRightOf(this.replacedFragment.ends[R]);
+        this.replacedFragment.clear();
+        this.replacedFragment = false; 
+      }
       // Only add subscript to a variable name (aka letter) 
       if (!(cursor[L] instanceof Variable)) return cursor.parent.flash();
       if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor, false);
@@ -26,50 +35,82 @@ var SupSub = P(MathCommand, function(_, super_) {
         cursor.insLeftOf(cdot);
       }
     } else {
-      // Only add superscript to actual math stuff (digits, variables, brackets, etc)
-      if((cursor[L] === 0) || (cursor[L] instanceof BinaryOperator)) return cursor.parent.flash();
-      // Test for elementwise operator .^
-      if((cursor[L].ctrlSeq === '.') && (cursor[L][L])) {
-        var to_remove = [cursor[L]];
-        if(cursor[L][L] && cursor[L][L][L] && cursor[L][L][L][L] && (cursor[L][L].ctrlSeq === '0') && (cursor[L][L][L].ctrlSeq === '\\cdot ')) {
-          // Deal with added 0 and implicit multiplication
-          to_remove.push(cursor[L][L]);
-          to_remove.push(cursor[L][L][L]);
-          var ins = cursor[L][L][L][L];
-        } else
-          var ins = cursor[L][L];
-        for(var i=0; i < to_remove.length; i++)
-          to_remove[i].remove();
-        this.elementWise = true;
-        cursor.insRightOf(ins);
-      }
-      if(((cursor[L] instanceof Fraction) || (cursor[L] instanceof DerivedMathCommand)) && !(cursor[L] instanceof Unit)) {
-        // Some items should be wrapped in brackets before we add the exponent
-        var bracket = CharCmds['(']();
-        var to_move = cursor[L];
-        bracket.createLeftOf(cursor);
-        to_move.disown();
-        to_move.adopt(bracket.ends[L], 0, 0);
-        to_move.jQ.prependTo(bracket.ends[L].jQ);
-        var close_it = CharCmds[')']();
-        close_it.createLeftOf(cursor);
-        bracket.reflow();
-      }
-      if((cursor[L] instanceof SupSub) && (cursor[L].supsub === 'sup')) {
-        // Also wrap, but SupSub does not 'have' its operand as part of it, so we have to march backwards to find what we need to wrap
-        var bracket = CharCmds['(']();
-        var to_move = [cursor[L]];
-        for(var el = cursor[L]; !(el instanceof BinaryOperator) && (el !== 0); el = el[L])
-          to_move.push(el);
-        bracket.createLeftOf(cursor);
-        for(var i=0; i < to_move.length; i++) {
-          to_move[i].disown();
-          to_move[i].adopt(bracket.ends[L], 0, bracket.ends[L].ends[L]);
-          to_move[i].jQ.prependTo(bracket.ends[L].jQ);
+      if(!this.replacedFragment) {
+        // Only add superscript to actual math stuff (digits, variables, brackets, etc)
+        if((cursor[L] === 0) || (cursor[L] instanceof BinaryOperator)) return cursor.parent.flash();
+        // Test for elementwise operator .^
+        if((cursor[L].ctrlSeq === '.') && (cursor[L][L])) {
+          var to_remove = [cursor[L]];
+          if(cursor[L][L] && cursor[L][L][L] && cursor[L][L][L][L] && (cursor[L][L].ctrlSeq === '0') && (cursor[L][L][L].ctrlSeq === '\\cdot ')) {
+            // Deal with added 0 and implicit multiplication
+            to_remove.push(cursor[L][L]);
+            to_remove.push(cursor[L][L][L]);
+            var ins = cursor[L][L][L][L];
+          } else
+            var ins = cursor[L][L];
+          for(var i=0; i < to_remove.length; i++)
+            to_remove[i].remove();
+          this.elementWise = true;
+          cursor.insRightOf(ins);
         }
-        var close_it = CharCmds[')']();
-        close_it.createLeftOf(cursor);
-        bracket.reflow();
+        if(((cursor[L] instanceof Fraction) || (cursor[L] instanceof DerivedMathCommand)) && !(cursor[L] instanceof Unit)) {
+          // Some items should be wrapped in brackets before we add the exponent
+          var bracket = CharCmds['(']();
+          var to_move = cursor[L];
+          bracket.createLeftOf(cursor);
+          to_move.disown();
+          to_move.adopt(bracket.ends[L], 0, 0);
+          to_move.jQ.prependTo(bracket.ends[L].jQ);
+          var close_it = CharCmds[')']();
+          close_it.createLeftOf(cursor);
+          bracket.reflow();
+        }
+        if((cursor[L] instanceof SupSub) && (cursor[L].supsub === 'sup')) {
+          // Also wrap, but SupSub does not 'have' its operand as part of it, so we have to march backwards to find what we need to wrap
+          var bracket = CharCmds['(']();
+          var to_move = [cursor[L]];
+          for(var el = cursor[L]; !(el instanceof BinaryOperator) && (el !== 0); el = el[L])
+            to_move.push(el);
+          bracket.createLeftOf(cursor);
+          for(var i=0; i < to_move.length; i++) {
+            to_move[i].disown();
+            to_move[i].adopt(bracket.ends[L], 0, bracket.ends[L].ends[L]);
+            to_move[i].jQ.prependTo(bracket.ends[L].jQ);
+          }
+          var close_it = CharCmds[')']();
+          close_it.createLeftOf(cursor);
+          bracket.reflow();
+        }
+      } else {
+        var brackets = false;
+        if((this.replacedFragment.ends[L] == this.replacedFragment.ends[R]) && (this.replacedFragment.ends[L] instanceof BinaryOperator)) {
+          // Same start/end item, no need for brackets, but make sure its not a BinaryOperator
+          cursor.insLeftOf(this.replacedFragment.ends[L]);
+          cursor.startSelection();
+          cursor.insRightOf(this.replacedFragment.ends[R]);
+          cursor.select(); 
+          this.replacedFragment.clear();
+          return this.flash();
+        }
+        //Loop fragment in search of non-letter/number and then add a bracket, insert into the bracket.
+        for(var el = this.replacedFragment.ends[L]; el !== this.replacedFragment.ends[R][R]; el = el[R]) {
+          if(!(el instanceof VanillaSymbol) && !(el instanceof Variable) && !(el instanceof OperatorName)) {
+            brackets = true;
+            break;
+          }
+        }
+        if(brackets) {
+          var bracket = CharCmds['(']();
+          bracket.replaces(this.replacedFragment);
+          bracket.createLeftOf(cursor);
+          bracket.reflow();
+          this.replacedFragment = false; 
+          cursor.insRightOf(bracket);
+        } else {
+          cursor.insRightOf(this.replacedFragment.ends[R]);
+          this.replacedFragment.clear();
+          this.replacedFragment = false; 
+        }
       }
     }
     return super_.createLeftOf.call(this, cursor);
@@ -79,8 +120,18 @@ var SupSub = P(MathCommand, function(_, super_) {
     var supsub = this.supsub;
     this.setUnit();
     this.unitsup = false;
-    this.ends[L].write = function(cursor, ch) {
-      if((supsub == 'sub') && (ch === '_')) return this.flash();
+    this.ends[L].write = function(cursor, ch, replacedFragment) {
+      if((supsub == 'sub') && (ch === '_')) {
+        if(replacedFragment) {
+          cursor.insLeftOf(replacedFragment.ends[L]);
+          cursor.startSelection();
+          cursor.insRightOf(replacedFragment.ends[R]);
+          cursor.select(); 
+          replacedFragment.clear();
+        }
+        return this.flash();
+      }
+      if(replacedFragment) replacedFragment.clear();
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
         if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor);
         cursor.insRightOf(this.parent);

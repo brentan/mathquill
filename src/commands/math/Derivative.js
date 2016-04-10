@@ -77,6 +77,10 @@ var MultiDerivative = P(Derivative, function(_, super_) {
   _.textOutput = function(opts) {
     return [{text:' diff('},{text:this.blocks[1].text(opts), obj:this.blocks[1]},{text:' , '},{text: this.blocks[2].text(opts), obj:this.blocks[2]},{text:'$'},{text: this.blocks[0].text(opts), obj:this.blocks[0]},{text:')'}];
   }
+  _.insertFragment = function(replacedFragment) {
+    replacedFragment.adopt(this.blocks[1], 0, 0);
+    replacedFragment.jQ.appendTo(this.blocks[1].jQ);
+  }
   _.parser = function() {
     var string = Parser.string;
     var optWhitespace = Parser.optWhitespace;

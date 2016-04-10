@@ -288,7 +288,6 @@ var Fragment = P(function(_) {
 
     var leftEnd = self.ends[L];
     if (!leftEnd) return this;
-
     var rightEnd = self.ends[R];
 
     if (leftward) {

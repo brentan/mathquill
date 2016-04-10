@@ -35,6 +35,11 @@ Controller.open(function(_) {
     if (!this.cursor.anticursor) this.cursor.startSelection();
     this.seek($(e.target), e.pageX, e.pageY).cursor.select();
   };
+  _.mouseUpShift = function(e) {
+    if (!this.cursor.anticursor) this.cursor.startSelection();
+    this.seek($(e.target), e.pageX, e.pageY).cursor.select();
+    this.mouseUp(e);
+  }
   _.mouseOut = function(e) {
     this.element.worksheet.blurToolbar(this.API);
     if (this.cursor.selection)

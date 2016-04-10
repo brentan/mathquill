@@ -438,6 +438,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.last_action = 'mouseUp';
     this.__controller.mouseUp(e);
   }
+  _.mouseUpShift = function(e) {
+    this.last_action = 'mouseUpShift';
+    this.__controller.mouseUpShift(e);
+  }
   _.mouseOut = function(e) {
     this.last_action = 'mouseOut';
     this.__controller.mouseOut(e);

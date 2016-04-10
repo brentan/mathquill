@@ -17,6 +17,15 @@ var SummationNotation = P(MathCommand, function(_, super_) {
         + '</span></span>';
     Symbol.prototype.init.call(this, ch, htmlTemplate);
   };
+  _.insertFragment = function(replacedFragment) {
+    if(this.hide_limits) {
+      replacedFragment.adopt(this.blocks[1], 0, 0);
+      replacedFragment.jQ.appendTo(this.blocks[1].jQ);
+    } else {
+      replacedFragment.adopt(this.blocks[3], 0, 0);
+      replacedFragment.jQ.appendTo(this.blocks[3].jQ);
+    }
+  }
   _.reflow = function() {
     var sumjQ = this.jQ.children(':first').children('big');
     var delimjQs = this.jQ.children(':last').children(':first').add(this.jQ.children(':last').children(':last'));
