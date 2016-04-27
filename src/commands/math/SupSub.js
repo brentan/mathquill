@@ -11,7 +11,7 @@ function insLeftOfMeUnlessAtEnd(cursor) {
   cursor.insRightOf(cmd);
 }
 
-// BRENTAN: The exponent is not always high enough.  Something like ( cos(1+3)/4 / (4 + cos(1) / 2) ) will produce the low exponent.  Should eventually be fixed.
+// BRENTAN: The exponent is not always high enough.  Something like ( cos(1+3)/4 / (4 + cos(1) ^ 2) ) will produce the low exponent.  Should eventually be fixed.
 var SupSub = P(MathCommand, function(_, super_) {
   _.ctrlSeq = '_{...}^{...}';
   _.replaces = function(replacedFragment) {
@@ -143,8 +143,8 @@ var SupSub = P(MathCommand, function(_, super_) {
       } else
         MathBlock.p.write.apply(this, arguments);
     };
-    if(this.sup && (this.sup.ends[L] && this.sup.ends[L].ctrlSeq === '.')) {
-      // There is no latex elementWise operator...so we just add a '.' to the front to represent it.  Note since we auto-add a '0' before '.' in numbers, it means a leading '.' should only indicate elementwise math
+    if(this.sup && (this.sup.ends[L] && this.sup.ends[L].ctrlSeq === '@')) {
+      // There is no latex elementWise operator...so we just add a '@' to the front to represent it.  
       this.sup.ends[L].remove();
       this.elementWise = true;
     }
@@ -167,7 +167,7 @@ var SupSub = P(MathCommand, function(_, super_) {
     var elementWise = this.elementWise;
     function latex(prefix, block) {
       var l = block && block.latex();
-      return block ? prefix + (l.length === 1 ? l : '{' + (elementWise ? '.' : '') + (l || ' ') + '}') : '';
+      return block ? prefix + ((l.length === 1) && !elementWise ? l : '{' + (elementWise ? '@' : '') + (l || ' ') + '}') : '';
     }
     return latex('_', this.sub) + latex('^', this.sup);
   };

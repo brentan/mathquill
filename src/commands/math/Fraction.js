@@ -20,8 +20,8 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
     this.controller.closePopup();
     this.upInto = this.ends[R].upOutOf = this.ends[L];
     this.downInto = this.ends[L].downOutOf = this.ends[R];
-    if(this.blocks[1].ends[L] && (this.blocks[1].ends[L].ctrlSeq === '.')) {
-      // There is no latex elementWise operator...so we just add a '.' to the front of the numerator to represent it.  Note since we auto-add a '0' before '.' in numbers, it means a leading '.' should only indicate elementwise math
+    if(this.blocks[1].ends[L] && (this.blocks[1].ends[L].ctrlSeq === '@')) {
+      // There is no latex elementWise operator...so we just add a '@' to the front of the numerator to represent it. 
       this.blocks[1].ends[L].remove();
       this.elementWise = true;
     }
@@ -34,7 +34,7 @@ LatexCmds.fraction = P(MathCommand, function(_, super_) {
     return [{text:'(('},{text:this.blocks[0].text(opts), obj:this.blocks[0]},{text:(')' + (this.elementWise ? '.' : '') + '/(')},{text:this.blocks[1].text(opts), obj:this.blocks[1]},{text:'))'}];
   }
   _.latex = function() {
-    return this.ctrlSeq + '{' + this.blocks[0].latex() + '}{' + (this.elementWise ? '.' : '') + this.blocks[1].latex() + '}';
+    return this.ctrlSeq + '{' + this.blocks[0].latex() + '}{' + (this.elementWise ? '@' : '') + this.blocks[1].latex() + '}';
   }
 });
 
