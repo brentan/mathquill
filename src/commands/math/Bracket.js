@@ -109,6 +109,10 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
           new_mat.createLeftOf(cursor);
           return;
       }
+      else if((!brack) && (this.ctrlSeq === '\\left\\{') && (cursor[L] instanceof Equality) && (cursor[L].strict) && cursor.controller.element && cursor.controller.element.changeToText) {
+        //This is a conditional if.  x = { 
+        if(cursor.controller.element.changeToText(cursor.controller.API.text() + '{')) return;
+      }
     }
     if (brack) {
       var side = this.side = -brack.side; // may be pipe with .side not yet set

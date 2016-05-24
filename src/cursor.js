@@ -234,6 +234,8 @@ var Cursor = P(Point, function(_) {
     } else {
       this.controller.destroyTooltip();
     }
+    if(this.controller.element && this.controller.element.mathquill_reflow)
+      this.controller.element.mathquill_reflow();
     return this;
   };
 
