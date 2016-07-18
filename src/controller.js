@@ -116,7 +116,7 @@ var Controller = P(function(_) {
     el.find('li').mouseenter(function() {  // We dont use CSS hover because the class is how we keep track of which item is 'active'
       $(this).closest('ul').find('li').removeClass('mq-popup-selected');
       $(this).addClass('mq-popup-selected');
-    }).click(onclick);
+    }).mousedown(onclick);
     if(this.root.jQ.closest('.popup_dialog').length)
       el.css('z-index', '6000');
     if(this.root.jQ.closest('.screen_explanation_content').length)
