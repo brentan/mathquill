@@ -105,7 +105,7 @@ var AbstractMathQuill = P(function(_) {
     var out = this.__controller.exportText(opts); 
     // Transform 1...2 and 1, 3...6 into appropriate emgiac 'matrix()' call
       // KEPT FOR BACKWARDS COMPATIBILITY 2/7/16.  PROBABLY SHOULD BE REMOVE AT SOME POINT IN FUTURE
-    out = out.replace(/(-?[a-z0-9_.]+) *, *(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $3, $2-$1))").replace(/(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $2, 1))")
+    //out = out.replace(/(-?[a-z0-9_.]+) *, *(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $3, $2-$1))").replace(/(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $2, 1))")
     if(opts['check_for_array'] && !out.match(/\[.*\]/) && out.match(/,/))
       out = '[' + out + ']'; 
     if(opts['default'] && (out.trim() == '')) return opts['default'];

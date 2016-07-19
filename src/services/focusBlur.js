@@ -21,6 +21,18 @@ Controller.open(function(_) {
       }
     };
     ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
+      if(ctrlr.captiveUnitMode || ctrlr.units_only) {
+        //Perform unit check
+        reg = /([^a-zA-Z0-9_]|^)_([a-zA-Zµ2]+)/g;
+        var result;
+        while((result = reg.exec(ctrlr.API.text())) !== null) {
+          if(!window.checkForValidUnit(result[2])) {
+            // Invalid unit in entry
+            showNotice("Unknown unit: " + result[2] + ".  Please correct your input and try again.",'red');
+            ctrlr.API.highlightError(result.index);
+          }
+        }
+      }
       ctrlr.blurred = true;
       if(ctrlr.captiveMode) {
         ctrlr.element.itemChosen(ctrlr.API.latex());
