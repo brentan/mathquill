@@ -122,6 +122,7 @@ var Variable = P(Symbol, function(_, super_) {
       if(word.length > 0) {
         var wordList = [];
         var commandList = [];
+        var functionlist = [];
         var pretext = '';
         if(this.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent === this.parent.parent.ends[R])) {
           // In a FunctionCommand, we only autocomplete the method calls that are public for that object
@@ -136,6 +137,22 @@ var Variable = P(Symbol, function(_, super_) {
           wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete || [];
           unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
+          if((this.controller.root.ends[L] instanceof OperatorName) && (this.controller.root.ends[L][R] instanceof Equality) && this.controller.root.ends[L][R].strict // We are on a line where we are defining a function...we should add the function variable list to the word list
+            && this.controller.cursor && this.controller.cursor.parent && (this.controller.cursor.parent.parent != this.controller.root.ends[L]) // Cursor is not in the function definition (no sub check)
+            && (!(this.controller.cursor.parent.parent && this.controller.cursor.parent.parent.parent) || (this.controller.cursor.parent.parent.parent.parent != this.controller.root.ends[L]))) { // Cursor is not in the function definition (sub check)
+            var var_list = this.controller.root.ends[L].blocks[1].text({}).split(',');
+            for(var i = 0; i < var_list.length; i++) {
+              if(var_list[i].trim().match(/^[a-z][a-z0-9_]/i)) {
+                var var_name = var_list[i].trim();
+                var add_it = true;
+                for(var j = 0; j < wordList.length; j++) 
+                  if(var_name == wordList[j]) { add_it = false; break; }
+                for(var j = 0; j < functionlist.length; j++) 
+                  if(var_name == functionlist[j]) { add_it = false; break; }
+                if(add_it) functionlist.push(var_list[i].trim());
+              }
+            }
+          }
         }
         var formatter = function(text, self) {
           var autoCommands = Object.keys(self.controller.API.__options.autoCommands);
@@ -152,6 +169,8 @@ var Variable = P(Symbol, function(_, super_) {
           return text;
         }
         //Find all matches
+        for(var i = 0; i < functionlist.length; i++)
+          if(functionlist[i].match(regex)) matchList.push("<li data-word='" + functionlist[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i], this) + "</i></span></li>");
         for(var i = 0; i < wordList.length; i++)
           if(wordList[i].match(regex)) matchList.push("<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], this) + "</i></span></li>");
         for(var i = 0; i < commandList.length; i++)

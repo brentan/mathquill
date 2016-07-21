@@ -22,7 +22,7 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
   _.textOutput = function(opts) {
     var out = [];
     if(this[L] && !(this[L] instanceof BinaryOperator))
-      out.push({text:'*'}); //BRENTAN: This needs lots of testing to make sure it doesnt add a '*' in situations where it shouldn't!
+      out.push({text:'*'}); //BRENTAN: This needs lots of testing to make sure it doesnt add a '*' in situations where it shouldn't! UPDATE: Been here a while and no issues...
     if((this.blocks[0].text(opts)+"").match(/^'+$/)) out = [];
     out.push({text:this.blocks[0].text(opts), obj:this.blocks[0]});
     out.push({text:'('});
