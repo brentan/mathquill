@@ -3,9 +3,9 @@ Controller.open(function(_) {
     var ctrlr = this, root = ctrlr.root, cursor = ctrlr.cursor;
     ctrlr.focus = function() {
       ctrlr.blurred = false;
+      ctrlr.container.addClass('mq-focused');
       if(ctrlr.captiveMode) return;
       if(ctrlr.element) ctrlr.element.setFocusedItem(ctrlr.API);
-      ctrlr.container.addClass('mq-focused');
       if (!cursor.parent)
         cursor.insAtRightEnd(root);
       if (cursor.selection) { 
