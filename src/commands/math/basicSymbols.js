@@ -220,7 +220,7 @@ CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot =
   bind(Multiplication, '\\cdot ', '&middot;', '*');
 //semantically should be &sdot;, but &middot; looks better
 
-var Inequality = P(BinaryOperator, function(_, super_) {
+var EqualityInequality = P(BinaryOperator, function(_, super_) {
   _.init = function(data, strict) {
     this.data = data;
     this.strict = strict;
@@ -244,6 +244,36 @@ var Inequality = P(BinaryOperator, function(_, super_) {
     super_.deleteTowards.apply(this, arguments);
   };
 });
+var Inequality = P(EqualityInequality, function(_, super_) {
+  _.textOutput = function(opts) {
+    // Test if this is 1<x<3 type of format...text output should convert to 1<x && x<3 format that emgiac understands
+    // Move left and see if we ever hit another inequality
+    var inequality_string = false;
+    var to_add = [];
+    for (var l = this[L]; l != 0; l = l[L]) { 
+      if(l instanceof Inequality) {
+        inequality_string = true;
+        break;
+      } else if(l instanceof LogicOperator) break; // x<3 and y<5 shouldn't by caught by this
+      else if(l instanceof Equality) break; 
+      else if((l instanceof BinaryOperator) && (l.ctrlSeq == ',')) break;
+      to_add.push(l);
+    }
+    var repeat_word = [];
+    // If we are a sandwhiched inequality, we can add these together now
+    if(inequality_string) {
+      repeat_word.push({text: " and "});
+      for(var i = (to_add.length-1); i >= 0; i--) {
+        var textout = to_add[i].textOutput(opts)
+        for(var j = 0; j < textout.length; j++)
+          repeat_word.push(textout[j]);
+      }
+      console.log(repeat_word);
+    }
+    repeat_word.push({text: this.textTemplate[0]});
+    return repeat_word;
+  }
+});
 
 var less = { ctrlSeq: '\\le ', html: '&le;', text: ' <= ',
              ctrlSeqStrict: '<', htmlStrict: '&lt;', textStrict: ' < ' };
@@ -259,12 +289,12 @@ LatexCmds['≥'] = LatexCmds.ge = LatexCmds.geq = bind(Inequality, greater, fals
 LatexCmds['!'] = bind(Inequality, factorial, true);
 LatexCmds['≠'] = LatexCmds.ne = LatexCmds.neq = bind(Inequality, factorial, false);
 
-var Equality = P(Inequality, function(_, super_) {
+var Equality = P(EqualityInequality, function(_, super_) {
   _.init = function(data, strict) {
     super_.init.call(this, data, strict);
   };
   _.createLeftOf = function(cursor) {
-    if ((cursor[L] instanceof Inequality) && !(cursor[L] instanceof Equality) && cursor[L].strict) {
+    if ((cursor[L] instanceof Inequality) && cursor[L].strict) {
       cursor[L].swap(false);
       return;
     } 
