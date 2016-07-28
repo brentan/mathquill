@@ -268,7 +268,6 @@ var Inequality = P(EqualityInequality, function(_, super_) {
         for(var j = 0; j < textout.length; j++)
           repeat_word.push(textout[j]);
       }
-      console.log(repeat_word);
     }
     repeat_word.push({text: this.textTemplate[0]});
     return repeat_word;
