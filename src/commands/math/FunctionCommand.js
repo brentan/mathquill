@@ -6,7 +6,7 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   _.htmlTemplate =
       '<span class="mq-function-command">'
     +   '<span>&0</span>'
-    +   '<span>.</span>'
+    +   '<span class="mq-period">.</span>'
     +   '<span>&1</span>'
     + '</span>'
   ;

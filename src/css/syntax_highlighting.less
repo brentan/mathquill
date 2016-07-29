@@ -1,9 +1,12 @@
 
 .mq-math-mode:not(.answer):hover, .mq-math-mode:not(.answer).mq-focused, body.syntax_highlighting {
+  .mq-root-block var, .mq-sub span, .mq-sub var, .mq-function-command span.mq-period {
+    color: #b35f10;
+  }
   span.mq-operator-name var, span.mq-operator-name span, span.mq-operator-name-holder > span.mq-non-leaf > span.mq-paren {
     color: #0000EE;
   }
-  span.mq-unit {
+  span.mq-unit, span.mq-unit var, span.mq-unit span {
     color: #00AA00;
   }
 }
