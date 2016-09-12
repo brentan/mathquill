@@ -49,7 +49,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
       var right = this.sides[R].textTemplate;
     } else {
       var left = '(';
-      var rights = ')';
+      var right = ')';
     }
     return [{text: left}, {text: this.ends[L].text(opts), obj: this.ends[L]}, {text: right}]
   }
