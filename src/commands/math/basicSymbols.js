@@ -5,6 +5,7 @@
 // VanillaSymbol's
 LatexCmds[','] = bind(BinaryOperator, ',', ',&nbsp;');
 LatexCmds.whitespace = bind(VanillaSymbol, '\\space ', '&nbsp;');
+LatexCmds.percentSymbol = bind(VanillaSymbol, '\\percentSymbol ', '%');
 
 LatexCmds.backslash = bind(VanillaSymbol,'\\backslash ','\\');
 if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
