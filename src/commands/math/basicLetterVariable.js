@@ -249,8 +249,6 @@ optionProcessors.autoCommands = function(cmds) {
   //dict._maxLength = maxLength;
   return dict;
 };
-var show_s_unit_message = true;
-var show_m_unit_message = true;
 var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { 
     return super_.init.call(this, this.letter = ch); 
@@ -329,19 +327,7 @@ var Letter = P(Variable, function(_, super_) {
           if(create_unit(this, unitList.name_to_symbol[unitList.names[i]])) return true;
         }
       }
-    } else if(try_unit_converstion && str.length) {
-      // We don't auto-convert 1 character things because there are too many false positives.  But we warn on 's' and 'm' as these
-      // are both common variable names AND common unit assessors 
-      // BRENTAN: Future, add option to select default option for converting s and m to units?
-      if(this.controller.element && this.controller.element.worksheet.loaded && show_s_unit_message && (str == 's')) {
-        if (SwiftCalcs.createTooltip("<<Did you mean seconds?>>\n<i>s</i> is a common variable name and Swift Calcs does not auto-convert it to <i>seconds</i>.  Looking for the seconds unit?  Try typing <[sec]>.", cursor[L].jQ))
-          show_s_unit_message = false;
-      }
-      if(this.controller.element && this.controller.element.worksheet.loaded && show_m_unit_message && (str == 'm')) {
-        if (SwiftCalcs.createTooltip("<<Did you mean meters?>>\n<i>m</i> is a common variable name and Swift Calcs does not auto-convert it to <i>meters</i>.  Looking for the meters unit?  Try typing <[meter]>.", cursor[L].jQ))
-          show_m_unit_message = false;
-      }
-    }
+    } 
     return false;
   };
   _.createLeftOf = function(cursor) {
