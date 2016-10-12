@@ -274,6 +274,7 @@ var Letter = P(Variable, function(_, super_) {
       }
     }
     var try_unit_converstion = true;
+    if(this.controller.disableAutoUnit) try_unit_converstion = false;
     if(unit_conversion === false) try_unit_converstion = false;
     if((unit_conversion === true) && !((left_of instanceof BinaryOperator) && (left_of.ctrlSeq == '\\cdot '))) try_unit_converstion = false;
     if(cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub == 'sub')) try_unit_converstion = false;
