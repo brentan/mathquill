@@ -266,7 +266,7 @@ var Letter = P(Variable, function(_, super_) {
     }
     var left_of = l;
     // check for an autocommand, going thru substrings longest to shortest
-    if(str.length > 1) {
+    if((str.length > 1) && (str != "psi")) {
       if (autoCmds.hasOwnProperty(str)) {
         for (var i = 1, l = cursor[L]; i < str.length; i += 1, l = l[L]);
         Fragment(l, cursor[L]).remove();
@@ -279,19 +279,23 @@ var Letter = P(Variable, function(_, super_) {
     if(unit_conversion === false) try_unit_converstion = false;
     if((unit_conversion === true) && !((left_of instanceof BinaryOperator) && (left_of.ctrlSeq == '\\cdot '))) try_unit_converstion = false;
     if(cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub == 'sub')) try_unit_converstion = false;
-    if(try_unit_converstion && (str.length > 1)) {
+    if(try_unit_converstion && (str.length >= 1)) {
       var unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
+      var wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
+      // If this is a function definition, we also need to add in the local variables for this function
+      if((this.controller.root.ends[L] instanceof OperatorName) && (this.controller.root.ends[L][R] instanceof Equality) && (this.controller.root.ends[L][R].ctrlSeq == '=')) {
+        var local_vars = this.controller.root.ends[L].text().replace(/^[a-zA-Z0-9_]\((.*)\)$/,"$1").split(",");
+        for(var j = 0; j < local_vars.length; j++) 
+          wordList.push(local_vars[j].trim());
+      }
+      var commandList = this.controller.API.__options.staticAutocomplete || [];
       var create_unit = function(_this, symb) {
         var change_to_unit = true;
-        var wordList = _this.controller.element ? _this.controller.element.autocomplete() : (_this.controller.API.__options.autocomplete || []);
-        // If this is a function definition, we also need to add in the local variables for this function
-        if((_this.controller.root.ends[L] instanceof OperatorName) && (_this.controller.root.ends[L][R] instanceof Equality) && (_this.controller.root.ends[L][R].ctrlSeq == '=')) {
-          var local_vars = _this.controller.root.ends[L].text().replace(/^[a-zA-Z0-9_]\((.*)\)$/,"$1").split(",");
-          for(var j = 0; j < local_vars.length; j++) 
-            wordList.push(local_vars[j].trim());
-        }
         for(var j = 0; j < wordList.length; j++) {
           if(wordList[j] == str) { change_to_unit = false; break; }
+        }
+        for(var j = 0; j < commandList.length; j++) {
+          if(commandList[j] == str) { change_to_unit = false; break; }
         }
         if(change_to_unit) {
           var unit = Unit();
