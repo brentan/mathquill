@@ -305,16 +305,29 @@ var Equality = P(EqualityInequality, function(_, super_) {
     var assignment = false;
     if(!cursor.controller.API.__options.expression_mode && (cursor.parent == cursor.controller.root)) {
       if((cursor[L] instanceof OperatorName) && (cursor[L][L] === 0)) assignment = true;
-      var start_test = cursor[L];
-      var all_letters = true;
-      if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
-      else if((start_test instanceof Bracket) && (start_test.sides[L].ctrlSeq == '[')) start_test = start_test[L];
-      else if((start_test instanceof Matrix) && (start_test.row == 1)) start_test = start_test[L];
-      if(start_test === 0) all_letters = false;
-      for(var l = start_test; l !== 0; l = l[L]) {
-        if(!(l instanceof Variable) && !(l instanceof NonSymbolaSymbol)) { all_letters = false; break }
+      else if((cursor[L] instanceof FunctionCommand) && (cursor[L][L] === 0)) {
+        var start_test = cursor[L].blocks[1].ends[R];
+        var all_letters = true;
+        if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
+        else if((start_test instanceof Bracket) && (start_test.sides[L].ctrlSeq == '[')) start_test = start_test[L];
+        else if((start_test instanceof Matrix) && (start_test.row == 1)) start_test = start_test[L];
+        if(start_test === 0) all_letters = false;
+        for(var l = start_test; l !== 0; l = l[L]) {
+          if(!(l instanceof Variable) && !(l instanceof NonSymbolaSymbol)) { all_letters = false; break }
+        }
+        if(all_letters) assignment = true;
+      } else {
+        var start_test = cursor[L];
+        var all_letters = true;
+        if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
+        else if((start_test instanceof Bracket) && (start_test.sides[L].ctrlSeq == '[')) start_test = start_test[L];
+        else if((start_test instanceof Matrix) && (start_test.row == 1)) start_test = start_test[L];
+        if(start_test === 0) all_letters = false;
+        for(var l = start_test; l !== 0; l = l[L]) {
+          if(!(l instanceof Variable) && !(l instanceof NonSymbolaSymbol)) { all_letters = false; break }
+        }
+        if(all_letters) assignment = true;
       }
-      if(all_letters) assignment = true;
     } 
     if(!assignment)
       this.swap(false);
