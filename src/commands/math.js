@@ -547,7 +547,27 @@ var MathBlock = P(MathElement, function(_, super_) {
       if(cursor[L] instanceof Letter)
         cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
     } else if(key === 'Enter') {
-      if((ctrlr.cursor.parent == ctrlr.root) && !(ctrlr.cursor[L]) && (ctrlr.element) && (ctrlr.element.PrependBlankItem) && ctrlr.element.PrependBlankItem(ctrlr.API)) {
+      var initial = true;
+      var starter = ctrlr.cursor;
+      while(true) {
+        if(starter[L]) {
+          initial = false;
+          break;
+        }
+        if(starter.parent) {
+          if((starter == ctrlr.cursor) && (starter.parent.ends[L] != starter[R])) {
+            initial = false;
+            break;
+          }
+          if((starter != ctrlr.cursor) && (starter.parent.ends[L] != starter)) {
+            initial = false;
+            break;
+          }
+          starter = starter.parent;
+        } else
+          break;
+      }
+      if(initial && (ctrlr.element) && (ctrlr.element.PrependBlankItem) && ctrlr.element.PrependBlankItem(ctrlr.API)) {
         // Enter pressed with cursor in initial position.  
         e.preventDefault();
         return;
