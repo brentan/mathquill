@@ -250,6 +250,7 @@ optionProcessors.autoCommands = function(cmds) {
   return dict;
 };
 var Letter = P(Variable, function(_, super_) {
+  _.force_no_unit = false;
   _.init = function(ch) { 
     return super_.init.call(this, this.letter = ch); 
   };
@@ -278,7 +279,8 @@ var Letter = P(Variable, function(_, super_) {
     else if(unit_conversion === false) try_unit_converstion = false;
     else if(this.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub == 'sub')) try_unit_converstion = false;
     else if(this.parent && (this.parent.parent instanceof FunctionCommand)) try_unit_converstion = false;
-    else if(!((left_of instanceof BinaryOperator) && (left_of.ctrlSeq == '\\cdot '))) try_unit_converstion = false;
+    else if(this.force_no_unit) try_unit_converstion = false;
+
     if(cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub == 'sub')) try_unit_converstion = false;
     if(try_unit_converstion && (str.length >= 1)) {
       var unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
@@ -300,6 +302,7 @@ var Letter = P(Variable, function(_, super_) {
         }
         if(change_to_unit) {
           var unit = Unit();
+          unit.autoOperator = true;
           for (var i = 1, l = cursor[L]; i < str.length; i += 1, l = l[L]);
           Fragment(l, cursor[L]).remove();
           cursor[L] = l[L];
