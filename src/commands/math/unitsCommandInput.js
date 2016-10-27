@@ -111,7 +111,10 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
         var symb = [];
         for(var i = this.blocks[0].ends[L]; i != 0; i = i[R])
           symb.push(i.text({}));
-        if(this[L] && !(this[L] instanceof BinaryOperator)) LatexCmds.cdot().createLeftOf(cursor);
+        if(this[L] && (this[L] instanceof VanillaSymbol) && (this[L].ctrlSeq == '1') && (!this[L][L] || (this[L][L] instanceof BinaryOperator))) {
+          // Remove implicit 1
+          this[L].remove();
+        } else if(this[L] && !(this[L] instanceof BinaryOperator)) LatexCmds.cdot().createLeftOf(cursor);
         var last_letter = false;
         for(var i = 0; i < symb.length; i++) {
           last_letter = Letter(symb[i])

@@ -94,12 +94,16 @@ var Variable = P(Symbol, function(_, super_) {
     var letters = output[1];
     var matchList = [];
     var regex = new RegExp("^" + word + ".*$", "i");
+    var regexe = new RegExp("^" + word + ".*$", "");
     var capitalize = function(s) {
       return s[0].toUpperCase() + s.slice(1);
     };
     if((this.parent.unit) || (this.parent.parent && this.parent.parent.unit)) {
       // Units
-      if(word.length == 1) regex = new RegExp("^" + word + "$", ""); // Exact match for 1 letter autocomplete (for things like 'm' -> meter)
+      if(word.length == 1) {
+        regex = new RegExp("^" + word + "$", ""); // Exact match for 1 letter autocomplete (for things like 'm' -> meter)
+        regexe = new RegExp("^" + word + "$", "");
+      }
       if(word.length > 0) {
         prefix_to_ignore = ['micro', 'yocto', 'zepto', 'atto', 'femto', 'pico', 'nano', 'milli', 'centi', 'deci', 'deca', 'hecto', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa', 'zetta', 'yotta'];
         skip_this = false;
@@ -110,11 +114,11 @@ var Variable = P(Symbol, function(_, super_) {
           var already_added = {};
           for(var i = 0; i < unitList.symbols.length; i++)
             if(unitList.symbols[i].match(regex)) {
-              matchList.push("<li data-word='" + unitList.symbols[i] + "'><span class='mq-operator-name'>" + unitList.symbols[i] + " (" + capitalize(unitList.symbol_to_name[unitList.symbols[i]]) + ")</span></li>");
+              matchList.push({match: unitList.symbols[i], html: "<li data-word='" + unitList.symbols[i] + "'><span class='mq-operator-name'>" + unitList.symbols[i] + " (" + capitalize(unitList.symbol_to_name[unitList.symbols[i]]) + ")</span></li>"});
               already_added[unitList.symbols[i]] = true;
             }
           for(var i = 0; i < unitList.names.length; i++)
-            if(unitList.names[i].match(regex) && !already_added[unitList.name_to_symbol[unitList.names[i]]]) matchList.push("<li data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]) + ")</span></li>");
+            if(unitList.names[i].match(regex) && !already_added[unitList.name_to_symbol[unitList.names[i]]]) matchList.push({match: unitList.name_to_symbol[unitList.names[i]], html: "<li data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]) + ")</span></li>"});
         }
       }
     } else {
@@ -132,8 +136,8 @@ var Variable = P(Symbol, function(_, super_) {
           pretext = this.parent.parent.objectName();
           pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>.' : (pretext + '.');
         } else {
-          if((word.length < 3) && (word.indexOf('_') == -1)) return; // Only autocomplete on 3 characters or more
-          // Get the provided list of words and commands to autocomplete
+          if((word.length < 3) && (word.indexOf('_') == -1)) 
+            return; // Only autocomplete on 3 characters or more
           wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete || [];
           unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
@@ -170,17 +174,27 @@ var Variable = P(Symbol, function(_, super_) {
         }
         //Find all matches
         for(var i = 0; i < functionlist.length; i++)
-          if(functionlist[i].match(regex)) matchList.push("<li data-word='" + functionlist[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i], this) + "</i></span></li>");
+          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i], this) + "</i></span></li>"});
         for(var i = 0; i < wordList.length; i++)
-          if(wordList[i].match(regex)) matchList.push("<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], this) + "</i></span></li>");
+          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], this) + "</i></span></li>"});
         for(var i = 0; i < commandList.length; i++)
-          if(commandList[i].match(regex)) matchList.push("<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>");
+          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>"});
         for(var i = 0; i < unitList.names.length; i++)
-          if(unitList.names[i].match(regex)) matchList.push("<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]) + ")</span></li>");
+          if(unitList.names[i].match(regex)) matchList.push({match: unitList.name_to_symbol[unitList.names[i]], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]) + ")</span></li>"});
       }
     }
     if(matchList.length > 0) {
-      matchList[0] = matchList[0].replace('<li', '<li class="mq-popup-selected"');
+      var matches = []
+      // Order by exact matches first, then non-exact
+      for(var i = 0; i < matchList.length; i++) {
+        if(matchList[i].match.match(regexe)) matches.push(matchList[i].html);
+        else matchList[i].addit = true;
+      }
+      for(var i = 0; i < matchList.length; i++) {
+        if(matchList[i].addit === true) matches.push(matchList[i].html);
+      }
+
+      matches[0] = matches[0].replace('<li', '<li class="mq-popup-selected"');
       if(this.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent === this.parent.parent.ends[R]))
         var leftBlock = this.parent.parent.jQ;
       else
@@ -223,7 +237,7 @@ var Variable = P(Symbol, function(_, super_) {
         if($(this).attr('data-make-unit') == '1') _this.controller.API.keystroke('Right', {preventDefault: function() {} });
         _this.controller.cursor.workingGroupChange();
       };
-      this.controller.createPopup('<ul>' + matchList.join('\n') + '</ul>', topOffset + topBlock.height() + scrollTop, leftOffset, onclick);
+      this.controller.createPopup('<ul>' + matches.join('\n') + '</ul>', topOffset + topBlock.height() + scrollTop, leftOffset, onclick);
     } else
       this.controller.closePopup();
   };
@@ -279,6 +293,7 @@ var Letter = P(Variable, function(_, super_) {
     else if(unit_conversion === false) try_unit_converstion = false;
     else if(this.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub == 'sub')) try_unit_converstion = false;
     else if(this.parent && (this.parent.parent instanceof FunctionCommand)) try_unit_converstion = false;
+    else if(!(left_of && (left_of instanceof BinaryOperator) && (left_of.ctrlSeq == '\\cdot ')) && !(this.parent && this.parent.parent && (this.parent.parent instanceof Fraction))) try_unit_converstion = false;
     else if(this.force_no_unit) try_unit_converstion = false;
 
     if(cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub == 'sub')) try_unit_converstion = false;

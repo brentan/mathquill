@@ -293,18 +293,9 @@ var Equality = P(EqualityInequality, function(_, super_) {
   _.init = function(data, strict) {
     super_.init.call(this, data, strict);
   };
-  _.createLeftOf = function(cursor) {
-    if ((cursor[L] instanceof Inequality) && cursor[L].strict) {
-      cursor[L].swap(false);
-      return;
-    } 
-    if(cursor[L] instanceof Equality) {
-      cursor[L].swap(!cursor[L].strict);
-      return;
-    }
-    var assignment = false;
+  _.convertToAssignment = function(cursor) {
     if(!cursor.controller.API.__options.expression_mode && (cursor.parent == cursor.controller.root)) {
-      if((cursor[L] instanceof OperatorName) && (cursor[L][L] === 0)) assignment = true;
+      if((cursor[L] instanceof OperatorName) && (cursor[L][L] === 0)) return true;
       else if((cursor[L] instanceof FunctionCommand) && (cursor[L][L] === 0)) {
         var start_test = cursor[L].blocks[1].ends[R];
         var all_letters = true;
@@ -315,7 +306,7 @@ var Equality = P(EqualityInequality, function(_, super_) {
         for(var l = start_test; l !== 0; l = l[L]) {
           if(!(l instanceof Variable) && !(l instanceof NonSymbolaSymbol)) { all_letters = false; break }
         }
-        if(all_letters) assignment = true;
+        if(all_letters) return true;
       } else {
         var start_test = cursor[L];
         var all_letters = true;
@@ -326,10 +317,21 @@ var Equality = P(EqualityInequality, function(_, super_) {
         for(var l = start_test; l !== 0; l = l[L]) {
           if(!(l instanceof Variable) && !(l instanceof NonSymbolaSymbol)) { all_letters = false; break }
         }
-        if(all_letters) assignment = true;
+        if(all_letters) return true;
       }
     } 
-    if(!assignment)
+    return false;
+  }
+  _.createLeftOf = function(cursor) {
+    if ((cursor[L] instanceof Inequality) && cursor[L].strict) {
+      cursor[L].swap(false);
+      return;
+    } 
+    if(cursor[L] instanceof Equality) {
+      cursor[L].swap(!cursor[L].strict);
+      return;
+    }
+    if(!this.convertToAssignment(cursor))
       this.swap(false);
     super_.createLeftOf.apply(this, arguments);
   };

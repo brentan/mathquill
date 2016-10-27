@@ -678,11 +678,11 @@ var MathBlock = P(MathElement, function(_, super_) {
     if(!(cmd instanceof Variable) && (ch != '_') && (cursor[L] instanceof Letter)) {
       if((cmd instanceof Bracket) && (cmd.side === L)) {
         if(cursor[L].autoOperator(cursor, false)) return;
-      } else if(((cmd instanceof Equality) && (cmd.ctrlSeq == '=')) ||
+      } else if(((cmd instanceof Equality) && !cmd.convertToAssignment(cursor)) ||
         ((ch == ',') && cursor.parent && cursor.parent.suppressAutoUnit) ||
-        ((ch == ')') && cursor.parent && cursor.parent.suppressAutoUnit) )
-        cursor[L].autoOperator(cursor, true); 
-      else 
+        ((ch == ')') && cursor.parent && cursor.parent.suppressAutoUnit) ) {
+        cursor[L].autoOperator(cursor, false); 
+      } else 
         cursor[L].autoOperator(cursor, undefined, true);   //cursor[L].autoOperator(cursor);
     }
 
