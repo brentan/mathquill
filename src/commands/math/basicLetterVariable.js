@@ -429,7 +429,7 @@ optionProcessors.unitList = function(units) {
   var sortFunction = function (a, b) {
     return a.toLowerCase().localeCompare(b.toLowerCase());
   };
-  return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.sort(sortFunction).concat(symbols_prefix.sort(sortFunction)) }
+  return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.concat(symbols_prefix).sort(sortFunction) }
 }
 
 LatexCmds["'"] = P(Letter, function(_, super_) {
