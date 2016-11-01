@@ -141,3 +141,87 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
       return [{text:'*('},{text:this.blocks[0].text(jQuery.extend({unit: true}, opts)), obj:this.blocks[0]},{text:')'}];
   }
 });
+
+
+var CombinedUnit = LatexCmds.CombinedUnit = 
+P(Unit, function(_, super_) {
+  _.ctrlSeq = 'CombinedUnit{...}{...}';
+  _.replaces = function(replacedFragment) {
+    replacedFragment.disown();
+    this._replacedFragment = replacedFragment;
+  };
+  _.htmlTemplate = '<span><span>&0</span><span class="mq-unit mq-non-leaf">&1</span></span>';
+  _.finalizeTree = function() {
+    super_.finalizeTree.call(this);
+    this.ends[L].deleteOutOf = function(dir, cursor) {
+      for(var el= this.parent.ends[R].ends[L]; el !== 0; el = el[R])
+        el.remove();
+      cursor.insAtRightEnd(this);
+      cursor.unwrapGramp();
+    };
+    if(this.getController().captiveUnitMode) 
+      this.ends[L].jQ.hide();
+    if(this.getController().units_only) 
+      this.ends[L].jQ.hide();
+  }
+  _.createLeftOf = function(cursor) {
+    if (this._replacedFragment) {
+      // Determine if the fragment is just numbers.  If so, add units
+      var just_a_number = true;
+      this._replacedFragment.each(function(el) {
+        if(!((el instanceof VanillaSymbol) && el.ctrlSeq.match(/[0-9\.]/))) 
+          just_a_number = false;
+      });
+      // Determine if its scientific notation ONLY
+      if((this._replacedFragment.ends[L] === this._replacedFragment.ends[R]) && (this._replacedFragment.ends[L] instanceof ScientificNotation)) just_a_number = true;
+      if(just_a_number) {
+        super_.createLeftOf.call(this, cursor);
+        this._replacedFragment.adopt(this.ends[L], 0, 0);
+        this._replacedFragment.jQ.appendTo(this.ends[L].jQ);
+      } else {
+        var bracket = CharCmds['(']();
+        bracket.replaces(this._replacedFragment);
+        bracket.createLeftOf(cursor);
+        bracket.reflow();
+        cursor.insRightOf(bracket);
+        LatexCmds.cdot().createLeftOf(cursor);
+        super_.createLeftOf.call(this, cursor);
+        cursor.insAtRightEnd(this.ends[L]);
+        VanillaSymbol('1').createLeftOf(cursor);
+      }
+    } else {
+      // See if im being added next to a number.  If so, start walking left until the start of the number is found, then move this into the unit
+      var to_move = [];
+      if(cursor[L] instanceof ScientificNotation) to_move.push(cursor[L]);
+      for(var el = cursor[L]; el !== 0; el = el[L]) {
+        if((el instanceof VanillaSymbol) && el.ctrlSeq.match(/[0-9\.]/)) to_move.push(el);
+        else break;
+      }
+      if(to_move.length === 0) {
+        if((cursor[L] instanceof BinaryOperator) || (cursor[L] === 0))
+          VanillaSymbol('1').createLeftOf(cursor);
+        else {
+          LatexCmds.cdot().createLeftOf(cursor);
+          VanillaSymbol('1').createLeftOf(cursor);
+        }
+        to_move.push(cursor[L]);
+      }
+      super_.createLeftOf.call(this, cursor);
+      for(var i=0; i < to_move.length; i++) {
+        to_move[i].disown();
+        to_move[i].adopt(this.ends[L], 0, this.ends[L].ends[L]);
+        to_move[i].jQ.prependTo(this.ends[L].jQ);
+      }
+    }
+    cursor.insAtRightEnd(this.ends[R]);
+    cursor.workingGroupChange();
+    return this;
+  };
+  _.latex = function() {
+    return '\\CombinedUnit{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
+  }
+  _.textOutput = function(opts) { 
+    if(opts.captiveUnitMode || opts.units_only) return [{text:this.blocks[1].text(jQuery.extend({unit: true}, opts)), obj:this.blocks[1]}];
+    return [{text:this.blocks[0].text(opts), obj:this.blocks[0]},{text:'*('},{text:this.blocks[1].text(jQuery.extend({unit: true}, opts)),obj:this.blocks[1]},{text:')'}];
+  }
+});
