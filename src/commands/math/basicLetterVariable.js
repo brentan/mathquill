@@ -301,8 +301,8 @@ var Letter = P(Variable, function(_, super_) {
       var unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
       var wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
       // If this is a function definition, we also need to add in the local variables for this function
-      if((this.controller.root.ends[L] instanceof OperatorName) && (this.controller.root.ends[L][R] instanceof Equality) && (this.controller.root.ends[L][R].ctrlSeq == '=')) {
-        var local_vars = this.controller.root.ends[L].text().replace(/^[a-zA-Z0-9_]\((.*)\)$/,"$1").split(",");
+      if((this.controller.root.ends[L] instanceof OperatorName) && (this.controller.root.ends[L][R] instanceof Equality) && (this.controller.root.ends[L][R].strict)) {
+        var local_vars = this.controller.root.ends[L].blocks[1].text({}).split(',');
         for(var j = 0; j < local_vars.length; j++) 
           wordList.push(local_vars[j].trim());
       }
