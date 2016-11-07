@@ -16,7 +16,9 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
     super_.init.call(this);
   };
   _.textOutput = function(opts) {
-    return [{text: this.blocks[0].text(opts), obj:this.blocks[0]},{text:'SWIFTCALCSMETHOD'},{text: this.blocks[1].text(opts), obj:this.blocks[1]}];
+    var object_name = this.blocks[0].text(opts).trim();
+    var seperator = object_name.match(/^[0-9\.]+$/) ? ':' : 'SWIFTCALCSMETHOD';  // Numerics dont quite work...
+    return [{text: object_name, obj:this.blocks[0]},{text:seperator},{text: this.blocks[1].text(opts), obj:this.blocks[1]}];
   }
   _.latex = function() {
     return '\\functionCommand{' + this.blocks[0].latex() + '}{' + this.blocks[1].latex() + '}';
