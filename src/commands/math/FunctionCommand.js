@@ -6,8 +6,8 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   _.htmlTemplate =
       '<span class="mq-function-command">'
     +   '<span>&0</span>'
-    +   '<span class="mq-period">.</span>'
-    +   '<span>&1</span>'
+    +   '<span class="mq-colon">:</span>'
+    +   '<span class="mq-method">&1</span>'
     + '</span>'
   ;
   _.init = function(ch) {
@@ -55,7 +55,7 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
         next.disown().adopt(this.ends[L], 0, this.ends[L].ends[L]);
         next.jQ.prependTo(this.ends[L].jQ);
       }
-      // Remove the preceeding '.'
+      // Remove the preceeding ':'
       e.remove();
 
       // Insert the last command into the method area and place the cursor

@@ -1,7 +1,13 @@
 
 .mq-math-mode:not(.answer):hover, .mq-math-mode:not(.answer).mq-focused, body.syntax_highlighting {
-  .mq-root-block var, .mq-sub span, .mq-sub var, .mq-function-command span.mq-period {
+  .mq-root-block var, .mq-sub span, .mq-sub var {
     color: #b35f10;
+  }
+  .mq-function-command span.mq-colon, .mq-function-command span.mq-method {
+    color: #990000;
+    var, span {
+      color: #990000;
+    }
   }
   span.mq-operator-name var, span.mq-operator-name span, span.mq-operator-name-holder > span.mq-non-leaf > span.mq-paren {
     color: #0000EE;

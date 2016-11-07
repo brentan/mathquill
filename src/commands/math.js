@@ -457,7 +457,13 @@ var Symbol = P(MathCommand, function(_, super_) {
       // See if we need to add a '0' before the decimal point to make things look pretty
       cursor.insLeftOf(cursor[L]);
       VanillaSymbol('0').createLeftOf(cursor);
-      cursor.insRightOf(cursor[R]);
+      // Do we need to add multiplication before it?
+      if(cursor[L][L] && !(cursor[L][L] instanceof BinaryOperator)) {
+        cursor.insLeftOf(cursor[L]);
+        LatexCmds.cdot().implicit().createLeftOf(cursor);
+        cursor.insRightOf(cursor[R][R]);
+      } else
+        cursor.insRightOf(cursor[R]);
     }
     super_.createLeftOf.call(this, cursor);
   }
@@ -636,7 +642,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     else if(ch.match(/^[0-9\+\-]$/) && (cursor[L] instanceof Variable) && (cursor[L].ctrlSeq === 'e') && (cursor[L][L] !== 0) && (cursor[L][L] instanceof Multiplication) && (cursor[L][L].addedImplicitly) && (cursor[L][L][L] !== 0) && (typeof cursor[L][L][L] !== 'undefined') && cursor[L][L][L].ctrlSeq.match(/^[0-9]$/)) {// this should match scientific notation
       cursor[L][L].remove(); // Remove the implicit multiplication
       cmd = ScientificNotation(ch);
-    } else if(ch.match(/^[0-9\.]$/) && !(cursor.parent && cursor.parent.unit) && !(cursor.parent && cursor.parent.parent && cursor.parent.parent.unit) && ((cursor[L] instanceof Variable) || (cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')))) // Numbers after letters are 'letters' as they are part of a var name
+    } else if(ch.match(/^[0-9]$/) && !(cursor.parent && cursor.parent.unit) && !(cursor.parent && cursor.parent.parent && cursor.parent.parent.unit) && ((cursor[L] instanceof Variable) || (cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')))) // Numbers after letters are 'letters' as they are part of a var name
       cmd = Letter(ch);
     else if(ch === '#') {
       if((cursor.controller.exportText() == '') && cursor.controller.element && cursor.controller.element.changeToText)
@@ -693,7 +699,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     }
 
     // Test for implicit multiplication
-    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof OperatorName) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !(cursor[L].ctrlSeq && cursor[L].ctrlSeq.match(/^[\,…\.]$/)) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
+    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof OperatorName) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !(cursor[L].ctrlSeq && cursor[L].ctrlSeq.match(/^[\,…\:]$/)) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
       LatexCmds.cdot().implicit().createLeftOf(cursor);
     else if(!(ch.match(/^[\,]$/i) || cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket) && (ch !== '.'))))
       LatexCmds.cdot().implicit().createLeftOf(cursor);

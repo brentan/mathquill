@@ -188,7 +188,7 @@ var PlusMinus = P(BinaryOperator, function(_) {
 var Multiplication = P(BinaryOperator, function(_, super_) {
   _.addedImplicitly = false;
   _.finalizeTree = function() {
-    if(this[L] && (this[L].ctrlSeq === '.')) {
+    if(this[L] && (this[L].ctrlSeq === '.') && !this.addedImplicitly) {
       var to_remove = [this[L]];
       if(this[L][L] && this[L][L][L] && (this[L][L].ctrlSeq === '0') && (this[L][L][L].ctrlSeq === '\\cdot ')) {
         // Deal with added 0 and implicit multiplication
@@ -201,6 +201,8 @@ var Multiplication = P(BinaryOperator, function(_, super_) {
       this.jQ.addClass("mq-multiply-elementWise");
       this.ctrlSeq = '.' + this.ctrlSeq;
       this.textTemplate = '.' + this.textTemplate;
+    } else if(this[L] && (this[L].ctrlSeq === '.')) {
+      this[L].remove();
     }
   }
   _.implicit = function() {

@@ -134,7 +134,7 @@ var Variable = P(Symbol, function(_, super_) {
           commandList = this.parent.parent.getObject().methodList;
           unitList = {names: [], symbols: []};
           pretext = this.parent.parent.objectName();
-          pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>.' : (pretext + '.');
+          pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>:' : (pretext + ':');
         } else {
           if((word.length < 3) && (word.indexOf('_') == -1)) 
             return; // Only autocomplete on 3 characters or more
@@ -168,8 +168,8 @@ var Variable = P(Symbol, function(_, super_) {
 
           }
           text = (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
-          if(text.indexOf('.') > -1) 
-            text = text.replace('.','') + ".<span class='mq-inline-box'></span>";  //BRENTAN- better visual than this box after the period?
+          if(text.indexOf(':') > -1) 
+            text = text.replace(':','') + ":<span class='mq-inline-box'></span>";  //BRENTAN- better visual than this box after the period?
           return text;
         }
         //Find all matches
@@ -229,10 +229,10 @@ var Variable = P(Symbol, function(_, super_) {
         _this.controller.API.typedText(word);
         if(_this.controller.cursor[L] instanceof Letter)
           _this.controller.cursor[L].autoOperator(_this.controller.cursor, false);
-        if(word[word.length - 1] === '.')
+        if(word[word.length - 1] === ':')
           FunctionCommand(true).createLeftOf(_this.controller.cursor);
         _this.controller.closePopup();
-        if((word[word.length - 1] !== '(') && (word[word.length - 1] !== '.') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
+        if((word[word.length - 1] !== '(') && (word[word.length - 1] !== ':') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
           _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
         if($(this).attr('data-make-unit') == '1') _this.controller.API.keystroke('Right', {preventDefault: function() {} });
         _this.controller.cursor.workingGroupChange();
@@ -354,9 +354,9 @@ var Letter = P(Variable, function(_, super_) {
   _.createLeftOf = function(cursor) {
     if((this.ctrlSeq == 'u') && (cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) && !(cursor[L] instanceof Variable) && !(cursor[L] && (cursor[L].ctrlSeq == 'µ'))) 
       Letter('µ').createLeftOf(cursor);
-    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof Variable) && (this.ctrlSeq != '.')) {
+    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === ':') && (cursor[L][L] instanceof Variable) && (this.ctrlSeq != ':')) {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
-    } else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === '.') && (cursor[L][L] instanceof SupSub) && (this.ctrlSeq != '.') && cursor[L][L].supsub === 'sub') {
+    } else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === ':') && (cursor[L][L] instanceof SupSub) && (this.ctrlSeq != ':') && cursor[L][L].supsub === 'sub') {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
     } else
       super_.createLeftOf.apply(this, arguments);
