@@ -93,7 +93,9 @@ var Variable = P(Symbol, function(_, super_) {
     var word = output[0];
     var letters = output[1];
     var matchList = [];
-    var regex = new RegExp("^" + word + ".*$", "i");
+    var word_regex = new RegExp("(" + word + ")", "gi");
+    var regex = new RegExp("^.*" + word + ".*$", "i");
+    var regexs = new RegExp("^" + word + ".*$", "i");
     var regexe = new RegExp("^" + word + ".*$", "");
     var capitalize = function(s) {
       return s[0].toUpperCase() + s.slice(1);
@@ -101,9 +103,11 @@ var Variable = P(Symbol, function(_, super_) {
     if((this.parent.unit) || (this.parent.parent && this.parent.parent.unit)) {
       // Units
       if(word.length == 1) {
-        regex = new RegExp("^" + word + "$", ""); // Exact match for 1 letter autocomplete (for things like 'm' -> meter)
+        regexs = new RegExp("^" + word + "$", ""); // Exact match for 1 letter autocomplete (for things like 'm' -> meter)
+        regex = new RegExp("^" + word + "$", ""); 
         regexe = new RegExp("^" + word + "$", "");
-      }
+      } else if(word.length == 2)
+        regex = new RegExp("^" + word + ".*$", "i");
       if(word.length > 0) {
         prefix_to_ignore = ['micro', 'yocto', 'zepto', 'atto', 'femto', 'pico', 'nano', 'milli', 'centi', 'deci', 'deca', 'hecto', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa', 'zetta', 'yotta'];
         skip_this = false;
@@ -114,11 +118,11 @@ var Variable = P(Symbol, function(_, super_) {
           var already_added = {};
           for(var i = 0; i < unitList.symbols.length; i++)
             if(unitList.symbols[i].match(regex)) {
-              matchList.push({match: unitList.symbols[i], html: "<li data-word='" + unitList.symbols[i] + "'><span class='mq-operator-name'>" + unitList.symbols[i] + " (" + capitalize(unitList.symbol_to_name[unitList.symbols[i]]) + ")</span></li>"});
+              matchList.push({match: unitList.symbols[i], html: "<li data-word='" + unitList.symbols[i] + "'><span class='mq-operator-name'>" + unitList.symbols[i].replace(word_regex, "<b>$1</b>") + " (" + capitalize(unitList.symbol_to_name[unitList.symbols[i]]) + ")</span></li>"});
               already_added[unitList.symbols[i]] = true;
             }
           for(var i = 0; i < unitList.names.length; i++)
-            if(unitList.names[i].match(regex) && !already_added[unitList.name_to_symbol[unitList.names[i]]]) matchList.push({match: unitList.name_to_symbol[unitList.names[i]], html: "<li data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]) + ")</span></li>"});
+            if(unitList.names[i].match(regex) && !already_added[unitList.name_to_symbol[unitList.names[i]]]) matchList.push({match: unitList.names[i], html: "<li data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>") + ")</span></li>"});
         }
       }
     } else {
@@ -174,24 +178,32 @@ var Variable = P(Symbol, function(_, super_) {
         }
         //Find all matches
         for(var i = 0; i < functionlist.length; i++)
-          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i], this) + "</i></span></li>"});
+          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i], this).replace(word_regex, "<b>$1</b>") + "</i></span></li>"});
         for(var i = 0; i < wordList.length; i++)
-          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], this) + "</i></span></li>"});
+          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], this).replace(word_regex, "<b>$1</b>") + "</i></span></li>"});
         for(var i = 0; i < commandList.length; i++)
-          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]) + "(<span class='mq-inline-box'></span>)</span></li>"});
+          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace('_','<sub>')+'</sub>' : commandList[i]).replace(word_regex, "<b>$1</b>") + "(<span class='mq-inline-box'></span>)</span></li>"});
         for(var i = 0; i < unitList.names.length; i++)
-          if(unitList.names[i].match(regex)) matchList.push({match: unitList.name_to_symbol[unitList.names[i]], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]) + ")</span></li>"});
+          if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>") + ")</span></li>"});
       }
     }
     if(matchList.length > 0) {
       var matches = []
-      // Order by exact matches first, then non-exact
+      // Order by exact matches first, then non-exact but at start, then rest
       for(var i = 0; i < matchList.length; i++) {
-        if(matchList[i].match.match(regexe)) matches.push(matchList[i].html);
-        else matchList[i].addit = true;
+        if(matchList[i].match.match(regexe)) {
+          matches.push(matchList[i].html);
+          matchList[i].addit = false
+        }
       }
       for(var i = 0; i < matchList.length; i++) {
-        if(matchList[i].addit === true) matches.push(matchList[i].html);
+        if((matchList[i].addit !== false) && matchList[i].match.match(regexs)) {
+          matches.push(matchList[i].html);
+          matchList[i].addit = false
+        }
+      }
+      for(var i = 0; i < matchList.length; i++) {
+        if(matchList[i].addit !== false) matches.push(matchList[i].html);
       }
 
       matches[0] = matches[0].replace('<li', '<li class="mq-popup-selected"');
@@ -427,6 +439,8 @@ optionProcessors.unitList = function(units) {
     }
   }
   var sortFunction = function (a, b) {
+    if(a == "United States Dollar") return -1;
+    if(b == "United States Dollar") return 1;
     return a.toLowerCase().localeCompare(b.toLowerCase());
   };
   return { name_to_symbol: by_name, symbol_to_name: by_symbol, names: names.sort(sortFunction), symbols: symbols.concat(symbols_prefix).sort(sortFunction) }
