@@ -94,7 +94,30 @@ var Cursor = P(Point, function(_) {
     else
       return { cursor: getLocation(this, this.controller.root) }
   }
-
+  _.initialPosition = function() {
+    if(!shown) return false;
+    var initial = true;
+    var starter = this;
+    while(true) {
+      if(starter[L]) {
+        initial = false;
+        break;
+      }
+      if(starter.parent) {
+        if((starter == this) && (starter.parent.ends[L] != starter[R])) {
+          initial = false;
+          break;
+        }
+        if((starter != this) && (starter.parent.ends[L] != starter)) {
+          initial = false;
+          break;
+        }
+        starter = starter.parent;
+      } else
+        break;
+    }
+    return initial;
+  }
   _.withDirInsertAt = function(dir, parent, withDir, oppDir) {
     if (parent !== this.parent && this.parent.blur) this.parent.blur();
     if(parent && parent.unit) parent.unit.focus();

@@ -197,6 +197,9 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     }
     return this;
   }
+  _.cursorInInitialPosition = function() {
+    return this.__controller.cursor.initialPosition();
+  }
   _.blur = function() { this.__controller.blur(); return this; };
   _.windowBlur = function() { this.__controller.windowBlur(); return this; };
   _.inFocus = function() { return !this.__controller.blurred; };
