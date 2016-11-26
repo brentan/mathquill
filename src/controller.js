@@ -16,6 +16,7 @@ var Controller = P(function(_) {
     this.disableAutoUnit = false;
     this.root = root;
     this.mq_popup_el = [];
+    this.skipAutoUnit = {};
     this.container = container;
 
     API.__controller = root.controller = this;
@@ -42,55 +43,28 @@ var Controller = P(function(_) {
     if(this.element && this.element.worksheet) 
       this.element.worksheet.scheduleUndoPoint(this);
   }
-  _.setUndoPoint = function() {
+  _.autoConvertUnit = undefined;
+  _.setUndoPoint = function(str) {
     if(this.staticMode) return;
+    this.autoConvertUnit = str;
     if(this.element && this.element.worksheet) 
       this.element.worksheet.setUndoPoint(this);
   }
   _.currentState = function() {
     return {
+        autoConvert: this.autoConvertUnit,
         latex: this.API.toString(),
         cursor: this.cursor.getAbsolutePosition()
     };
   }
   _.restoreState = function(data) {
+    if(data.autoConvert && this.element && this.element.skipAutoUnit) this.element.skipAutoUnit[data.autoConvert] = true;
+    else this.skipAutoUnit[data.autoConvert] = true;
     this.API.select();
     this.cursor.deleteSelection();
     this.API.moveToLeftEnd();
     this.writeLatex(data.latex.slice(6, -1));
-    if(data.cursor.anticursor) {
-      var el = this.root;
-      for(var i = 0; i < data.cursor.anticursor.length; i++) {
-        switch(data.cursor.anticursor[i]) {
-          case 'L':
-            el = el[R];
-            break;
-          case 'endsL':
-            el = el.ends[L];
-            break;
-          default:
-            this.cursor[data.cursor.anticursor[i]](el);
-        }
-      }
-      this.cursor.startSelection();
-    }
-    if(data.cursor.cursor) {
-      var el = this.root;
-      for(var i = 0; i < data.cursor.cursor.length; i++) {
-        switch(data.cursor.cursor[i]) {
-          case 'L':
-            el = el[R];
-            break;
-          case 'endsL':
-            el = el.ends[L];
-            break;
-          default:
-            this.cursor[data.cursor.cursor[i]](el);
-        }
-      }
-      if(data.cursor.anticursor) this.cursor.select();
-    }
-    this.cursor.workingGroupChange();
+    this.cursor.setPosition(data.cursor);
     this.notifyElementOfChange();
   }
 
@@ -139,11 +113,11 @@ var Controller = P(function(_) {
       return [];
   };
   _.current_tooltip = false;
-  _.destroyTooltip = function() {
+  _.destroyTooltip = function(fade) {
     if(this.current_tooltip && this.element && (this.element.worksheet.tooltip_holder === this.current_tooltip))
-      SwiftCalcs.destroyHelpPopup();
+      SwiftCalcs.destroyHelpPopup(fade);
     else if(this.current_tooltip && !this.element) 
-      SwiftCalcs.destroyHelpPopup();
+      SwiftCalcs.destroyHelpPopup(fade);
     this.current_tooltip = false;
   }
   _.errorBlock = 0;

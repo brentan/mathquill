@@ -236,7 +236,7 @@ Controller.open(function(_) {
   _.moveLeft = function() { return this.moveDir(L); };
   _.moveRight = function() { 
     if(this.cursor[L] instanceof Letter) 
-      this.cursor[L].autoOperator(this.cursor, (this.cursor.parent && this.cursor.parent.suppressAutoUnit) ? true : undefined);
+      this.cursor[L].autoOperator(this.cursor, (this.cursor.parent && this.cursor.parent.suppressAutoUnit) ? true : undefined,false,true);
     return this.moveDir(R); 
   };
 

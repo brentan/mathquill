@@ -27,7 +27,7 @@ var SupSub = P(MathCommand, function(_, super_) {
       }
       // Only add subscript to a variable name (aka letter) 
       if (!(cursor[L] instanceof Variable)) return cursor.parent.flash();
-      if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor, false);
+      if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor, false, false, true);
       // Inserting in a string for some reason...
       if((cursor[L] instanceof Variable) && (cursor[R] instanceof Variable)) {
         var cdot = LatexCmds.cdot()
@@ -133,11 +133,11 @@ var SupSub = P(MathCommand, function(_, super_) {
       }
       if(replacedFragment) replacedFragment.clear();
       if (cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1) {
-        if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor);
+        if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor, undefined, false, true);
         cursor.insRightOf(this.parent);
         cursor.parent.write(cursor, ch);
       } else if ((supsub == 'sub') && !RegExp(/[A-Za-z0-9]/).test(ch)) {
-        if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor, false);
+        if(cursor[L] instanceof Letter) cursor[L].autoOperator(cursor, false, false, true);
         cursor.insRightOf(this.parent);
         cursor.parent.write(cursor, ch);
       } else

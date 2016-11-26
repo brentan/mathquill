@@ -43,10 +43,13 @@ Controller.open(function(_) {
       if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
       root.postOrder('intentionalBlur'); // none, intentional blur: #264
       cursor.clearSelection();
+      if(cursor[L] instanceof Letter)
+        cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
       cursor.hide().parent.blur(); // synchronous with/in the same frame as
       ctrlr.closePopup();
       ctrlr.container.removeClass('mq-focused'); // clearing/blurring selection
       ctrlr.handle('blur');
+      ctrlr.suppress_auto_commands = false;
     };
     ctrlr.windowBlur = function() {
       ctrlr.blurred = true;
@@ -56,6 +59,8 @@ Controller.open(function(_) {
       }
       //if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API); // Window blur should refocus this on next focus, so we need this to stay...why was this added?
       if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
+      if(cursor[L] instanceof Letter)
+        cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
       cursor.hide().parent.blur(); // synchronous with/in the same frame as
       ctrlr.closePopup();
       ctrlr.container.removeClass('mq-focused'); // clearing/blurring selection

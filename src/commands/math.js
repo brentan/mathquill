@@ -119,7 +119,7 @@ var MathCommand = P(MathElement, function(_, super_) {
   _.createLeftOf = function(cursor) {
     var cmd = this;
 
-    if(!(this instanceof Variable) && (this.supsub !== 'sub')) 
+    if(cursor.controller && !(this instanceof Variable) && (this.supsub !== 'sub')) 
       cursor.controller.closePopup();
 
     // Test for matrix specific commands
@@ -532,7 +532,7 @@ var MathBlock = P(MathElement, function(_, super_) {
               ctrlr.element.notifyChangeToText(space);
             }
             if(cursor[L] instanceof Letter) {
-              if(cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined))
+              if(cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined),false,true)
                 window.setTimeout(function() { ctrlr.lastKeySpacebar = false; });
               else 
                 addSpace();
@@ -542,7 +542,7 @@ var MathBlock = P(MathElement, function(_, super_) {
         } 
         // Test for autocommands 
         if(cursor[L] instanceof Letter)
-          cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
+          cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined,false,true);
         if(cursor.parent !== ctrlr.root)
           ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
       }
@@ -551,7 +551,7 @@ var MathBlock = P(MathElement, function(_, super_) {
       // Test for autocommands 
       var cursor = ctrlr.cursor;
       if(cursor[L] instanceof Letter)
-        cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined);
+        cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined,false,true);
     } else if(key === 'Enter') {
       if(ctrlr.cursor.initialPosition() && (ctrlr.element) && (ctrlr.element.PrependBlankItem) && ctrlr.element.PrependBlankItem(ctrlr.API)) {
         // Enter pressed with cursor in initial position.  
@@ -663,13 +663,13 @@ var MathBlock = P(MathElement, function(_, super_) {
     // Test for autocommands 
     if(!(cmd instanceof Variable) && (ch != '_') && (cursor[L] instanceof Letter)) {
       if((cmd instanceof Bracket) && (cmd.side === L)) {
-        if(cursor[L].autoOperator(cursor, false)) return;
+        if(cursor[L].autoOperator(cursor, false, false, true)) return;
       } else if(((cmd instanceof Equality) && !cmd.convertToAssignment(cursor)) ||
         ((ch == ',') && cursor.parent && cursor.parent.suppressAutoUnit) ||
         ((ch == ')') && cursor.parent && cursor.parent.suppressAutoUnit) ) {
-        cursor[L].autoOperator(cursor, false); 
+        cursor[L].autoOperator(cursor, false, false, true); 
       } else 
-        cursor[L].autoOperator(cursor, undefined, true);   //cursor[L].autoOperator(cursor);
+        cursor[L].autoOperator(cursor, undefined, true, true); 
     }
 
     // Only allow variables (letters basically) in a operatorname
@@ -679,7 +679,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     }
 
     // Test for implicit multiplication
-    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof OperatorName) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !(cursor[L].ctrlSeq && cursor[L].ctrlSeq.match(/^[\,…\:]$/)) && !(cursor.parent && cursor.parent.parent instanceof SupSub))
+    if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof OperatorName) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !(cursor[L].ctrlSeq && cursor[L].ctrlSeq.match(/^[\,…\:]$/)) && !(cursor.parent && (cursor.parent.parent instanceof SupSub) && cursor.parent.parent.supsub == 'sub'))
       LatexCmds.cdot().implicit().createLeftOf(cursor);
     else if(!(ch.match(/^[\,]$/i) || cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket) && (ch !== '.'))))
       LatexCmds.cdot().implicit().createLeftOf(cursor);

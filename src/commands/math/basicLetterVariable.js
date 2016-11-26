@@ -280,7 +280,11 @@ var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { 
     return super_.init.call(this, this.letter = ch); 
   };
-  _.autoOperator = function(cursor, unit_conversion, allow_left_right) {
+  _.autoOperator = function(cursor, unit_conversion, allow_left_right, delay_auto_conversion) {
+    if(!cursor[L]) return false;
+    if(cursor.controller.suppress_auto_commands) return false;
+    if(cursor[L].autoOperatorComplete) return false;
+    cursor[L].autoOperatorComplete = true;
     if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) return false;
     var autoCmds = cursor.options.autoCommands;
     // join together longest sequence of letters
@@ -289,14 +293,37 @@ var Letter = P(Variable, function(_, super_) {
     while (l instanceof Letter) {
       str = l.letter + str, l = l[L], i += 1;
     }
+    if(this.controller.element && this.controller.element.skipAutoUnit && this.controller.element.skipAutoUnit[str]) return false;
+    if(this.controller.skipAutoUnit[str]) return false;
     var left_of = l;
     // check for an autocommand, going thru substrings longest to shortest
     if((str.length > 1) && (str != "psi")) {
       if (autoCmds.hasOwnProperty(str)) {
-        for (var i = 1, l = cursor[L]; i < str.length; i += 1, l = l[L]);
-        Fragment(l, cursor[L]).remove();
-        cursor[L] = l[L];
-        LatexCmds[str](str).createLeftOf(cursor);
+        // We do auto-operator after a delay so that it is the 'last' thing done and a ctrl-z will undo the auto piece
+        var converter = function(controller, init_l, str) { return function() {
+          controller.setUndoPoint(str);
+          var cursor = controller.cursor;
+          var cursor_l = cursor[L];
+          var cursor_p = cursor.parent;
+          var insertRight = false;
+          cursor.insRightOf(init_l);
+          for (var i = 1, l = init_l; i < str.length; i += 1, l = l[L]);
+          cursor.startSelection();
+          cursor.insLeftOf(l);
+          cursor.select();
+          cursor.deleteSelection();
+          cursor.endSelection();
+          cursor.show();
+          LatexCmds[str](str).createLeftOf(cursor);
+          if(cursor_l != init_l) {
+            if(cursor_l) cursor.insRightOf(cursor_l);
+            else cursor.insAtLeftEnd(cursor_p);
+          }
+        }}(this.controller, cursor[L], str);
+        if(delay_auto_conversion)
+          window.setTimeout(converter, 1);
+        else
+          converter();
         return true;
       }
     }
@@ -328,25 +355,49 @@ var Letter = P(Variable, function(_, super_) {
           if(commandList[j] == str) { change_to_unit = false; break; }
         }
         if(change_to_unit) {
-          var unit = Unit();
-          unit.autoOperator = true;
-          for (var i = 1, l = cursor[L]; i < str.length; i += 1, l = l[L]);
-          Fragment(l, cursor[L]).remove();
-          cursor[L] = l[L];
-          if((cursor[L] instanceof BinaryOperator) && (cursor[L].ctrlSeq == '\\cdot ')) {
-            cursor[L] = cursor[L][L];
-            l[L].remove();
-          }
-          unit.createLeftOf(cursor);
-          for(var i = 0; i < symb.length; i++) 
-            Letter(symb[i]).createLeftOf(cursor);
-          _this.controller.closePopup();
-          unit.jQ.find('.mq-florin').removeClass('.mq-florin').html('f'); // change florin to 'f'
-          cursor.insRightOf(unit);
+          // We do change after a delay so that it is the 'last' thing done and a ctrl-z will undo the change
+          var converter = function(controller, init_l, str, symb) { return function() {
+            controller.setUndoPoint(str);
+            var cursor = controller.cursor;
+            var cursor_l = cursor[L];
+            var cursor_p = cursor.parent;
+            cursor.insRightOf(init_l);
+            var unit = Unit();
+            for (var i = 1, l = init_l; i < str.length; i += 1, l = l[L]);
+            cursor.startSelection();
+            cursor.insLeftOf(l);
+            if((cursor[L] instanceof BinaryOperator) && (cursor[L].ctrlSeq == '\\cdot ')) 
+              cursor.insLeftOf(cursor[L]);
+            cursor.select();
+            cursor.deleteSelection();
+            cursor.endSelection();
+            cursor.show();
+            unit.createLeftOf(cursor);
+            for(var i = 0; i < symb.length; i++) 
+              Letter(symb[i]).createLeftOf(cursor);
+            controller.closePopup();
+            unit.jQ.find('.mq-florin').removeClass('.mq-florin').html('f'); // change florin to 'f'
+            if(cursor_l == init_l) cursor.insRightOf(unit);
+            else if(cursor_l) cursor.insRightOf(cursor_l);
+            else cursor.insAtLeftEnd(cursor_p);
+            if(!SwiftCalcs.autoConvertMessage && controller.element) {
+              SwiftCalcs.createHelpPopup("Converted to unit.  Use Ctrl-Z to undo&nbsp;&nbsp;&nbsp;", unit.jQ);
+              controller.current_tooltip = unit;
+              SwiftCalcs.autoConvertMessage = true;
+              window.setTimeout(function() { if(controller.current_tooltip == unit) { SwiftCalcs.destroyHelpPopup(300); controller.current_tooltip = false }}, 2200);
+            }
+          }}(_this.controller, cursor[L], str, symb);
+          if(delay_auto_conversion)
+            window.setTimeout(converter, 1);
+          else
+            converter();
           return true;
         }
         return false;
       }
+      if(str.substr(0,1) == 'u') str = str.replace('u','µ'); // um -> µm
+      if(this.controller.element && this.controller.element.skipAutoUnit && this.controller.element.skipAutoUnit[str]) return false;
+      if(this.controller.skipAutoUnit[str]) return false;
       if((str == 'sec') && create_unit(this, 's')) return true; // Override command for seconds
       for(var i = 0; i < unitList.symbols.length; i++) {
         if(str == unitList.symbols[i]) {

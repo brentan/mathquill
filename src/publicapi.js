@@ -393,7 +393,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.typedText = function(text) {
     this.last_action = 'typedText: ' + text;
     if(this.__controller.staticMode) return this;
-    this.__controller.scheduleUndoPoint();
+    if(text.trim().length) this.__controller.scheduleUndoPoint();
     this.__controller.notifyElementOfChange();
     for (var i = 0; i < text.length; i += 1) this.__controller.typedText(text.charAt(i));
     return this;
@@ -420,6 +420,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__controller.paste(text); 
     this.__controller.closePopup(); 
     return this; 
+  }
+  _.suppressAutoCommands = function(val) {
+    this.__controller.suppress_auto_commands = val;
+    return this;
   }
   _.closePopup = function() {
     this.__controller.closePopup();

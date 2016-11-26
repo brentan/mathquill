@@ -101,35 +101,6 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
     cursor.workingGroupChange();
     return this;
   };
-  _.deleteTowards = function(dir, cursor) {
-    if(this.autoOperator) {
-      var unwrap = true;
-      for(var i = this.blocks[0].ends[L]; i != 0; i = i[R])
-        unwrap = unwrap && (i instanceof Letter)
-      // Unit was auto-created and is only a single unit, so if we delete-towards we should unwrap it 
-      if(unwrap && this.blocks[0].ends[L]) {
-        var symb = [];
-        for(var i = this.blocks[0].ends[L]; i != 0; i = i[R])
-          symb.push(i.text({}));
-        if(this[L] && (this[L] instanceof VanillaSymbol) && (this[L].ctrlSeq == '1') && (!this[L][L] || (this[L][L] instanceof BinaryOperator))) {
-          // Remove implicit 1
-          this[L].remove();
-        } else if(this[L] && !(this[L] instanceof BinaryOperator)) LatexCmds.cdot().createLeftOf(cursor);
-        var last_letter = false;
-        for(var i = 0; i < symb.length; i++) {
-          last_letter = Letter(symb[i])
-          last_letter.createLeftOf(cursor);
-        }
-        last_letter.force_no_unit = true;
-        this.remove();
-        cursor.insRightOf(last_letter);
-        return;
-      }
-    }
-    cursor.startSelection();
-    this.selectTowards(dir, cursor);
-    cursor.select();
-  };
   _.latex = function() {
     return '\\Unit{' + this.blocks[0].latex() + '}';
   }
