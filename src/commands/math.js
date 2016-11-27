@@ -532,7 +532,7 @@ var MathBlock = P(MathElement, function(_, super_) {
               ctrlr.element.notifyChangeToText(space);
             }
             if(cursor[L] instanceof Letter) {
-              if(cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined),false,true)
+              if(cursor[L].autoOperator(cursor, (cursor.parent && cursor.parent.suppressAutoUnit) ? true : undefined,false,true)
                 window.setTimeout(function() { ctrlr.lastKeySpacebar = false; });
               else 
                 addSpace();
