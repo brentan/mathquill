@@ -185,6 +185,20 @@ var PlusMinus = P(BinaryOperator, function(_) {
     return this;
   };
 });
+var DotPlus = P(PlusMinus, function(_) {
+  _.textOutput = function(opts) {
+    if(!this[L] || (this[L] instanceof BinaryOperator))
+      return [{text: '+'}]
+    return [{text: ' .+'}]
+  }
+});
+var DotMinus = P(PlusMinus, function(_) {
+  _.textOutput = function(opts) {
+    if(!this[L] || (this[L] instanceof BinaryOperator))
+      return [{text: '-'}]
+    return [{text: " .-"}]
+  }
+});
 var Multiplication = P(BinaryOperator, function(_, super_) {
   _.addedImplicitly = false;
   _.finalizeTree = function() {
@@ -211,9 +225,9 @@ var Multiplication = P(BinaryOperator, function(_, super_) {
   }
 });
 
-LatexCmds['+'] = bind(PlusMinus, '+', '+');
+LatexCmds['+'] = bind(DotPlus, '+', '+');
 //yes, these are different dashes, I think one is an en dash and the other is a hyphen
-LatexCmds['–'] = LatexCmds['-'] = bind(PlusMinus, '-', '&minus;');
+LatexCmds['–'] = LatexCmds['-'] = bind(DotMinus, '-', '&minus;');
 LatexCmds['±'] = LatexCmds.pm = LatexCmds.plusmn = LatexCmds.plusminus =
   bind(PlusMinus,'\\pm ','&plusmn;');
 LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus =
