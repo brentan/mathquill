@@ -380,7 +380,7 @@ var Letter = P(Variable, function(_, super_) {
             if(cursor_l == init_l) cursor.insRightOf(unit);
             else if(cursor_l) cursor.insRightOf(cursor_l);
             else cursor.insAtLeftEnd(cursor_p);
-            if(!SwiftCalcs.autoConvertMessage && controller.element) {
+            if(!SwiftCalcs.autoConvertMessage && controller.element && false) {
               SwiftCalcs.createHelpPopup("Converted to unit.  Use Ctrl-Z to undo&nbsp;&nbsp;&nbsp;", unit.jQ);
               controller.current_tooltip = unit;
               SwiftCalcs.autoConvertMessage = true;
