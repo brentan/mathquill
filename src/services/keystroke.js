@@ -70,6 +70,7 @@ Node.open(function(_) {
 
     // Ctrl-End -> move all the way to the end of the root block.
     case 'Ctrl-End':
+    case 'Meta-Right':
       ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
       ctrlr.cursor.workingGroupChange();
       break;
@@ -84,6 +85,7 @@ Node.open(function(_) {
 
     // Ctrl-Shift-End -> select to the end of the root block.
     case 'Ctrl-Shift-End':
+    case 'Meta-Shift-Right':
       if((cursor.parent === ctrlr.root) && (cursor[R] === 0)) ctrlr.selectRight();
       while (cursor[R] || cursor.parent !== ctrlr.root) {
         ctrlr.selectRight();
@@ -98,12 +100,14 @@ Node.open(function(_) {
 
     // Ctrl-Home -> move to the start of the current block.
     case 'Ctrl-Home':
+    case 'Meta-Left':
       ctrlr.notify('move').cursor.insAtLeftEnd(ctrlr.root);
       ctrlr.cursor.workingGroupChange();
       break;
 
     // Shift-Home -> select to the start of the current block.
     case 'Shift-Home':
+    case 'Shift-Meta-Left':
       if((cursor.parent === ctrlr.root) && (cursor[L] === 0)) ctrlr.selectLeft();
       while (cursor[L]) {
         ctrlr.selectLeft();
@@ -112,6 +116,7 @@ Node.open(function(_) {
 
     // Ctrl-Shift-Home -> move to the start of the root block.
     case 'Ctrl-Shift-Home':
+    case 'Meta-Shift-Left':
       if((cursor.parent === ctrlr.root) && (cursor[L] === 0)) ctrlr.selectLeft();
       while (cursor[L] || cursor.parent !== ctrlr.root) {
         ctrlr.selectLeft();
