@@ -389,6 +389,8 @@ var Cursor = P(Point, function(_) {
     this.selection.remove();
     this.selectionChanged();
     delete this.selection;
+    if(this[L] instanceof NumberSymbol) this[L].redrawComma();
+    else if(this[R] instanceof NumberSymbol) this[R].redrawComma();
   };
   _.replaceSelection = function() {
     var seln = this.selection;
@@ -396,6 +398,8 @@ var Cursor = P(Point, function(_) {
       this[L] = seln.ends[L][L];
       this[R] = seln.ends[R][R];
       delete this.selection;
+      if(this[L] instanceof NumberSymbol) this[L].redrawComma();
+      else if(this[R] instanceof NumberSymbol) this[R].redrawComma();
     }
     return seln;
   };

@@ -523,21 +523,6 @@ LatexCmds.µ = P(VanillaSymbol, function(_, super_) {  //Do this for units, so t
       super_.createLeftOf.call(this, cursor);
   };
 });
-LatexCmds['2'] = P(VanillaSymbol, function(_, super_) {  //Do this for units, so that 2 becomes a letter in the unit box (inH2O)
-  _.init = function() {
-    super_.init.call(this, '2');
-  }
-  _.createLeftOf = function(cursor) {
-    if((cursor.parent && cursor.parent.parent && cursor.parent.parent instanceof Unit && (cursor.parent === cursor.parent.parent.ends[R])) || (cursor.parent && cursor.parent.parent && cursor.parent.parent.unit && !(cursor.parent.parent instanceof SupSub))) {
-      if(cursor[L] && (cursor[L].ctrlSeq === 'H'))
-        Letter('2').createLeftOf(cursor);
-      else
-        cursor.parent.flash();
-    }
-    else
-      super_.createLeftOf.call(this, cursor);
-  };
-});
 
 LatexCmds.f = P(Letter, function(_, super_) {
   _.init = function() {

@@ -2,8 +2,6 @@
  * Input box to type units commands
  **********************************/
 // Not truly latex appropriate, but useful for making units work
-
- // BRENTAN: Far future: giac has an '8th' unit type, which is currency.  Consider adding more currency to giac if we have a way to set exchange rates programmatically
  // BRENTAN: Temperature is not well handled by giac, due to confusion over absolute or relative.  Add something in 'text' that converts C -> K and F -> R, and add a warning to the output box or something
 
 var Unit = LatexCmds.Unit = 
@@ -91,7 +89,7 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
       // See if im being added next to a number or other item, or if I should prepend a '1'
       var implicit_one = false;
       if((cursor[L] == 0) || (cursor[L] instanceof BinaryOperator)) {
-        implicit_one = VanillaSymbol('1');
+        implicit_one = NumberSymbol('1');
         implicit_one.createLeftOf(cursor);
       }
       super_.createLeftOf.call(this, cursor);
@@ -158,7 +156,7 @@ P(Unit, function(_, super_) {
         LatexCmds.cdot().createLeftOf(cursor);
         super_.createLeftOf.call(this, cursor);
         cursor.insAtRightEnd(this.ends[L]);
-        VanillaSymbol('1').createLeftOf(cursor);
+        NumberSymbol('1').createLeftOf(cursor);
       }
     } else {
       // See if im being added next to a number.  If so, start walking left until the start of the number is found, then move this into the unit
@@ -170,10 +168,10 @@ P(Unit, function(_, super_) {
       }
       if(to_move.length === 0) {
         if((cursor[L] instanceof BinaryOperator) || (cursor[L] === 0))
-          VanillaSymbol('1').createLeftOf(cursor);
+          NumberSymbol('1').createLeftOf(cursor);
         else {
           LatexCmds.cdot().createLeftOf(cursor);
-          VanillaSymbol('1').createLeftOf(cursor);
+          NumberSymbol('1').createLeftOf(cursor);
         }
         to_move.push(cursor[L]);
       }

@@ -25,6 +25,8 @@ var MathElement = P(Node, function(_, super_) {
     if (self[R].siblingCreated) self[R].siblingCreated(options, L);
     if (self[L].siblingCreated) self[L].siblingCreated(options, R);
     self.bubble('reflow');
+    if(this[L] instanceof NumberSymbol) this[L].redrawComma();
+    else if(this[R] instanceof NumberSymbol) this[R].redrawComma();
   };
   _.contextMenu = function(cursor, event) {
     // Default context menu to call.  
@@ -73,6 +75,14 @@ var MathElement = P(Node, function(_, super_) {
       }
     }
     return tracker;
+  }
+  _.disown = function() {
+    var l_item = this[L];
+    var r_item = this[R];
+    super_.disown.call(this);
+    if(l_item instanceof NumberSymbol) l_item.redrawComma();
+    else if(r_item instanceof NumberSymbol) r_item.redrawComma();
+    return this;
   }
 });
 
@@ -456,7 +466,7 @@ var Symbol = P(MathCommand, function(_, super_) {
     } else if(this.ctrlSeq.match(/^[0-9]$/) && cursor[L] && (cursor[L].ctrlSeq === '.') && ((cursor[L][L] === 0) || !cursor[L][L].ctrlSeq.match(/^[0-9]$/))) {
       // See if we need to add a '0' before the decimal point to make things look pretty
       cursor.insLeftOf(cursor[L]);
-      VanillaSymbol('0').createLeftOf(cursor);
+      NumberSymbol('0').createLeftOf(cursor);
       // Do we need to add multiplication before it?
       if(cursor[L][L] && !(cursor[L][L] instanceof BinaryOperator)) {
         cursor.insLeftOf(cursor[L]);
@@ -631,7 +641,9 @@ var MathBlock = P(MathElement, function(_, super_) {
         return this.flash();
     } else if (cmd = CharCmds[ch] || LatexCmds[ch])
       cmd = cmd(ch);
-    else
+    else if(ch.match(/^[0-9]$/))
+      cmd = NumberSymbol(ch);
+    else 
       cmd = VanillaSymbol(ch);
 
     // Transform percentage into mod if needed

@@ -65,6 +65,7 @@ var ScientificNotation = LatexCmds.scientificNotation = LatexCmds.scientificNota
         next.jQ.prependTo(this.ends[L].jQ);
         move_to_exponent = true;
       }
+      if(this.ends[L].ends[L] instanceof NumberSymbol) this.ends[L].ends[L].redrawComma();
       // place the cursor
       if(move_to_exponent)
         cursor.insAtLeftEnd(this.ends[R]);
@@ -79,6 +80,7 @@ var ScientificNotation = LatexCmds.scientificNotation = LatexCmds.scientificNota
         next.disown().adopt(this.ends[L], 0, this.ends[L].ends[L]);
         next.jQ.prependTo(this.ends[L].jQ);
       }
+      if(this.ends[L].ends[L] instanceof NumberSymbol) this.ends[L].ends[L].redrawComma();
       // Remove the preceeding 'e'
       e.remove();
 

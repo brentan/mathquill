@@ -31,6 +31,7 @@ var latexMathParser = (function() {
 
   // Parsers yielding MathCommands
   var variable = regex(/^[a-z]+[0-9]*/i).map(function(c) { return Letter(c); });
+  var number = regex(/^[0-9]/).map(function(c) { return NumberSymbol(c); });
   var symbol = regex(/^[^${}\\_^]/).map(function(c) { return VanillaSymbol(c); });
 
 
@@ -55,6 +56,7 @@ var latexMathParser = (function() {
   var command =
     controlSequence
     .or(variable)
+    .or(number)
     .or(symbol)
   ;
 

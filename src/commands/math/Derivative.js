@@ -125,7 +125,7 @@ var MultiDerivative = P(Derivative, function(_, super_) {
     var _this = this;
     this.ends[L].write = function(cursor, ch, replacedFragment) {
       if (ch.match(/^[0-9]$/i)) {
-        cmd = VanillaSymbol(ch);
+        cmd = NumberSymbol(ch);
         if (replacedFragment) cmd.replaces(replacedFragment);
         cmd.createLeftOf(cursor);
         _this.jQ.find(".mq-denominator-power").html(_this.ends[L].text({}));
