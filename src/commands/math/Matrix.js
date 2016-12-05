@@ -329,6 +329,7 @@ var Matrix =
       _.moveOrInsertColumn = function(cursor) {
         var cell = this.cursorRowCol(cursor);
         if((cell.col + 1) == this.col) return this.insertColumn(cursor);
+        if(cursor[L] === 0) return this.insertColumn(cursor);
         cursor.insAtLeftEnd(cursor.parent[R]);
         cursor.workingGroupChange();
       }
