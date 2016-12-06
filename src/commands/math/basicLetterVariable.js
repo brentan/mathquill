@@ -246,11 +246,12 @@ var Variable = P(Symbol, function(_, super_) {
           _this.controller.cursor[L].autoOperator(_this.controller.cursor, false);
         if(word[word.length - 1] === ':')
           FunctionCommand(true).createLeftOf(_this.controller.cursor);
-        _this.controller.closePopup();
         if((word[word.length - 1] !== '(') && (word[word.length - 1] !== ':') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
           _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
         if($(this).attr('data-make-unit') == '1') _this.controller.API.keystroke('Right', {preventDefault: function() {} });
         _this.controller.cursor.workingGroupChange();
+        _this.controller.closePopup();
+        window.setTimeout(function() { _this.controller.closePopup(); },10); //in case of autocommand causing it to reappear
       };
       this.controller.createPopup('<ul>' + matches.join('\n') + '</ul>', topOffset + topBlock.height() + scrollTop, leftOffset, onclick);
     } else
