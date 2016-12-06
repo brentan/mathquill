@@ -118,11 +118,11 @@ var Variable = P(Symbol, function(_, super_) {
           var already_added = {};
           for(var i = 0; i < unitList.symbols.length; i++)
             if(unitList.symbols[i].match(regex)) {
-              matchList.push({match: unitList.symbols[i], html: "<li data-word='" + unitList.symbols[i] + "'><span class='mq-operator-name'>" + unitList.symbols[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/,"<b>$1</b>_<b>$2</b>") + " (" + capitalize(unitList.symbol_to_name[unitList.symbols[i]]) + ")</span></li>"});
+              matchList.push({match: unitList.symbols[i], html: "<li data-word='" + unitList.symbols[i] + "'><span class='mq-operator-name'>" + unitList.symbols[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + " (" + capitalize(unitList.symbol_to_name[unitList.symbols[i]]) + ")</span></li>"});
               already_added[unitList.symbols[i]] = true;
             }
           for(var i = 0; i < unitList.names.length; i++)
-            if(unitList.names[i].match(regex) && !already_added[unitList.name_to_symbol[unitList.names[i]]]) matchList.push({match: unitList.names[i], html: "<li data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/,"<b>$1</b>_<b>$2</b>")) + ")</span></li>"});
+            if(unitList.names[i].match(regex) && !already_added[unitList.name_to_symbol[unitList.names[i]]]) matchList.push({match: unitList.names[i], html: "<li data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>")) + ")</span></li>"});
         }
       }
     } else {
@@ -181,13 +181,13 @@ var Variable = P(Symbol, function(_, super_) {
         }
         //Find all matches
         for(var i = 0; i < functionlist.length; i++)
-          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/,"<b>$1</b>_<b>$2</b>"), this) + "</i></span></li>"});
+          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>"), this) + "</i></span></li>"});
         for(var i = 0; i < wordList.length; i++)
-          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/,"<b>$1</b>_<b>$2</b>"), this) + "</i></span></li>"});
+          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>"), this) + "</i></span></li>"});
         for(var i = 0; i < commandList.length; i++)
-          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/,"<b>$1</b>_<b>$2</b>").replace('_','<sub>')+'</sub>' : commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/,"<b>$1</b>_<b>$2</b>")) + "(<span class='mq-inline-box'></span>)</span></li>"});
+          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>").replace('_','<sub>')+'</sub>' : commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>")) + "(<span class='mq-inline-box'></span>)</span></li>"});
         for(var i = 0; i < unitList.names.length; i++)
-          if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/,"<b>$1</b>_<b>$2</b>") + ")</span></li>"});
+          if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + ")</span></li>"});
       }
     }
     if(matchList.length > 0) {
