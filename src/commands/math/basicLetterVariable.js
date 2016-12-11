@@ -358,6 +358,14 @@ var Letter = P(Variable, function(_, super_) {
         for(var j = 0; j < commandList.length; j++) {
           if(commandList[j] == str) { change_to_unit = false; break; }
         }
+        var allowed = false;
+        if(window.SwiftCalcsSettings && (str.length == 1)) {
+          // Check for 'allowed' single character autoconversions
+          for(var j = 0; j < window.SwiftCalcsSettings.settings.single_convert_units.length; j++) {
+            if(window.SwiftCalcsSettings.settings.single_convert_units[j] == str) { allowed = true; break; }
+          }
+          if(!allowed) change_to_unit = false;
+        }
         if(change_to_unit) {
           // We do change after a delay so that it is the 'last' thing done and a ctrl-z will undo the change
           var converter = function(controller, init_l, str, symb) { return function() {
