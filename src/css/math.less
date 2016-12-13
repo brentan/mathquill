@@ -2,6 +2,9 @@ div.show_commas .mq-math-mode span.add_comma::after { // comma seperators in num
   content: ",";
   color: #999999;
 }
+div.show_commas .mq-math-mode .mq-sub > span.add_comma::after { // No comma's in subscript
+  content: "";
+}
 .mq-math-mode {
   font-variant: normal;
   font-weight: normal;
