@@ -30,12 +30,13 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
       return this;
     };
     this.ends[R].write = function(cursor, ch, replacedFragment) {
-      
+      var check_auto = false;
       if (ch.match(/^[a-z]$/i))
         cmd = Letter(ch); 
-      else if (cmd = CharCmds[ch] || LatexCmds[ch])
+      else if (cmd = CharCmds[ch] || LatexCmds[ch]) {
         cmd = cmd(ch);
-      else
+        check_auto = true;
+      } else
         cmd = VanillaSymbol(ch);
       if(!ch.match(/^[a-zµ2\^\*\/\(\)]$/i)) { 
         if (replacedFragment) 
@@ -43,8 +44,8 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
         this.flash();
         return; 
       }
-
       if (replacedFragment) cmd.replaces(replacedFragment);
+      else if(check_auto && (cursor[L] instanceof Letter)) cursor[L].autoOperator(cursor, false, true, false); 
       cmd.createLeftOf(cursor);
     };
     this.ends[R].unit = this.ends[R];

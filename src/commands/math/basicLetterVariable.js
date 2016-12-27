@@ -187,7 +187,7 @@ var Variable = P(Symbol, function(_, super_) {
         for(var i = 0; i < commandList.length; i++)
           if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>").replace('_','<sub>')+'</sub>' : commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>")) + "(<span class='mq-inline-box'></span>)</span></li>"});
         for(var i = 0; i < unitList.names.length; i++)
-          if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]] + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + ")</span></li>"});
+          if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]].replace(/delta([A-Z])/,"&Delta;&deg;$1").replace(/deg([A-Z])/,"&deg;$1") + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + ")</span></li>"});
       }
     }
     if(matchList.length > 0) {
@@ -241,16 +241,21 @@ var Variable = P(Symbol, function(_, super_) {
             _this.controller.API.keystroke('Backspace', {preventDefault: function() {} });
           _this.controller.API.typedText('"');
         }
-        _this.controller.API.typedText(word);
+        if((word == 'degF') || (word == 'degC') || (word == 'deltaF') || (word == 'deltaC')) {
+          _this.controller.scheduleUndoPoint();
+          LatexCmds[word]().createLeftOf(_this.controller.cursor);
+          _this.controller.notifyElementOfChange();
+        } else
+          _this.controller.API.typedText(word);
         if(_this.controller.cursor[L] instanceof Letter)
           _this.controller.cursor[L].autoOperator(_this.controller.cursor, false);
         if(word[word.length - 1] === ':')
           FunctionCommand(true).createLeftOf(_this.controller.cursor);
         if((word[word.length - 1] !== '(') && (word[word.length - 1] !== ':') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
           _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
+        _this.controller.closePopup();
         if($(this).attr('data-make-unit') == '1') _this.controller.API.keystroke('Right', {preventDefault: function() {} });
         _this.controller.cursor.workingGroupChange();
-        _this.controller.closePopup();
         window.setTimeout(function() { _this.controller.closePopup(); },10); //in case of autocommand causing it to reappear
       };
       this.controller.createPopup('<ul>' + matches.join('\n') + '</ul>', topOffset + topBlock.height() + scrollTop, leftOffset, onclick);
@@ -289,8 +294,10 @@ var Letter = P(Variable, function(_, super_) {
     if(cursor.controller.suppress_auto_commands) return false;
     if(cursor[L].autoOperatorComplete) return false;
     cursor[L].autoOperatorComplete = true;
-    if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) return false;
-    var autoCmds = cursor.options.autoCommands;
+    if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) 
+      var autoCmds = {degF:true,degC:true,deltaF:true,deltaC:true};
+    else
+      var autoCmds = cursor.options.autoCommands;
     // join together longest sequence of letters
     var str = cursor[L].letter, l = cursor[L][L], i = 1;
     if((cursor[R] instanceof Letter) && (allow_left_right !== true)) return false;
@@ -311,6 +318,7 @@ var Letter = P(Variable, function(_, super_) {
           var cursor_p = cursor.parent;
           var insertRight = false;
           cursor.insRightOf(init_l);
+          if(typeof init_l === 'undefined') return true;
           for (var i = 1, l = init_l; i < str.length; i += 1, l = l[L]);
           cursor.startSelection();
           cursor.insLeftOf(l);
@@ -333,6 +341,7 @@ var Letter = P(Variable, function(_, super_) {
     }
     var try_unit_converstion = true;
     if(this.controller.disableAutoUnit) try_unit_converstion = false;
+    else if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) try_unit_converstion = false;
     else if(unit_conversion === false) try_unit_converstion = false;
     else if(this.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub == 'sub')) try_unit_converstion = false;
     else if(this.parent && (this.parent.parent instanceof FunctionCommand)) try_unit_converstion = false;
@@ -375,6 +384,7 @@ var Letter = P(Variable, function(_, super_) {
             var cursor_p = cursor.parent;
             cursor.insRightOf(init_l);
             var unit = Unit();
+            if(typeof init_l === 'undefined') return true;
             for (var i = 1, l = init_l; i < str.length; i += 1, l = l[L]);
             cursor.startSelection();
             cursor.insLeftOf(l);
@@ -385,8 +395,18 @@ var Letter = P(Variable, function(_, super_) {
             cursor.endSelection();
             cursor.show();
             unit.createLeftOf(cursor);
-            for(var i = 0; i < symb.length; i++) 
-              Letter(symb[i]).createLeftOf(cursor);
+            if(str == 'degF')
+              LatexCmds.degF().createLeftOf(cursor);
+            else if(str == 'degC')
+              LatexCmds.degC().createLeftOf(cursor);
+            else if(str == 'deltaC')
+              LatexCmds.deltaC().createLeftOf(cursor);
+            else if(str == 'deltaF')
+              LatexCmds.deltaF().createLeftOf(cursor);
+            else {
+              for(var i = 0; i < symb.length; i++) 
+                Letter(symb[i]).createLeftOf(cursor);
+            }
             controller.closePopup();
             unit.jQ.find('.mq-florin').removeClass('.mq-florin').html('f'); // change florin to 'f'
             if(cursor_l == init_l) cursor.insRightOf(unit);

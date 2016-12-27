@@ -293,13 +293,19 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
         }
         for(unit = this.__controller.cursor; unit !== 0; unit = unit.parent) if(unit instanceof Unit) break;
         if(!unit) {
+          this.__controller.scheduleUndoPoint();
           var to_replace = this.__controller.cursor.show().replaceSelection();
           unit = Unit();
           if(to_replace) unit.replaces(to_replace);
           unit.createLeftOf(this.__controller.cursor);
           leave_unit = true;
         }
-        this.typedText(option);
+        if(option.charAt(0) == '\\') {
+          this.__controller.scheduleUndoPoint();
+          LatexCmds[option.replace('\\','')]().createLeftOf(this.__controller.cursor);
+          this.__controller.notifyElementOfChange();
+        } else
+          this.typedText(option);
         this.__controller.closePopup();
         if(leave_unit) {
           this.__controller.cursor.insRightOf(unit);

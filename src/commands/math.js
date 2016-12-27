@@ -693,7 +693,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     // Test for implicit multiplication
     if(((cmd instanceof Variable) || (cmd instanceof Currency)) && ((cursor[L] instanceof VanillaSymbol) || (cursor[L] instanceof OperatorName) || (cursor[L] instanceof DerivedMathCommand) || (cursor[L] instanceof Currency)) && !(cursor[L].ctrlSeq && cursor[L].ctrlSeq.match(/^[\,…\:]$/)) && !(cursor.parent && (cursor.parent.parent instanceof SupSub) && cursor.parent.parent.supsub == 'sub'))
       LatexCmds.cdot().implicit().createLeftOf(cursor);
-    else if(!(ch.match(/^[\,]$/i) || cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket) && (ch !== '.'))))
+    else if(!(ch.match(/^[\,]$/i) || cmd instanceof BinaryOperator || cmd instanceof Fraction || cmd instanceof DerivedMathCommand || cmd instanceof SupSub || (cmd instanceof Bracket && (cmd.side === R))) && (cursor[L] !== 0) && ((cursor[L] instanceof Fraction) || (cursor[L] instanceof Bracket) || (cursor[L] instanceof DerivedMathCommand) || ((cursor[L] instanceof SupSub) && !(cmd instanceof Bracket) && (ch !== ':'))))
       LatexCmds.cdot().implicit().createLeftOf(cursor);
     
     cmd.createLeftOf(cursor);

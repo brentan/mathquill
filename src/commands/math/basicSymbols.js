@@ -49,6 +49,14 @@ LatexCmds.omega = P(Variable, function(_, super_) {
   };
 });
 
+// Temperatures
+LatexCmds.deltaF = bind(Variable, '\\deltaF', "&Delta;&deg;F","deltaF");
+LatexCmds.deltaC = bind(Variable, '\\deltaC', "&Delta;&deg;C","deltaC");
+LatexCmds.deltaK = bind(Variable, '\\deltaK', "K","deltaK");
+LatexCmds.deltaRankine = bind(Variable, '\\deltaRankine', "Rankine","deltaRankine");
+LatexCmds.degF = bind(Variable, '\\degF', "&deg;F","degF");
+LatexCmds.degC = bind(Variable, '\\degC', "&deg;C","degC");
+
 //why can't anybody FUCKING agree on these
 LatexCmds.phi = //W3C or Unicode?
   bind(Variable,'\\phi ','&#981;');
