@@ -263,24 +263,32 @@ var Variable = P(Symbol, function(_, super_) {
       this.controller.closePopup();
   };
   _.createTooltip = function() {
+    if(!this.controller) this.getController();
     if(this.parent.unit || (this.parent.parent && this.parent.parent.unit)) {
       this.controller.destroyTooltip();
       return false;
     }
     var command = this.fullWord()[0];
-    if(!this.controller) this.getController();
+    if(this.controller.triedVars[command] === false) return false; 
+    if(this.jQ.closest(".mq-function-command").length) command += "__SCOBJECT"; //to make sure we catch only the element where the class is defined, not its methods
     var parent_el = (this.parent.parent && this.parent.parent instanceof SupSub) && (this.parent.parent.supsub === 'sub') ? this.parent.parent : this;
     for(;parent_el[L] instanceof Variable;parent_el = parent_el[L]);
     if(this.controller.current_tooltip === parent_el) return parent_el;
     if(this.controller.element && this.controller.element.varHelp) {
-      var el = this.controller.element.varHelp(command);
+      if(this.controller.triedVars[command]) el = this.controller.triedVars[command];
+      else var el = this.controller.element.varHelp(command);
+      this.controller.triedVars[command] = el;
       if(el === false) {
         this.controller.destroyTooltip();
         return false;
       }
       this.controller.current_tooltip = parent_el;
       this.controller.element.worksheet.tooltip_holder = parent_el;
-      SwiftCalcs.createHelpPopup("Defined on <a href='#' style='color: #888888;'>line " + el.myLineNumber + "</a>&nbsp;&nbsp;", parent_el.jQ).find('a').on('click', function(e) {
+      var last_result = el.getLastResult();
+      var html = "Defined on <a href='#' style='color: #666666;'>line " + el.myLineNumber + "</a>&nbsp;&nbsp;"
+      if(last_result && (last_result.length < 150)) 
+        html = window.SwiftCalcsLatexHelper.latexToHtml(last_result) + "<div style='font-style: italic; color: #666666;'>" + html + "</div>";
+      SwiftCalcs.createHelpPopup(html, parent_el.jQ).find('a').on('click', function(e) {
         el.focus(0);
         el.flash("#65b2ff", 750);
         e.preventDefault();

@@ -21,6 +21,7 @@ Controller.open(function(_) {
       }
     };
     ctrlr.blur = function() { // not directly in the textarea blur handler so as to be
+      ctrlr.triedVars = {};
       if(ctrlr.captiveUnitMode || ctrlr.units_only) {
         //Perform unit check
         reg = /([^a-zA-Z0-9_]|^)_([a-zA-Zµ2]+)/g;
@@ -52,6 +53,7 @@ Controller.open(function(_) {
       ctrlr.suppress_auto_commands = false;
     };
     ctrlr.windowBlur = function() {
+      ctrlr.triedVars = {};
       ctrlr.blurred = true;
       if(ctrlr.captiveMode) {
         ctrlr.element.itemChosen(ctrlr.API.latex());

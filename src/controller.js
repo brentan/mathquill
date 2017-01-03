@@ -17,6 +17,7 @@ var Controller = P(function(_) {
     this.root = root;
     this.mq_popup_el = [];
     this.skipAutoUnit = {};
+    this.triedVars = {};
     this.container = container;
 
     API.__controller = root.controller = this;

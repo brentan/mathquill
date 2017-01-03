@@ -186,7 +186,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   };
   _.scrollToMe = function(dir) {
     if(this.jQ && this.__controller.element && this.__controller.element.jQ) {
-      var top = this.jQ.position().top + this.__controller.element.jQ.position().top - this.jQ.closest('body').scrollTop() - 80;
+      var top = this.jQ.position().top + this.__controller.element.topOffset() - this.jQ.closest('body').scrollTop() - 80;
       var bottom = top + this.jQ.height();
       var to_move_top = Math.min(0, top-40);
       var to_move_bot = Math.max(0, bottom - this.jQ.closest('body').height()+50);
