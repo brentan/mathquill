@@ -13,11 +13,10 @@ var Controller = P(function(_) {
     this.captiveUnitMode = false;
     this.captiveMode = false;
     this.units_only = false;
-    this.disableAutoUnit = false;
+    this.variableEntryField = false;
     this.root = root;
     this.mq_popup_el = [];
     this.skipAutoUnit = {};
-    this.triedVars = {};
     this.container = container;
 
     API.__controller = root.controller = this;

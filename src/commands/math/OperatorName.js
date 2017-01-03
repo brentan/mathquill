@@ -95,7 +95,8 @@ var OperatorName = LatexCmds.operatorname = P(MathCommand, function(_, super_) {
       var html = this.controller.API.__options.helpList[command];
       SwiftCalcs.createHelpPopup(html, this.jQ.find('.mq-operator-name'));
       return this;
-    }
+    } 
+    if(this.blocks[0].ends[L] instanceof Variable) return this.blocks[0].ends[L].createTooltip();
     this.controller.destroyTooltip();
     return false;
   }

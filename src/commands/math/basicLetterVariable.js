@@ -1,4 +1,4 @@
-
+var timeout_holder = false;
 var Variable = P(Symbol, function(_, super_) {
   _.init = function(ch, html, text) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
@@ -132,12 +132,13 @@ var Variable = P(Symbol, function(_, super_) {
         var commandList = [];
         var functionlist = [];
         var pretext = '';
+        var showHTML = false;
         if((this.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent === this.parent.parent.ends[R])) ||
           (this.parent && (this.parent.parent instanceof SupSub) && this.parent.parent.parent && (this.parent.parent.parent.parent instanceof FunctionCommand) && (this.parent.parent.parent === this.parent.parent.parent.parent.ends[R]))) {
           // In a FunctionCommand, we only autocomplete the method calls that are public for that object
           var func_command = (this.parent.parent instanceof FunctionCommand) ? this.parent.parent : this.parent.parent.parent.parent;
-          wordList = func_command.getObject().propertyList;
-          commandList = func_command.getObject().methodList;
+          wordList = func_command.getObject().propertyList.slice(0);
+          commandList = func_command.getObject().methodList.slice(0);
           unitList = {names: [], symbols: []};
           pretext = func_command.objectName();
           pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>:' : (pretext + ':');
@@ -145,8 +146,13 @@ var Variable = P(Symbol, function(_, super_) {
           if((word.length < 3) && (word.indexOf('_') == -1)) 
             return; // Only autocomplete on 3 characters or more
           if(word == 'and') return; // ignore 'and'
-          wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
-          commandList = this.controller.API.__options.staticAutocomplete || [];
+          showHTML = true;
+          var allwords = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
+          commandList = this.controller.API.__options.staticAutocomplete.slice(0) || [];
+          for(var i = 0; i < allwords.length; i++) {
+            if(allwords[i].match(/\($/)) commandList.push(allwords[i].replace("(",""));
+            else wordList.push(allwords[i]);
+          } 
           unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
           if((this.controller.root.ends[L] instanceof OperatorName) && (this.controller.root.ends[L][R] instanceof Equality) && this.controller.root.ends[L][R].strict // We are on a line where we are defining a function...we should add the function variable list to the word list
             && this.controller.cursor && this.controller.cursor.parent && (this.controller.cursor.parent.parent != this.controller.root.ends[L]) // Cursor is not in the function definition (no sub check)
@@ -179,15 +185,26 @@ var Variable = P(Symbol, function(_, super_) {
             text = text.replace(':','') + ":<span class='mq-inline-box'></span>";  //BRENTAN- better visual than this box after the period?
           return text;
         }
+        var varVal = function(command, self) {
+          if(showHTML && self.controller.element && self.controller.element.varHelp) {
+            var el = self.controller.element.varHelp(command);
+            if(el != false) {
+              var last_result = el.getLastResult();
+              if(last_result && (last_result.length < 150)) 
+                return "</td><td class='autoHTML'>" + window.SwiftCalcsLatexHelper.latexToHtml(last_result);
+            }
+          }
+          return "";
+        }
         //Find all matches
         for(var i = 0; i < functionlist.length; i++)
-          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>"), this) + "</i></span></li>"});
-        for(var i = 0; i < wordList.length; i++)
-          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>"), this) + "</i></span></li>"});
+          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>"), this) + "</i></span></td></tr></tbody></table></li>"});
+        for(var i = 0; i < wordList.length; i++) 
+          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>"), this) + "</i></span>" + varVal(wordList[i],this) + "</td></tr></tbody></table></li>"});
         for(var i = 0; i < commandList.length; i++)
-          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>").replace('_','<sub>')+'</sub>' : commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>")) + "(<span class='mq-inline-box'></span>)</span></li>"});
+          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>").replace('_','<sub>')+'</sub>' : commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>")) + "(<span class='mq-inline-box'></span>)</span>" + varVal(commandList[i],this) + "</td></tr></tbody></table></li>"});
         for(var i = 0; i < unitList.names.length; i++)
-          if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]].replace(/delta([A-Z])/,"&Delta;&deg;$1").replace(/deg([A-Z])/,"&deg;$1") + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + ")</span></li>"});
+          if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><table><tbody><tr><td><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]].replace(/delta([A-Z])/,"&Delta;&deg;$1").replace(/deg([A-Z])/,"&deg;$1") + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + ")</span></td></tr></tbody></table></li>"});
       }
     }
     if(matchList.length > 0) {
@@ -262,22 +279,73 @@ var Variable = P(Symbol, function(_, super_) {
     } else
       this.controller.closePopup();
   };
+  _.createLeftOf = function(cursor) {
+    super_.createLeftOf.call(this, cursor);
+    var parent_el = (this.parent.parent && this.parent.parent instanceof SupSub) && (this.parent.parent.supsub === 'sub') ? this.parent.parent : this;
+    for(;parent_el[L] instanceof Variable;parent_el = parent_el[L]);
+    if(this.controller.current_tooltip === parent_el) this.controller.destroyTooltip();
+    if(timeout_holder) window.clearTimeout(timeout_holder);
+    timeout_holder = window.setTimeout(function(_this) { return function() { _this.controller.cursor.loadPopups(); } }(this), 500);
+    return this;
+  };
+  _.remove = function() {
+    var parent_el = (this.parent.parent && this.parent.parent instanceof SupSub) && (this.parent.parent.supsub === 'sub') ? this.parent.parent : this;
+    for(;parent_el[L] instanceof Variable;parent_el = parent_el[L]);
+    if(this.controller.current_tooltip === parent_el) this.controller.destroyTooltip();
+    if(timeout_holder) window.clearTimeout(timeout_holder);
+    if(this[L] instanceof Variable)
+      timeout_holder = window.setTimeout(function(_this) { return function() { _this.controller.cursor.loadPopups(); } }(this[L]), 500);
+    else if(this[R] instanceof Variable)
+      timeout_holder = window.setTimeout(function(_this) { return function() { _this.controller.cursor.loadPopups(); } }(this[R]), 500);
+    else if(this.parent && (this.parent.parent instanceof Variable) && (this.parent.parent.supsub === 'sub'))
+      timeout_holder = window.setTimeout(function(_this) { return function() { _this.controller.cursor.loadPopups(); } }(this.parent.parent), 500);
+    return super_.remove.call(this);
+  }
   _.createTooltip = function() {
     if(!this.controller) this.getController();
+    if(this.controller.variableEntryField) {
+      this.controller.destroyTooltip();
+      return false;
+    }
     if(this.parent.unit || (this.parent.parent && this.parent.parent.unit)) {
       this.controller.destroyTooltip();
       return false;
     }
     var command = this.fullWord()[0];
-    if(this.controller.triedVars[command] === false) return false; 
     if(this.jQ.closest(".mq-function-command").length) command += "__SCOBJECT"; //to make sure we catch only the element where the class is defined, not its methods
     var parent_el = (this.parent.parent && this.parent.parent instanceof SupSub) && (this.parent.parent.supsub === 'sub') ? this.parent.parent : this;
     for(;parent_el[L] instanceof Variable;parent_el = parent_el[L]);
     if(this.controller.current_tooltip === parent_el) return parent_el;
     if(this.controller.element && this.controller.element.varHelp) {
-      if(this.controller.triedVars[command]) el = this.controller.triedVars[command];
-      else var el = this.controller.element.varHelp(command);
-      this.controller.triedVars[command] = el;
+      // Tests to ensure we aren't showing a popup for a line where we are defining that variable:
+      if((this.controller.root.ends[L] instanceof OperatorName) && (this.controller.root.ends[L][R] instanceof Equality) && this.controller.root.ends[L][R].strict) {// We are on a line where we are defining a function...we should ignore the function name and function variable list
+        if(this.controller.cursor && this.controller.cursor.parent && ((this.controller.cursor.parent.parent == this.controller.root.ends[L]) // Cursor is in the function definition (no sub check)
+          || (this.controller.cursor.parent.parent && this.controller.cursor.parent.parent.parent && (this.controller.cursor.parent.parent.parent.parent == this.controller.root.ends[L])))) { // Cursor is in the function definition (sub check)
+          this.controller.destroyTooltip();
+          return false;
+        }
+        var var_list = this.controller.root.ends[L].blocks[1].text({}).split(',');
+        for(var i = 0; i < var_list.length; i++) {
+          if(var_list[i].trim() == command) { // Don't show popup, we are defining this variable on this line in a function definition
+            this.controller.destroyTooltip();
+            return false;
+          }
+        }
+      }
+      // Variable definition check:
+      if(this.controller.root.ends[L] instanceof Variable) {
+        for(var left_el = this.controller.root.ends[L]; left_el[R] instanceof Variable; left_el = left_el[R]);
+        if((left_el[R] instanceof SupSub) && (left_el[R].supsub == 'sub')) left_el = left_el[R];
+        if((left_el[R] instanceof Equality) && left_el[R].strict) {
+          //Variable definition
+          if(this.controller.root.ends[L].fullWord()[0] == command) {
+            this.controller.destroyTooltip();
+            return false;
+          }
+        }
+      }
+
+      var el = this.controller.element.varHelp(command);
       if(el === false) {
         this.controller.destroyTooltip();
         return false;
@@ -376,7 +444,7 @@ var Letter = P(Variable, function(_, super_) {
       }
     }
     var try_unit_converstion = true;
-    if(this.controller.disableAutoUnit) try_unit_converstion = false;
+    if(this.controller.variableEntryField) try_unit_converstion = false;
     else if(cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) try_unit_converstion = false;
     else if(unit_conversion === false) try_unit_converstion = false;
     else if(this.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub == 'sub')) try_unit_converstion = false;
@@ -398,7 +466,7 @@ var Letter = P(Variable, function(_, super_) {
       var create_unit = function(_this, symb) {
         var change_to_unit = true;
         for(var j = 0; j < wordList.length; j++) {
-          if(wordList[j] == str) { change_to_unit = false; break; }
+          if((wordList[j] == str) || (wordList[j] == (str+"("))) { change_to_unit = false; break; }
         }
         for(var j = 0; j < commandList.length; j++) {
           if(commandList[j] == str) { change_to_unit = false; break; }

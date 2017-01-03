@@ -63,8 +63,8 @@ var AbstractMathQuill = P(function(_) {
     this.latex(contents.text());
     if(opts && opts.ghost && (contents.text().trim() == ''))
       this.setGhost(opts.ghost);
-    if(opts && opts.disableAutoUnit && (contents.text().trim() == ''))
-      this.disableAutoUnit(opts.disableAutoUnit);
+    if(opts && opts.variableEntryField && (contents.text().trim() == ''))
+      this.variableEntryField(opts.variableEntryField);
 
     this.revert = function() {
       return el.empty().unbind('.mathquill')
@@ -88,7 +88,7 @@ var AbstractMathQuill = P(function(_) {
   _.setCaptiveMode = function(val) { this.__controller.captiveMode = val; return this; };
   _.setUnitsOnly = function(val) { this.__controller.units_only = val; return this; };
   _.setStaticMode = function(val) { this.__controller.staticMode = val; return this; };
-  _.disableAutoUnit = function(val) {this.__controller.disableAutoUnit = val; return this; };
+  _.variableEntryField = function(val) {this.__controller.variableEntryField = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
   var setOpts = function(opts, _this) {
     if(opts)

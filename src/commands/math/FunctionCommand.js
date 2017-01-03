@@ -68,7 +68,8 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   };
   _.createTooltip = function() {
     // For now we don't do anything with help for function commands
-    return;
+    this.controller.destroyTooltip();
+    return false;
   }
 });
 
