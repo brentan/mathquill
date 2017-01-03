@@ -163,7 +163,6 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     //The other hacky unit mode thing.  If the parent element is in unitmode but im not, ignore focus events
     if(!this.__controller.captiveUnitMode && this.__controller.element && this.__controller.element.captiveUnitMode) return this;
     this.jQ.find('.mq-selection').removeClass('mq-selection');
-    this.__controller.focus(); 
     if(dir && (dir < 2)) {
       if(this.__controller.units_only || this.__controller.captiveUnitMode) {
         this.moveToDirEnd(R);
@@ -178,22 +177,26 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     } else if(this.__controller.cursor.anticursor)
       this.__controller.cursor.select();
     else this.__controller.cursor.show();
+    this.__controller.focus(); 
     this.scrollToMe(dir);
+    this.__controller.cursor.loadPopups();
+    //this.__controller.destroyTooltip(0);
+    //window.setTimeout(function(_this) { return function() { _this.__controller.cursor.loadPopups(); } }(this),1); // load popups after slight delay
     return this; 
   };
   _.scrollToMe = function(dir) {
-    if(this.jQ && this.__controller.element) {
-      var top = this.jQ.position().top;
+    if(this.jQ && this.__controller.element && this.__controller.element.jQ) {
+      var top = this.jQ.position().top + this.__controller.element.jQ.position().top - this.jQ.closest('body').scrollTop() - 80;
       var bottom = top + this.jQ.height();
-      var to_move_top = Math.min(0, top);
-      var to_move_bot = Math.max(0, bottom - this.__controller.element.worksheet.jQ.height()+20);
+      var to_move_top = Math.min(0, top-40);
+      var to_move_bot = Math.max(0, bottom - this.jQ.closest('body').height()+50);
       if((to_move_bot > 0) && (to_move_top < 0)) {
         if(dir === R)
-          this.__controller.element.worksheet.jQ.scrollTop(this.__controller.element.worksheet.jQ.scrollTop() + to_move_bot);
+          this.jQ.closest('body').scrollTop(this.jQ.closest('body').scrollTop() + to_move_bot);
         else
-          this.__controller.element.worksheet.jQ.scrollTop(this.__controller.element.worksheet.jQ.scrollTop() + to_move_top);
+          this.jQ.closest('body').scrollTop(this.jQ.closest('body').scrollTop() + to_move_top);
       } else
-        this.__controller.element.worksheet.jQ.scrollTop(this.__controller.element.worksheet.jQ.scrollTop() + to_move_top + to_move_bot);
+        this.jQ.closest('body').scrollTop(this.jQ.closest('body').scrollTop() + to_move_top + to_move_bot);
     }
     return this;
   }

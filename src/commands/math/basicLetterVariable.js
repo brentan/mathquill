@@ -262,6 +262,34 @@ var Variable = P(Symbol, function(_, super_) {
     } else
       this.controller.closePopup();
   };
+  _.createTooltip = function() {
+    if(this.parent.unit || (this.parent.parent && this.parent.parent.unit)) {
+      this.controller.destroyTooltip();
+      return false;
+    }
+    var command = this.fullWord()[0];
+    if(!this.controller) this.getController();
+    var parent_el = (this.parent.parent && this.parent.parent instanceof SupSub) && (this.parent.parent.supsub === 'sub') ? this.parent.parent : this;
+    for(;parent_el[L] instanceof Variable;parent_el = parent_el[L]);
+    if(this.controller.current_tooltip === parent_el) return parent_el;
+    if(this.controller.element && this.controller.element.varHelp) {
+      var el = this.controller.element.varHelp(command);
+      if(el === false) {
+        this.controller.destroyTooltip();
+        return false;
+      }
+      this.controller.current_tooltip = parent_el;
+      this.controller.element.worksheet.tooltip_holder = parent_el;
+      SwiftCalcs.createHelpPopup("Defined on <a href='#' style='color: #888888;'>line " + el.myLineNumber + "</a>&nbsp;&nbsp;", parent_el.jQ).find('a').on('click', function(e) {
+        el.focus(0);
+        el.flash("#65b2ff", 750);
+        e.preventDefault();
+      });
+      return parent_el;
+    }
+    this.controller.destroyTooltip();
+    return false;
+  }
 });
 
 Options.p.autoCommands = { _maxLength: 0 };

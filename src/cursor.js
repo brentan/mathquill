@@ -283,12 +283,24 @@ var Cursor = P(Point, function(_) {
       if(!suppress) _this.addClass('hasCursor_highlighting');
     });
     mathField.find(".mq-hasCursor").first().children(".hasCursor_highlighting").wrapAll("<span class='active_block'></span>");
+    this.loadPopups();
+    return this;
+  }
+  _.loadPopups = function() {
+    if(this.controller.element && this.controller.element.blurred) return this;
+    // Varhelp popup
+    var try_opname_popup = true;
+    if(this.controller.showPopups && ((this[L] instanceof Variable) || (this[R] instanceof Variable))) {
+      var el = this[L] instanceof Variable ? this[L] : this[R];
+      this.controller.current_tooltip = el.createTooltip();
+      try_opname_popup = this.controller.current_tooltip === false;
+    }
     // OperatorName and FunctionCommand popup help
-    if(this.controller.showPopups && cursor.closest('.mq-function-command, .mq-operator-name-holder').length) {
-      var el = cursor.closest('.mq-function-command, .mq-operator-name-holder');
+    if(try_opname_popup && this.controller.showPopups && this.jQ.closest('.mq-function-command, .mq-operator-name-holder').length) {
+      var el = this.jQ.closest('.mq-function-command, .mq-operator-name-holder');
       var cmdId = el.attr('mathquill-command-id');
       this.controller.current_tooltip = Node.byId[cmdId].createTooltip();
-    } else {
+    } else if(try_opname_popup) {
       this.controller.destroyTooltip();
     }
     if(this.controller.element && this.controller.element.mathquill_reflow)
