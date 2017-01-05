@@ -52,6 +52,25 @@ var Variable = P(Symbol, function(_, super_) {
     block.ends[L].jQ.removeClass('mq-empty');
     cursor.workingGroupChange();
   };
+  _.renameVariable = function(controller, old_name, new_name) {
+    if(this[L] instanceof Variable) return;
+    if(this.parent && this.parent.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub == 'sub')) return;
+    if((this.parent.unit) || (this.parent.parent && this.parent.parent.unit)) return;
+    if(this.parent && this.parent.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent == this.parent.parent.blocks[1])) return; // Second part of function command
+    if(this.fullWord()[0] == old_name) {
+      //I need to be renamed!
+      controller.cursor.insLeftOf(this);
+      controller.setUndoPoint();
+      controller.cursor.startSelection();
+      // Move to the right
+      for (var l = this; l[R] instanceof Variable; l = l[R]);
+      if((l[R] instanceof SupSub) && (l[R].supsub == 'sub')) l = l[R]
+      controller.cursor.insRightOf(l);
+      controller.cursor.select();
+      controller.paste(window.SwiftCalcsLatexHelper.UnitNameToLatex(new_name));
+      controller.cursor.hide(); 
+    }
+  }
   _.fullWord = function() {
     var word = this.text({})+'';
     var letters = [this];
@@ -150,6 +169,7 @@ var Variable = P(Symbol, function(_, super_) {
           var allwords = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete.slice(0) || [];
           for(var i = 0; i < allwords.length; i++) {
+            if(this.controller.element && this.controller.element.independent_vars && (this.controller.element.independent_vars.indexOf(allwords[i])>-1)) continue;
             if(allwords[i].match(/\($/)) commandList.push(allwords[i].replace("(",""));
             else wordList.push(allwords[i]);
           } 
@@ -171,19 +191,14 @@ var Variable = P(Symbol, function(_, super_) {
             }
           }
         }
-        var formatter = function(text, self) {
-          var autoCommands = Object.keys(self.controller.API.__options.autoCommands);
-          for(var i = 0; i < autoCommands.length; i++) {
-            if(text === autoCommands[i]) {
-              text = LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate;
-              break;
-            } else text = text.replace(new RegExp('^' + autoCommands[i] + '_',''), LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate + '_').replace(new RegExp('_' + autoCommands[i] + '$',''), '_' + LatexCmds[autoCommands[i]](autoCommands[i]).htmlTemplate);
-
-          }
-          text = (text.indexOf('_') > -1 ? text.replace('_','<sub>')+'</sub>' : text);
+        var formatter = function(text, to_match, self) {
+          text = window.SwiftCalcsLatexHelper.UnitNameToHTML(text).replace("<sub>","<_>").replace("</sub>","</_>");
+          to_match = to_match.split("_");
+          for(var i = 0; i < to_match.length; i++)
+            if(to_match[i].length) text = text.replace(new RegExp("(" + to_match[i] + ")","gi"), "*$1\\*").replace(/&([a-z0-9#\*\\]*)\\\*([a-z0-9#]*);/gi,"&$1$2;\\*").replace(/&([a-z0-9#]*)\*([a-z0-9#\\\*]*);/gi,"*&$1$2;").replace(/&([a-z0-9#]*)\\?\*([a-z0-9#]*)\\?\*([a-z0-9#]*);/gi,"&$1$2$3;");
           if(text.indexOf(':') > -1) 
             text = text.replace(':','') + ":<span class='mq-inline-box'></span>";  //BRENTAN- better visual than this box after the period?
-          return text;
+          return text.replace("<_>","<sub>").replace("</_>","</sub>").replace(/\\\*/g,"</b>").replace(/\*/g,"<b>");
         }
         var varVal = function(command, self) {
           if(showHTML && self.controller.element && self.controller.element.varHelp) {
@@ -198,11 +213,11 @@ var Variable = P(Symbol, function(_, super_) {
         }
         //Find all matches
         for(var i = 0; i < functionlist.length; i++)
-          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>"), this) + "</i></span></td></tr></tbody></table></li>"});
+          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i], word, this) + "</i></span></td></tr></tbody></table></li>"});
         for(var i = 0; i < wordList.length; i++) 
-          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>"), this) + "</i></span>" + varVal(wordList[i],this) + "</td></tr></tbody></table></li>"});
+          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], word, this) + "</i></span>" + varVal(wordList[i],this) + "</td></tr></tbody></table></li>"});
         for(var i = 0; i < commandList.length; i++)
-          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + (commandList[i].indexOf('_') > -1 ? commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>").replace('_','<sub>')+'</sub>' : commandList[i].replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>")) + "(<span class='mq-inline-box'></span>)</span>" + varVal(commandList[i],this) + "</td></tr></tbody></table></li>"});
+          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + formatter(commandList[i], word, this) + "(<span class='mq-inline-box'></span>)</span>" + varVal(commandList[i],this) + "</td></tr></tbody></table></li>"});
         for(var i = 0; i < unitList.names.length; i++)
           if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><table><tbody><tr><td><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]].replace(/delta([A-Z])/,"&Delta;&deg;$1").replace(/deg([A-Z])/,"&deg;$1") + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + ")</span></td></tr></tbody></table></li>"});
       }

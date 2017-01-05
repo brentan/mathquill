@@ -474,6 +474,10 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.last_action = 'currentState';
     return this.__controller.currentState();
   }
+  _.renameVariable = function(old_name, new_name) {
+    this.__controller.renameVariable(old_name, new_name);
+    return this;
+  }
 });
 
 function RootBlockMixin(_) {

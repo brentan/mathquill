@@ -57,9 +57,15 @@ var MathElement = P(Node, function(_, super_) {
           tracker = arr[i].obj.highlightError(opts, controller, tracker, arr[i].offset ? (error_index + arr[i].offset) : error_index);
         } else {
           // This is the block.  Do something
+          if(this instanceof Variable) {
+            var left_el = this;
+            for(;left_el[R] instanceof Variable; left_el = left_el[R]);
+            if((left_el[R] instanceof SupSub) && (left_el[R].supsub == "sub")) left_el = left_el[R];
+          } else
+            var left_el = this;
           tracker.block_found = true;
           var offset = this.jQ.position();
-          var width = this.jQ.width();
+          var width = left_el.jQ.position().left + left_el.jQ.width() - offset.left;
           var height = this.jQ.height();
           var scrollTop = controller.element ? controller.element.worksheet.jQ.scrollTop() : 0;
           if(this.jQ.closest('.tutorial_block').length)
@@ -75,6 +81,11 @@ var MathElement = P(Node, function(_, super_) {
       }
     }
     return tracker;
+  }
+  _.renameVariable = function(controller, old_name, new_name) {
+    this.foldChildren('', function(a, child) {
+      child.renameVariable(controller, old_name, new_name);
+    });
   }
   _.disown = function() {
     var l_item = this[L];

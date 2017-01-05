@@ -66,6 +66,7 @@ var Controller = P(function(_) {
     this.writeLatex(data.latex.slice(6, -1));
     this.cursor.setPosition(data.cursor);
     this.notifyElementOfChange();
+    this.closePopup();
   }
 
   var notifyees = [];

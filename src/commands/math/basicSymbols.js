@@ -359,6 +359,15 @@ var Equality = P(EqualityInequality, function(_, super_) {
       this.swap(false);
     super_.createLeftOf.apply(this, arguments);
   };
+  _.textOutput = function(opts) {
+    var repeat_word = [];
+    if(!this.controller) this.getController();
+    if(this.controller.API.__options.expression_mode)
+      repeat_word.push({text: " == "}); // Force in expression mode
+    else
+      repeat_word.push({text: this.textTemplate[0]});
+    return repeat_word;
+  }
 });
 var equal = { ctrlSeq: '\\eq ', html: '=', text: ' == ',
               ctrlSeqStrict: '=', htmlStrict: '&#8801;', textStrict: ' := ' };

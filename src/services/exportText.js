@@ -10,11 +10,17 @@ Controller.open(function(_, super_) {
     });
   };
   _.highlightError = function(opts, error_index) {
-  	var controller = this;
+    var controller = this;
     var tracker = { error_index: error_index, current_length: 0, block_found: false };
     var out = this.root.foldChildren(tracker, function(tracker, child) {
-    	return child.highlightError(opts, controller, tracker, tracker.error_index);
+      return child.highlightError(opts, controller, tracker, tracker.error_index);
     });
     return out.block_found;
+  };
+  _.renameVariable = function(old_name, new_name) {
+    var controller = this;
+    this.root.foldChildren('',function(a,child) {
+      child.renameVariable(controller, old_name, new_name);
+    });
   };
 });
