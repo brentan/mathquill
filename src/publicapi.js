@@ -468,7 +468,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   // Undo/Redo manager API points
   _.restoreState = function(d) {
     this.last_action = 'restoreState';
-    this.__controller.restoreState(d);
+    return this.__controller.restoreState(d);
   }
   _.currentState = function() {
     this.last_action = 'currentState';

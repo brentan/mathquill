@@ -41,14 +41,14 @@ var Controller = P(function(_) {
   _.scheduleUndoPoint = function() {
     if(this.staticMode) return;
     if(this.element && this.element.worksheet) 
-      this.element.worksheet.scheduleUndoPoint(this);
+      this.element.worksheet.scheduleUndoPoint(this.API);
   }
   _.autoConvertUnit = undefined;
   _.setUndoPoint = function(str) {
     if(this.staticMode) return;
     this.autoConvertUnit = str;
     if(this.element && this.element.worksheet) 
-      this.element.worksheet.setUndoPoint(this);
+      this.element.worksheet.setUndoPoint(this.API);
   }
   _.currentState = function() {
     return {
