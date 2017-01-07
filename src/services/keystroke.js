@@ -53,11 +53,14 @@ Node.open(function(_) {
         el.find('li.mq-popup-selected').click();
         break;
       }
+      if(ctrlr.cursor.initialPosition() && (ctrlr.element) && (ctrlr.element.indent) && ctrlr.element.indent(ctrlr.API, true)) {
+        // tab pressed with cursor in initial position.  
+        e.preventDefault();
+        return;
+      }
       ctrlr.escapeDir(R, key, e);
       return;
 
-    // Shift-Tab -> go one block left if it exists, else escape left.
-    case 'Shift-Tab':
     case 'Shift-Esc':
       ctrlr.escapeDir(L, key, e);
       return;
@@ -98,6 +101,14 @@ Node.open(function(_) {
       ctrlr.cursor.workingGroupChange();
       break;
 
+    // Shift-Tab -> go one block left if it exists, else escape left.
+    case 'Shift-Tab':
+      if(ctrlr.cursor.initialPosition() && (ctrlr.element) && (ctrlr.element.indent) && ctrlr.element.indent(ctrlr.API, false)) {
+        // shift-tab pressed with cursor in initial position.  
+        e.preventDefault();
+        return;
+      }
+      // IF not in first place, move to first place
     // Ctrl-Home -> move to the start of the current block.
     case 'Ctrl-Home':
     case 'Meta-Left':
