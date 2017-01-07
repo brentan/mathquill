@@ -107,6 +107,9 @@ Node.open(function(_) {
         // shift-tab pressed with cursor in initial position.  
         e.preventDefault();
         return;
+      } else if(ctrlr.cursor.initialPosition()) {
+        ctrlr.escapeDir(L, key, e);
+        return;
       }
       // IF not in first place, move to first place
     // Ctrl-Home -> move to the start of the current block.
