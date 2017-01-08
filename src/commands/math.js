@@ -748,6 +748,18 @@ MathQuill.MathField = APIFnFor(P(EditableField, function(_, super_) {
     this.jQ = el;
   };
   _.latex = function(latex) {
+    if(this.__controller.captiveUnitMode || this.__controller.units_only) {
+      var reg = /([^a-zA-Z0-9_]|^)_([a-zA-Zµ2]+)/g;
+      out = this.text({suppress_unit_check: true});
+      while((result = reg.exec(out)) !== null) {
+        if(!window.checkForValidUnit(result[2])) {
+          // Invalid unit in entry
+          showNotice("Error: Unknown unit (" + result[2] + ").  Please express as a function of built-in units (use the 'm/s' dropdown from the menubar for a full list).","red");
+          this.clear();
+          return "";
+        }
+      }
+    } 
     this.last_action = 'latex: ' + latex;
     if (arguments.length > 0) {
       this.__controller.renderLatexMath(latex);

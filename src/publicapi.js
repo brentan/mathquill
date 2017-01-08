@@ -112,6 +112,17 @@ var AbstractMathQuill = P(function(_) {
     if(opts['check_for_array'] && !out.match(/\[.*\]/) && out.match(/,/))
       out = '[' + out + ']'; 
     if(opts['default'] && (out.trim() == '')) return opts['default'];
+    if(!(opts && opts.suppress_unit_check) && (this.__controller.captiveUnitMode || this.__controller.units_only)) {
+      var reg = /([^a-zA-Z0-9_]|^)_([a-zA-Zµ2]+)/g;
+      while((result = reg.exec(out)) !== null) {
+        if(!window.checkForValidUnit(result[2])) {
+          // Invalid unit in entry
+          showNotice("Error: Unknown unit (" + result[2] + ").  Please express as a function of built-in units (use the 'm/s' dropdown from the menubar for a full list).","red");
+          this.clear();
+          return "";
+        }
+      }
+    } 
     return out;
   };
   _.highlightError = function(error_index, opts) {
@@ -357,6 +368,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.select = function() {
     var ctrlr = this.__controller;
     ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
+    if(this.__controller.captiveUnitMode || this.__controller.units_only) ctrlr.moveLeft();
     while (ctrlr.cursor[L]) ctrlr.selectLeft();
     return this;
   };
