@@ -106,19 +106,17 @@ var AbstractMathQuill = P(function(_) {
   _.text = function(opts) { 
     opts = setOpts(opts, this);
     var out = this.__controller.exportText(opts); 
-    // Transform 1...2 and 1, 3...6 into appropriate emgiac 'matrix()' call
-      // KEPT FOR BACKWARDS COMPATIBILITY 2/7/16.  PROBABLY SHOULD BE REMOVE AT SOME POINT IN FUTURE
-    //out = out.replace(/(-?[a-z0-9_.]+) *, *(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $3, $2-$1))").replace(/(-?[a-z0-9_.]+) *\.\.\. *(-?[a-z0-9_.]+)/ig, " makevector(seq($1, $2, 1))")
     if(opts['check_for_array'] && !out.match(/\[.*\]/) && out.match(/,/))
       out = '[' + out + ']'; 
     if(opts['default'] && (out.trim() == '')) return opts['default'];
-    if(!(opts && opts.suppress_unit_check) && (this.__controller.captiveUnitMode || this.__controller.units_only)) {
+    if(this.__controller.captiveUnitMode || this.__controller.units_only) {
       var reg = /([^a-zA-Z0-9_]|^)_([a-zA-Zµ2]+)/g;
       while((result = reg.exec(out)) !== null) {
         if(!window.checkForValidUnit(result[2])) {
           // Invalid unit in entry
           showNotice("Error: Unknown unit (" + result[2] + ").  Please express as a function of built-in units (use the 'm/s' dropdown from the menubar for a full list).","red");
           this.clear();
+          this.__controller.closePopup();
           return "";
         }
       }
