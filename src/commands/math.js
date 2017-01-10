@@ -67,7 +67,7 @@ var MathElement = P(Node, function(_, super_) {
           var offset = this.jQ.position();
           var width = left_el.jQ.position().left + left_el.jQ.width() - offset.left;
           var height = this.jQ.height();
-          var scrollTop = controller.element ? controller.element.worksheet.jQ.scrollTop() : 0;
+          var scrollTop = (controller.element && controller.element.worksheet) ? controller.element.worksheet.jQ.scrollTop() : 0;
           if(this.jQ.closest('.tutorial_block').length)
             scrollTop = this.jQ.closest('.tutorial_block').scrollTop();
           if(this.jQ.closest('.sidebar').length) 

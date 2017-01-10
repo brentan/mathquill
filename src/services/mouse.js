@@ -41,7 +41,7 @@ Controller.open(function(_) {
     this.mouseUp(e);
   }
   _.mouseOut = function(e) {
-    this.element.worksheet.blurToolbar(this.API);
+    if(this.element && this.element.worksheet) this.element.worksheet.blurToolbar(this.API);
     if (this.cursor.selection)
       this.cursor.selection.jQ.removeClass('mq-selection');
     else

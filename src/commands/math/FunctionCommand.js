@@ -35,7 +35,7 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   }
   _.getObject = function() {
     if(this.saved_object) return this.saved_object;
-    if(this.getController().element) {
+    if(this.getController().element && this.getController().element.autocompleteObject) {
       this.saved_object = this.getController().element.autocompleteObject(this.objectName());
       if(this.saved_object) return this.saved_object;
     }

@@ -5,7 +5,7 @@ Controller.open(function(_) {
       ctrlr.blurred = false;
       ctrlr.container.addClass('mq-focused');
       if(ctrlr.captiveMode) return;
-      if(ctrlr.element) ctrlr.element.setFocusedItem(ctrlr.API);
+      if(ctrlr.element && ctrlr.element.setFocusedItem) ctrlr.element.setFocusedItem(ctrlr.API);
       if (!cursor.parent)
         cursor.insAtRightEnd(root);
       if (cursor.selection) { 
@@ -15,7 +15,7 @@ Controller.open(function(_) {
         cursor.select();
       } else
         cursor.show();
-      if(ctrlr.element) {
+      if(ctrlr.element && ctrlr.element.worksheet) {
         ctrlr.element.worksheet.attachToolbar(ctrlr.API, ctrlr.element.worksheet.toolbar.mathToolbar());
         if(ctrlr.staticMode) ctrlr.element.worksheet.blurToolbar(this.API);
       }
@@ -39,8 +39,8 @@ Controller.open(function(_) {
         return;
       }
       ctrlr.destroyTooltip();
-      if(ctrlr.element) ctrlr.element.worksheet.blurToolbar(ctrlr.API);
-      if(ctrlr.element) ctrlr.element.clearFocusedItem(ctrlr.API);
+      if(ctrlr.element && ctrlr.element.worksheet) ctrlr.element.worksheet.blurToolbar(ctrlr.API);
+      if(ctrlr.element && ctrlr.element.clearFocusedItem) ctrlr.element.clearFocusedItem(ctrlr.API);
       root.postOrder('intentionalBlur'); // none, intentional blur: #264
       cursor.clearSelection();
       if(cursor[L] instanceof Letter)

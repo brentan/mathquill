@@ -115,7 +115,7 @@ var Controller = P(function(_) {
   };
   _.current_tooltip = false;
   _.destroyTooltip = function(fade) {
-    if(this.current_tooltip && this.element && (this.element.worksheet.tooltip_holder === this.current_tooltip))
+    if(this.current_tooltip && this.element && this.element.worksheet && (this.element.worksheet.tooltip_holder === this.current_tooltip))
       SwiftCalcs.destroyHelpPopup(fade);
     else if(this.current_tooltip && !this.element) 
       SwiftCalcs.destroyHelpPopup(fade);

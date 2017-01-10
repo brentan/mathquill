@@ -166,7 +166,7 @@ var Variable = P(Symbol, function(_, super_) {
             return; // Only autocomplete on 3 characters or more
           if(word == 'and') return; // ignore 'and'
           showHTML = true;
-          var allwords = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
+          var allwords = (this.controller.element && this.controller.element.autocomplete) ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete.slice(0) || [];
           for(var i = 0; i < allwords.length; i++) {
             if(this.controller.element && this.controller.element.independent_vars && (this.controller.element.independent_vars.indexOf(allwords[i])>-1)) continue;
@@ -251,7 +251,7 @@ var Variable = P(Symbol, function(_, super_) {
       var topOffset = topBlock.offset();
       topOffset = topOffset.top;
       leftOffset = leftOffset.left;
-      var scrollTop = this.controller.element ? this.controller.element.worksheet.jQ.scrollTop() : 0;
+      var scrollTop = (this.controller.element && this.controller.element.worksheet) ? this.controller.element.worksheet.jQ.scrollTop() : 0;
       if(topBlock.closest('.tutorial_block').length)
         scrollTop = topBlock.closest('.tutorial_block').scrollTop();
       if(topBlock.closest('.sidebar').length) 
@@ -366,7 +366,7 @@ var Variable = P(Symbol, function(_, super_) {
         return false;
       }
       this.controller.current_tooltip = parent_el;
-      this.controller.element.worksheet.tooltip_holder = parent_el;
+      if(this.controller.element.worksheet) this.controller.element.worksheet.tooltip_holder = parent_el;
       var last_result = el.getLastResult();
       var html = "Defined on <a href='#' style='color: #666666;'>line " + el.myLineNumber + "</a>&nbsp;&nbsp;"
       if(last_result && (last_result.length < 150)) 
@@ -470,7 +470,7 @@ var Letter = P(Variable, function(_, super_) {
     if(cursor.parent && cursor.parent.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub == 'sub')) try_unit_converstion = false;
     if(try_unit_converstion && (str.length >= 1)) {
       var unitList = this.controller.API.__options.unitList || {names: [], symbols: []};
-      var wordList = this.controller.element ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
+      var wordList = (this.controller.element && this.controller.element.autocomplete) ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
       // If this is a function definition, we also need to add in the local variables for this function
       if((this.controller.root.ends[L] instanceof OperatorName) && (this.controller.root.ends[L][R] instanceof Equality) && (this.controller.root.ends[L][R].strict)) {
         var local_vars = this.controller.root.ends[L].blocks[1].text({}).split(',');
