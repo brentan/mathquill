@@ -153,7 +153,7 @@ var Cursor = P(Point, function(_) {
     return initial;
   }
   _.withDirInsertAt = function(dir, parent, withDir, oppDir) {
-    if (parent !== this.parent && this.parent.blur) this.parent.blur();
+    if (parent !== this.parent && this.parent && this.parent.blur) this.parent.blur();
     if(parent && parent.unit) parent.unit.focus();
     if(parent && parent.parent && parent.parent.unit) parent.parent.unit.focus();
     this.parent = parent;
