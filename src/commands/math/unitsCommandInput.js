@@ -12,6 +12,7 @@ CharCmds['"'] = P(DerivedMathCommand, function(_, super_) {
     this._replacedFragment = replacedFragment;
   };
   _.htmlTemplate = '<span><span class="mq-unit mq-non-leaf">&0</span></span>';
+
   _.finalizeTree = function() {
     // Change any fancy 'f' back into normal f
     this.jQ.find('.mq-florin').removeClass('.mq-florin').html('f');

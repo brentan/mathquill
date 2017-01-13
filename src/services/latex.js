@@ -88,6 +88,18 @@ Controller.open(function(_, super_) {
   _.writeLatex = function(latex) {
     var cursor = this.notify('edit').cursor;
 
+    if(this.captiveUnitMode || this.units_only) {
+      // Remove nested units
+      while(latex.match(/^\\Unit\{.*\}$/))
+        latex = latex.replace(/^\\Unit\{(.*)\}$/,"$1");
+      if(this.API.text() == '') {
+        while(this.root.ends[L])
+          this.root.ends[L].remove();
+        cursor.insAtLeftEnd(this.root);
+        latex = "\\Unit{" + latex + "}";
+      }
+    }
+
     var all = Parser.all;
     var eof = Parser.eof;
 

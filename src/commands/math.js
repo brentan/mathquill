@@ -748,7 +748,6 @@ MathQuill.MathField = APIFnFor(P(EditableField, function(_, super_) {
     this.jQ = el;
   };
   _.latex = function(latex) {
-    if(this.__controller.captiveUnitMode || this.__controller.units_only) this.text(); // Will do unit consistency check
     this.last_action = 'latex: ' + latex;
     if (arguments.length > 0) {
       this.__controller.renderLatexMath(latex);
@@ -756,6 +755,7 @@ MathQuill.MathField = APIFnFor(P(EditableField, function(_, super_) {
       if (this.__controller.blurred) { this.__controller.cursor.hide().parent.blur(); this.__controller.closePopup(); }
       return this;
     }
+    if(this.__controller.captiveUnitMode || this.__controller.units_only) this.text(); // Will do unit consistency check
     return this.__controller.exportLatex();
   };
 }));
