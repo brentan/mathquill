@@ -286,8 +286,17 @@ var Cursor = P(Point, function(_) {
     this.loadPopups();
     return this;
   }
+  _.popupTimeout = false;
   _.loadPopups = function() {
+    if(this.popupTimeout) window.clearTimeout(this.popupTimeout);
+    this.popupTimeout = window.setTimeout(function(_this) { return function() { _this.actuallyLoadPopups(); } }(this), 250);
+  }
+  _.delayPopups = function() {
+    if(this.popupTimeout) this.loadPopups();
+  }
+  _.actuallyLoadPopups = function() {
     if(this.controller.element && this.controller.element.blurred) return this;
+    if(this.controller.mq_popup_el && this.controller.mq_popup_el.length > 0) return;
     // Varhelp popup
     var try_opname_popup = true;
     if(this.controller.showPopups && ((this[L] instanceof Variable) || (this[R] instanceof Variable))) {

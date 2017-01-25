@@ -48,6 +48,7 @@ Controller.open(function(_) {
   _.typedText = function(ch) {
     if (ch === '\n') { this.handle('enter'); return this.API.blur(); }
     var cursor = this.notify().cursor;
+    cursor.delayPopups();
     cursor.parent.write(cursor, ch, cursor.show().replaceSelection());
     this.scrollHoriz();
   };

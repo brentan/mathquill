@@ -6,6 +6,7 @@
 Controller.open(function(_) {
   _.lastKeySpacebar = false;
   _.keystroke = function(key, evt) {
+    this.cursor.delayPopups();
     this.cursor.parent.keystroke(key, evt, this);
     this.lastKeySpacebar = (this.cursor.parent === this.root) && (key == 'Spacebar');
   };

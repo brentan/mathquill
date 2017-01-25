@@ -108,6 +108,9 @@ var Variable = P(Symbol, function(_, super_) {
   _.autoComplete = function() {
     // Autocomplete functionality.  Look for autocomplete options and, if found, show in popup that can be navigated
     if(!this.controller) this.getController();
+    if(!this.controller.showPopups) return;
+    if(this.controller.autocompleteTimeout) window.clearTimeout(this.controller.autocompleteTimeout);
+    this.controller.autocompleteTimeout = false;
     var output = this.fullWord();
     var word = output[0];
     var letters = output[1];
@@ -163,8 +166,8 @@ var Variable = P(Symbol, function(_, super_) {
           pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>:' : (pretext + ':');
         } else {
           if((word.length < 3) && (word.indexOf('_') == -1)) 
-            return; // Only autocomplete on 3 characters or more
-          if(word == 'and') return; // ignore 'and'
+            return this.controller.closePopup(); // Only autocomplete on 3 characters or more
+          if(word == 'and') return this.controller.closePopup(); // ignore 'and'
           showHTML = true;
           var allwords = (this.controller.element && this.controller.element.autocomplete) ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
           commandList = this.controller.API.__options.staticAutocomplete.slice(0) || [];
@@ -200,14 +203,12 @@ var Variable = P(Symbol, function(_, super_) {
             text = text.replace(':','') + ":<span class='mq-inline-box'></span>";  //BRENTAN- better visual than this box after the period?
           return text.replace("<_>","<sub>").replace("</_>","</sub>").replace(/\\\*/g,"</b>").replace(/\*/g,"<b>");
         }
+        var toHTML_list = [];
+        var count = 0;
         var varVal = function(command, self) {
           if(showHTML && self.controller.element && self.controller.element.varHelp) {
-            var el = self.controller.element.varHelp(command);
-            if(el != false) {
-              var last_result = el.getLastResult();
-              if(last_result && (last_result.length < 150)) 
-                return "</td><td class='autoHTML'>" + window.SwiftCalcsLatexHelper.latexToHtml(last_result);
-            }
+            toHTML_list.push({id: count, command: command});
+            return "</td><td class='autoHTML autoHTML" + (count++) + "'><i class='fa fa-spinner fa-pulse'></i>";
           }
           return "";
         }
@@ -220,6 +221,19 @@ var Variable = P(Symbol, function(_, super_) {
           if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + formatter(commandList[i], word, this) + "(<span class='mq-inline-box'></span>)</span>" + varVal(commandList[i],this) + "</td></tr></tbody></table></li>"});
         for(var i = 0; i < unitList.names.length; i++)
           if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><table><tbody><tr><td><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]].replace(/delta([A-Z])/,"&Delta;&deg;$1").replace(/deg([A-Z])/,"&deg;$1") + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + ")</span></td></tr></tbody></table></li>"});
+        if(toHTML_list.length > 0) this.controller.autocompleteTimeout = window.setTimeout(function(HTML_list, self) { return function() { 
+          if(!(self.controller.mq_popup_el && self.controller.mq_popup_el.length > 0)) return;
+          for(var i = 0; i < HTML_list.length; i++) {
+            var el = self.controller.element.varHelp(HTML_list[i].command);
+            var html = '';
+            if(el != false) {
+              var last_result = el.getLastResult();
+              if(last_result && (last_result.length < 150)) 
+                html = window.SwiftCalcsLatexHelper.latexToHtml(last_result);
+            }
+            self.controller.mq_popup_el.find("td.autoHTML" + HTML_list[i].id).html(html);
+          }
+        };}(toHTML_list, this),400);
       }
     }
     if(matchList.length > 0) {

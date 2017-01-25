@@ -25,6 +25,7 @@ Controller.open(function(_) {
   //drag-to-select event handling
   _.orig_block = 0;
   _.mouseDown = function(e) {
+    this.cursor.delayPopups();
     this.orig_block = this.cursor.parent;
     this.closePopup();
     if (this.blurred) 
@@ -32,15 +33,18 @@ Controller.open(function(_) {
     this.seek($(e.target), e.pageX, e.pageY).cursor.workingGroupChange(true).startSelection();
   }
   _.mouseMove = function(e) {
+    this.cursor.delayPopups();
     if (!this.cursor.anticursor) this.cursor.startSelection();
     this.seek($(e.target), e.pageX, e.pageY).cursor.select();
   };
   _.mouseUpShift = function(e) {
+    this.cursor.delayPopups();
     if (!this.cursor.anticursor) this.cursor.startSelection();
     this.seek($(e.target), e.pageX, e.pageY).cursor.select();
     this.mouseUp(e);
   }
   _.mouseOut = function(e) {
+    this.cursor.delayPopups();
     if(this.element && this.element.worksheet) this.element.worksheet.blurToolbar(this.API);
     if (this.cursor.selection)
       this.cursor.selection.jQ.removeClass('mq-selection');
@@ -48,6 +52,7 @@ Controller.open(function(_) {
       this.cursor.hide();
   }
   _.mouseUp = function(e) {
+    this.cursor.delayPopups();
     if (!this.cursor.selection) {
       if (this.editable) {
         if(this.orig_block) this.orig_block.blur();
