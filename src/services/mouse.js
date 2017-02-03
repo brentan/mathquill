@@ -51,6 +51,7 @@ Controller.open(function(_) {
     else
       this.cursor.hide();
   }
+  var last_click = 0;
   _.mouseUp = function(e) {
     this.cursor.delayPopups();
     if (!this.cursor.selection) {
@@ -59,6 +60,23 @@ Controller.open(function(_) {
         this.cursor.show();
         this.cursor.parent.focus();
         this.cursor.workingGroupChange(true);
+        var timestamp = Date.now();
+        if((timestamp - last_click) < 300) {
+          //double click
+          var target = false;
+          if(this.cursor[L] instanceof Variable || this.cursor[L] instanceof NumberSymbol) target = this.cursor[L];
+          else if(this.cursor[R] instanceof Variable || this.cursor[R] instanceof NumberSymbol) target = this.cursor[R];
+          if(target) {
+            for(var startL = target;startL[L] instanceof Variable || startL[L] instanceof NumberSymbol;startL = startL[L]);
+            for(var startR = target;startR[R] instanceof Variable || startR[R] instanceof NumberSymbol;startR = startR[R]);
+            if((startR[R] instanceof SupSub) && (startR[R].supsub == 'sub')) startR = startR[R];
+            this.cursor.insLeftOf(startL);
+            this.cursor.startSelection();
+            this.cursor.insRightOf(startR);
+            this.cursor.select();
+          }
+        }
+        last_click = timestamp;
       } 
     } 
   };
