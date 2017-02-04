@@ -47,13 +47,13 @@ var FunctionCommand = LatexCmds.functionCommand = P(DerivedMathCommand, function
   _.createLeftOf = function(cursor) {
     super_.createLeftOf.apply(this, arguments);
     if(typeof this.incorporate_previous !== 'undefined') {
-      // If this is set, it means we were automagically created from a object.method type of syntax
+      // If this is set, it means we were automagically created from a object:method type of syntax
       // We need to roll up the previous letters into this element and place the cursor
       var e = this[L];
       if(e === 0) return; //this shouldn't happen....
       if(e[L] === 0) return; //nor should this...
       // Zip up all the preceding letters
-      for(next = e[L]; (next !== 0) && ((next instanceof Variable) || ((next instanceof SupSub) && (next.supsub === 'sub'))); next = e[L]) {
+      for(next = e[L]; (next !== 0) && ((next instanceof Variable) || (next instanceof Accent) || ((next instanceof SupSub) && (next.supsub === 'sub'))); next = e[L]) {
         next.disown().adopt(this.ends[L], 0, this.ends[L].ends[L]);
         next.jQ.prependTo(this.ends[L].jQ);
       }

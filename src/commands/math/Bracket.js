@@ -78,13 +78,12 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
           if((node instanceof OperatorName) || (node instanceof SummationNotation)) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
         } else if((this.side === R) && (this.ctrlSeq === '\\left[') && (node instanceof Matrix)) { cursor.insRightOf(node); return cursor.workingGroupChange(); }
       }
-
       // Upon '(', we check if we should un-italicize a variable name (as its now a function handle).  
-      if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof Variable) && (this.side === L)) 
+      if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof Variable || cursor[L] instanceof Accent) && (this.side === L)) 
         return cursor[L].autoUnItalicize(cursor);
       else if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof VanillaSymbol) && (cursor[L].ctrlSeq.match(/^[0-9]$/)) && (this.side === L)) 
         LatexCmds.cdot().implicit().createLeftOf(cursor);
-      else if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof SupSub) && (this.side === L) && (cursor[L].supsub === 'sub') && (cursor[L]['sub'].ends[R] instanceof Variable)) {
+      else if((!brack) && (this.ctrlSeq === '\\left(') && (cursor[L] instanceof SupSub) && (this.side === L) && (cursor[L].supsub === 'sub') && (cursor[L]['sub'].ends[R] instanceof Variable || cursor[L]['sub'].ends[R] instanceof Accent)) {
         cursor.insAtRightEnd(cursor[L]['sub'])
         return cursor[L].autoUnItalicize(cursor); 
       }

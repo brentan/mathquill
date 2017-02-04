@@ -326,9 +326,15 @@ var Equality = P(EqualityInequality, function(_, super_) {
         if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
         else if((start_test instanceof Bracket) && (start_test.sides[L].ctrlSeq == '[')) start_test = start_test[L];
         else if((start_test instanceof Matrix) && (start_test.row == 1)) start_test = start_test[L];
+        else if((start_test instanceof Accent)) {
+          start_test = start_test.ends[R] ? start_test.ends[R].ends[R] : start_test.ends[R];
+          if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
+        }
         if(start_test === 0) all_letters = false;
         for(var l = start_test; l !== 0; l = l[L]) {
+          if(l instanceof Accent) l = l.ends[R] ? l.ends[R].ends[R] : l.ends[R];
           if(!(l instanceof Variable) && !(l instanceof NonSymbolaSymbol)) { all_letters = false; break }
+          if((l[L] == 0) && (l.parent && l.parent.parent instanceof Accent)) l = l.parent.parent;
         }
         if(all_letters) return true;
       } else {
@@ -337,9 +343,15 @@ var Equality = P(EqualityInequality, function(_, super_) {
         if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
         else if((start_test instanceof Bracket) && (start_test.sides[L].ctrlSeq == '[')) start_test = start_test[L];
         else if((start_test instanceof Matrix) && (start_test.row == 1)) start_test = start_test[L];
+        else if((start_test instanceof Accent)) {
+          start_test = start_test.ends[R] ? start_test.ends[R].ends[R] : start_test.ends[R];
+          if((start_test instanceof SupSub) && (start_test.supsub == 'sub')) start_test = start_test[L];
+        }
         if(start_test === 0) all_letters = false;
         for(var l = start_test; l !== 0; l = l[L]) {
+          if(l instanceof Accent) l = l.ends[R] ? l.ends[R].ends[R] : l.ends[R];
           if(!(l instanceof Variable) && !(l instanceof NonSymbolaSymbol)) { all_letters = false; break }
+          if((l[L] == 0) && (l.parent && l.parent.parent instanceof Accent)) l = l.parent.parent;
         }
         if(all_letters) return true;
       }

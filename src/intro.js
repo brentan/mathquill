@@ -124,6 +124,39 @@ function pray(message, cond, controller) {
   }
 }
 
+function accentCodes(command) {
+  switch(command) {
+    case 'v':
+      command = "&rarr;";
+      break;
+    case 'd':
+      command = "<span style='font-size:1.4em;position:relative;top:0.1em;'>&middot;</span>";
+      break;
+    case 'e':
+      command = "<span style='font-size:1.4em;position:relative;top:0.1em;'>&middot;&#8202;&middot;</span>";
+      break;
+    case 'f':
+      command = "<span style='font-size:1.4em;position:relative;top:0.1em;'>&middot;&#8202;&middot;&#8202;&middot;</span>";
+      break;
+    case 't':
+      command = "<span style='font-size:1.4em;position:relative;top:0.35em;'>&tilde;</span>";
+      break;
+    case 'b':
+      command = "&mdash;";
+      break;
+    case 'c':
+      command = "<span style='font-size:1.4em;position:relative;top:0.35em;'>&caron;</span>";
+      break;
+    case 'h':
+      command = "<span style='font-size:1.4em;position:relative;top:0.35em;'>&circ;</span>";
+      break;
+    case 's':
+      command = "<span style='font-size:1.1em;position:relative;top:0.3em;'>*</span>";
+      break;
+  }
+  return command;
+}
+
 /*!
  * jQuery Color Animations v2.1.2
  * https://github.com/jquery/jquery-color

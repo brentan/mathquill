@@ -131,4 +131,82 @@ var Controller = P(function(_) {
     this.container.append(el);
     this.errorBlock = el;
   };
+  _.findFullWord = function(el) {
+    if(el.parent && (el.parent.parent instanceof Accent)) return el.parent.parent.fullWord();
+    var word = el.text({})+'';
+    var letters = [el];
+    // Move to the left
+    for (var l = el[L]; l instanceof Variable || l instanceof Accent; l = l[L]) {
+      letters.unshift(l);
+      word = l.text({}) + word;
+    }
+    // Are we in a substring?
+    if(el.parent && (el.parent.parent instanceof SupSub) && (el.parent.parent.supsub === 'sub')) {
+      word = '_' + word;
+      letters = [el.parent.parent];
+      for (var l = el.parent.parent[L]; l instanceof Variable || l instanceof Accent; l = l[L]) {
+        letters.unshift(l);
+        word = l.text({}) + word;
+      }
+    }
+    // Move to the right
+    for (var l = el[R]; l instanceof Variable || l instanceof Accent; l = l[R]) {
+      letters.push(l);
+      word += l.text({});
+    }
+    // Did we hit a substring section?
+    if((l instanceof SupSub) && (l.supsub === 'sub')) {
+      word += '_';
+      letters.push(l);
+      for (var l = l.ends[L].ends[L]; l instanceof Variable || l instanceof Accent; l = l[R]) 
+        word += l.text({});
+    }
+    return [word, letters];
+  }
+  _.autoUnItalicize = function(el, cursor) {
+    if(el.parent && (el.parent.parent instanceof Accent)) return el.parent.parent.autoUnItalicize(cursor);
+    // want longest possible operator names, so join together entire contiguous
+    // sequence of letters
+    var str = '';
+    var to_remove = [];
+    for (var l = el; l instanceof Variable || l instanceof Accent; l = l[L]) {
+      str = l.ctrlSeq + str;
+      to_remove.push(l);
+    }
+    // See if we were in a substring...if so, jump to the main part of the variable name and keep going
+    if(cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')) {
+      str = '_' + str;
+      to_remove = [ cursor.parent.parent ];
+      for (var l = cursor.parent.parent[L]; l instanceof Variable || l instanceof Accent; l = l[L]) {
+        str = l.ctrlSeq + str;
+        to_remove.push(l);
+      }
+      cursor.insRightOf(cursor.parent.parent);
+    }
+    if((to_remove[0][R] === 0) && (to_remove[to_remove.length - 1].parent === el.controller.root) && el.controller.element && el.controller.element.changeToText) {
+      // If el is only thing in box, and if el matches a swiftcalcs option, we change to it
+      if((to_remove[to_remove.length - 1][L] === 0) && SwiftCalcs.elements[str]) return el.controller.element.changeToText(str);
+      var current_output = el.controller.API.text();
+      if(current_output.match(/^[^=]* := [a-z0-9\.-]+$/i) && el.controller.element.changeToText(current_output)) return;
+    }
+    var block = OperatorName();
+    block.createLeftOf(cursor);
+    for(var i = 0; i < to_remove.length; i++) {
+      // f is annoying and must be dealt with
+      if(to_remove[i].ctrlSeq === 'f') 
+        to_remove[i].jQ.removeClass('mq-florin').html('f');
+      if((to_remove[i] instanceof SupSub) && (to_remove[i].supsub === 'sub')) {
+        for(var node = to_remove[i].blocks[0].ends[L]; node !== 0; node = node[R]) {
+          if(node.ctrlSeq === 'f') 
+            node.jQ.removeClass('mq-florin').html('f');
+        }
+      }
+      if(to_remove[i] instanceof Accent) to_remove[i].removeFlorin();
+      to_remove[i].disown();
+      to_remove[i].adopt(block.ends[L], 0, block.ends[L].ends[L]);
+      to_remove[i].jQ.prependTo(block.ends[L].jQ);
+    }
+    block.ends[L].jQ.removeClass('mq-empty');
+    cursor.workingGroupChange();
+  }
 });

@@ -697,8 +697,16 @@ var MathBlock = P(MathElement, function(_, super_) {
 
     // Only allow variables (letters basically) in a operatorname
     if(cursor.parent && ((cursor.parent.parent instanceof OperatorName) || (cursor.parent.parent instanceof FunctionCommand)) && (cursor.parent === cursor.parent.parent.ends[L])) {
-      if(!((cmd instanceof Variable) || ((ch === '_') && cursor[R] === 0))) return this.flash(); 
-      if((cursor[L] instanceof SupSub) || ((ch === '_') && cursor[L] === 0)) return this.flash(); 
+      if(!((cmd instanceof Variable) || ((ch === '_') && cursor[R] === 0))) {
+        if(cursor[L] === 0) cursor.insLeftOf(cursor.parent.parent);
+        else if(cursor[R] === 0) {
+          if(cursor.parent.parent instanceof FunctionCommand) cursor.insRightOf(cursor.parent.parent);
+          else cursor.insAtLeftEnd(cursor.parent.parent.ends[R])
+        } else return this.flash(); 
+      }
+      if((cursor[L] instanceof SupSub) || ((ch === '_') && cursor[L] === 0)) {
+        return this.flash(); 
+      }
     }
 
     // Test for implicit multiplication

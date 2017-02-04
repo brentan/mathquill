@@ -9,98 +9,29 @@ var Variable = P(Symbol, function(_, super_) {
     return [{text: out}];
   };
   _.autoUnItalicize = function(cursor) {
-    // want longest possible operator names, so join together entire contiguous
-    // sequence of letters
-    var str = '';
-    var to_remove = [];
-    for (var l = this; l instanceof Variable; l = l[L]) {
-      str = l.ctrlSeq + str;
-      to_remove.push(l);
-    }
-    // See if we were in a substring...if so, jump to the main part of the variable name and keep going
-    if(cursor.parent && (cursor.parent.parent instanceof SupSub) && (cursor.parent.parent.supsub === 'sub')) {
-      str = '_' + str;
-      to_remove = [ cursor.parent.parent ];
-      for (var l = cursor.parent.parent[L]; l instanceof Variable; l = l[L]) {
-        str = l.ctrlSeq + str;
-        to_remove.push(l);
-      }
-      cursor.insRightOf(cursor.parent.parent);
-    }
-    if((to_remove[0][R] === 0) && (to_remove[to_remove.length - 1].parent === this.controller.root) && this.controller.element && this.controller.element.changeToText) {
-      // If this is only thing in box, and if this matches a swiftcalcs option, we change to it
-      if((to_remove[to_remove.length - 1][L] === 0) && SwiftCalcs.elements[str]) return this.controller.element.changeToText(str);
-      var current_output = this.controller.API.text();
-      if(current_output.match(/^[^=]* := [a-z0-9\.-]+$/i) && this.controller.element.changeToText(current_output)) return;
-    }
-    var block = OperatorName();
-    block.createLeftOf(cursor);
-    for(var i = 0; i < to_remove.length; i++) {
-      // f is annoying and must be dealt with
-      if(to_remove[i].ctrlSeq === 'f') 
-        to_remove[i].jQ.removeClass('mq-florin').html('f');
-      if((to_remove[i] instanceof SupSub) && (to_remove[i].supsub === 'sub')) {
-        for(var node = to_remove[i].blocks[0].ends[L]; node !== 0; node = node[R]) {
-          if(node.ctrlSeq === 'f') 
-            node.jQ.removeClass('mq-florin').html('f');
-        }
-      }
-      to_remove[i].disown();
-      to_remove[i].adopt(block.ends[L], 0, block.ends[L].ends[L]);
-      to_remove[i].jQ.prependTo(block.ends[L].jQ);
-    }
-    block.ends[L].jQ.removeClass('mq-empty');
-    cursor.workingGroupChange();
+    if(!this.controller) this.getController();
+    return this.controller.autoUnItalicize(this, cursor);
   };
   _.renameVariable = function(controller, old_name, new_name) {
     if(this[L] instanceof Variable) return;
     if(this.parent && this.parent.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub == 'sub')) return;
     if((this.parent.unit) || (this.parent.parent && this.parent.parent.unit)) return;
     if(this.parent && this.parent.parent && (this.parent.parent instanceof FunctionCommand) && (this.parent == this.parent.parent.blocks[1])) return; // Second part of function command
-    if(this.fullWord()[0] == old_name) {
+    var fullWord = this.fullWord();
+    if(fullWord[0] == old_name) {
       //I need to be renamed!
-      controller.cursor.insLeftOf(this);
+      controller.cursor.insLeftOf(fullWord[1][0]);
       controller.setUndoPoint();
       controller.cursor.startSelection();
-      // Move to the right
-      for (var l = this; l[R] instanceof Variable; l = l[R]);
-      if((l[R] instanceof SupSub) && (l[R].supsub == 'sub')) l = l[R]
-      controller.cursor.insRightOf(l);
+      controller.cursor.insRightOf(fullWord[1][fullWord[1].length-1]);
       controller.cursor.select();
-      controller.paste(window.SwiftCalcsLatexHelper.UnitNameToLatex(new_name));
+      controller.paste(window.SwiftCalcsLatexHelper.VarNameToLatex(new_name));
       controller.cursor.hide(); 
     }
   }
   _.fullWord = function() {
-    var word = this.text({})+'';
-    var letters = [this];
-    // Move to the left
-    for (var l = this[L]; l instanceof Variable; l = l[L]) {
-      letters.unshift(l);
-      word = l.text({}) + word;
-    }
-    // Are we in a substring?
-    if(this.parent && (this.parent.parent instanceof SupSub) && (this.parent.parent.supsub === 'sub')) {
-      word = '_' + word;
-      letters = [this.parent.parent];
-      for (var l = this.parent.parent[L]; l instanceof Variable; l = l[L]) {
-        letters.unshift(l);
-        word = l.text({}) + word;
-      }
-    }
-    // Move to the right
-    for (var l = this[R]; l instanceof Variable; l = l[R]) {
-      letters.push(l);
-      word += l.text({});
-    }
-    // Did we hit a substring section?
-    if((l instanceof SupSub) && (l.supsub === 'sub')) {
-      word += '_';
-      letters.push(l);
-      for (var l = l.ends[L].ends[L]; l instanceof Variable; l = l[R]) 
-        word += l.text({});
-    }
-    return [word, letters];
+    if(!this.controller) this.getController();
+    return this.controller.findFullWord(this);
   };
   _.finalizeTree = function() {
     this.autoComplete();
@@ -112,7 +43,7 @@ var Variable = P(Symbol, function(_, super_) {
     if(this.controller.autocompleteTimeout) window.clearTimeout(this.controller.autocompleteTimeout);
     this.controller.autocompleteTimeout = false;
     var output = this.fullWord();
-    var word = output[0];
+    var word = output[0].replace(/~[a-z]~/,"");
     var letters = output[1];
     var matchList = [];
     var word_regex = new RegExp("(" + word + ")", "gi");
@@ -162,11 +93,10 @@ var Variable = P(Symbol, function(_, super_) {
           wordList = func_command.getObject().propertyList.slice(0);
           commandList = func_command.getObject().methodList.slice(0);
           unitList = {names: [], symbols: []};
-          pretext = func_command.objectName();
-          pretext = pretext.indexOf('_') > -1 ? pretext.replace('_','<sub>')+'</sub>:' : (pretext + ':');
+          pretext = window.SwiftCalcsLatexHelper.VarNameToHTML(func_command.objectName()) + ':';
         } else {
           if((word.length < 3) && (word.indexOf('_') == -1)) 
-            return this.controller.closePopup(); // Only autocomplete on 3 characters or more
+            regex = new RegExp("^" + word + "$", "i"); // Only exact matches on 1 or 2 characters
           if(word == 'and') return this.controller.closePopup(); // ignore 'and'
           showHTML = true;
           var allwords = (this.controller.element && this.controller.element.autocomplete) ? this.controller.element.autocomplete() : (this.controller.API.__options.autocomplete || []);
@@ -182,7 +112,7 @@ var Variable = P(Symbol, function(_, super_) {
             && (!(this.controller.cursor.parent.parent && this.controller.cursor.parent.parent.parent) || (this.controller.cursor.parent.parent.parent.parent != this.controller.root.ends[L]))) { // Cursor is not in the function definition (sub check)
             var var_list = this.controller.root.ends[L].blocks[1].text({}).split(',');
             for(var i = 0; i < var_list.length; i++) {
-              if(var_list[i].trim().match(/^[a-z][a-z0-9_]/i)) {
+              if(var_list[i].trim().match(/^[a-z][a-z0-9_~]*$/i)) {
                 var var_name = var_list[i].trim();
                 var add_it = true;
                 for(var j = 0; j < wordList.length; j++) 
@@ -195,7 +125,18 @@ var Variable = P(Symbol, function(_, super_) {
           }
         }
         var formatter = function(text, to_match, self) {
-          text = window.SwiftCalcsLatexHelper.UnitNameToHTML(text).replace("<sub>","<_>").replace("</sub>","</_>");
+          if(text.lastIndexOf("~") > -1) {
+            var ind = text.lastIndexOf("~");
+            var start = text.substr(0,ind);
+            var ending = text.substr(ind+1);
+            if(start.lastIndexOf("~") > -1) { 
+              ind = start.lastIndexOf("~");
+              var command = start.substr(ind+1);
+              start = start.substr(0,ind);
+              return "<span style='display: inline-block;'><span style='display:block;line-height:.25em;font-size:0.75em;text-align:center;'>" + accentCodes(command) + "</span><span style='display:block;'>" + formatter(start, to_match, self) + "</span></span>" + formatter(ending, to_match, self);
+            }     
+          } 
+          text = window.SwiftCalcsLatexHelper.VarNameToHTML(text).replace("<sub>","<_>").replace("</sub>","</_>");
           to_match = to_match.split("_");
           for(var i = 0; i < to_match.length; i++)
             if(to_match[i].length) text = text.replace(new RegExp("(" + to_match[i] + ")","gi"), "*$1\\*").replace(/&([a-z0-9#\*\\]*)\\\*([a-z0-9#]*);/gi,"&$1$2;\\*").replace(/&([a-z0-9#]*)\*([a-z0-9#\\\*]*);/gi,"*&$1$2;").replace(/&([a-z0-9#]*)\\?\*([a-z0-9#]*)\\?\*([a-z0-9#]*);/gi,"&$1$2$3;");
@@ -214,11 +155,11 @@ var Variable = P(Symbol, function(_, super_) {
         }
         //Find all matches
         for(var i = 0; i < functionlist.length; i++)
-          if(functionlist[i].match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i], word, this) + "</i></span></td></tr></tbody></table></li>"});
+          if(functionlist[i].replace(/~[a-z]~/,"").match(regex)) matchList.push({match: functionlist[i], html: "<li data-word='" + functionlist[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(functionlist[i], word, this) + "</i></span></td></tr></tbody></table></li>"});
         for(var i = 0; i < wordList.length; i++) 
-          if(wordList[i].match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], word, this) + "</i></span>" + varVal(wordList[i],this) + "</td></tr></tbody></table></li>"});
+          if(wordList[i].replace(/~[a-z]~/,"").match(regex)) matchList.push({match: wordList[i], html: "<li data-word='" + wordList[i] + "'><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + formatter(wordList[i], word, this) + "</i></span>" + varVal(wordList[i],this) + "</td></tr></tbody></table></li>"});
         for(var i = 0; i < commandList.length; i++)
-          if(commandList[i].match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + formatter(commandList[i], word, this) + "(<span class='mq-inline-box'></span>)</span>" + varVal(commandList[i],this) + "</td></tr></tbody></table></li>"});
+          if(commandList[i].replace(/~[a-z]~/,"").match(regex)) matchList.push({match: commandList[i], html: "<li data-word='" + commandList[i] + "('><table><tbody><tr><td><span class='mq-nonSymbola'><i>" + pretext + "</i></span><span class='mq-operator-name'>" + formatter(commandList[i], word, this) + "(<span class='mq-inline-box'></span>)</span>" + varVal(commandList[i],this) + "</td></tr></tbody></table></li>"});
         for(var i = 0; i < unitList.names.length; i++)
           if(unitList.names[i].match(regex)) matchList.push({match: unitList.names[i], html: "<li data-make-unit='1' data-word='" + unitList.name_to_symbol[unitList.names[i]] + "'><table><tbody><tr><td><span class='mq-operator-name'>" + unitList.name_to_symbol[unitList.names[i]].replace(/delta([A-Z])/,"&Delta;&deg;$1").replace(/deg([A-Z])/,"&deg;$1") + " (" + capitalize(unitList.names[i]).replace(word_regex, "<b>$1</b>").replace(/<b>([a-z]*)_([a-z]*)<\/b>/i,"<b>$1</b>_<b>$2</b>") + ")</span></td></tr></tbody></table></li>"});
         if(toHTML_list.length > 0) this.controller.autocompleteTimeout = window.setTimeout(function(HTML_list, self) { return function() { 
@@ -287,18 +228,33 @@ var Variable = P(Symbol, function(_, super_) {
             _this.controller.API.keystroke('Backspace', {preventDefault: function() {} });
           _this.controller.API.typedText('"');
         }
+        var accents = [];
+        var reg = /~([a-z])~/g;
+        while((result = reg.exec(word)) !== null) 
+          accents.push(result[1]);
+        word = word.replace(reg,'');
         if((word == 'degF') || (word == 'degC') || (word == 'deltaF') || (word == 'deltaC')) {
           _this.controller.scheduleUndoPoint();
           LatexCmds[word]().createLeftOf(_this.controller.cursor);
           _this.controller.notifyElementOfChange();
-        } else
-          _this.controller.API.typedText(word);
+        } else {
+          if(word[word.length - 1]==='(' || word[word.length - 1] === ':')
+            _this.controller.API.typedText(word.substr(0,word.length-1));
+          else
+            _this.controller.API.typedText(word);
+        }
         if(_this.controller.cursor[L] instanceof Letter)
           _this.controller.cursor[L].autoOperator(_this.controller.cursor, false);
-        if(word[word.length - 1] === ':')
-          FunctionCommand(true).createLeftOf(_this.controller.cursor);
         if((word[word.length - 1] !== '(') && (word[word.length - 1] !== ':') && _this.controller.cursor.parent && (_this.controller.cursor.parent.parent instanceof SupSub) && (_this.controller.cursor.parent.parent.supsub === 'sub')) 
           _this.controller.cursor.insRightOf(_this.controller.cursor.parent.parent);
+        for(var i =0; i < accents.length; i++) 
+          var accent = LatexCmds["over" + accents[i]]().createLeftOf(_this.controller.cursor);
+        if(word[word.length - 1] === ':') {
+          _this.controller.API.typedText(':');
+          FunctionCommand(true).createLeftOf(_this.controller.cursor);
+        }
+        if(word[word.length - 1] === '(')
+          _this.controller.API.typedText('(');
         _this.controller.closePopup();
         if($(this).attr('data-make-unit') == '1') _this.controller.API.keystroke('Right', {preventDefault: function() {} });
         _this.controller.cursor.workingGroupChange();
@@ -576,7 +532,7 @@ var Letter = P(Variable, function(_, super_) {
   _.createLeftOf = function(cursor) {
     if((this.ctrlSeq == 'u') && (cursor.parent.unit || (cursor.parent.parent && cursor.parent.parent.unit)) && !(cursor[L] instanceof Variable) && !(cursor[L] && (cursor[L].ctrlSeq == 'µ'))) 
       Letter('µ').createLeftOf(cursor);
-    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === ':') && (cursor[L][L] instanceof Variable) && (this.ctrlSeq != ':')) {
+    else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === ':') && (cursor[L][L] instanceof Variable || cursor[L][L] instanceof Accent) && (this.ctrlSeq != ':')) {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);
     } else if(cursor[L] && cursor[L][L] && (cursor[L].ctrlSeq === ':') && (cursor[L][L] instanceof SupSub) && (this.ctrlSeq != ':') && cursor[L][L].supsub === 'sub') {
       FunctionCommand(this.ctrlSeq).createLeftOf(cursor);

@@ -82,6 +82,7 @@ var AbstractMathQuill = P(function(_) {
     if(this.__options['noWidth']) this.setWidth = false;
     return this;
   };
+  MathQuill.accentCodes = function(command) { return accentCodes(command); }
   _.setElement = function(el) { this.__controller.element = el; this.__controller.showPopups = true; return this; };
   _.showPopups = function() { this.__controller.showPopups = true; return this; };
   _.setUnitMode = function(val) { this.__controller.captiveUnitMode = val; this.__controller.captiveMode = val; return this; };
@@ -110,7 +111,7 @@ var AbstractMathQuill = P(function(_) {
       out = '[' + out + ']'; 
     if(opts['default'] && (out.trim() == '')) return opts['default'];
     if(this.__controller.captiveUnitMode || this.__controller.units_only) {
-      var reg = /([^a-zA-Z0-9_]|^)_([a-zA-Zµ2]+)/g;
+      var reg = /([^a-zA-Z0-9_~]|^)_([a-zA-Zµ2]+)/g;
       while((result = reg.exec(out)) !== null) {
         if(!window.checkForValidUnit(result[2])) {
           // Invalid unit in entry
