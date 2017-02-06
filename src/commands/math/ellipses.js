@@ -57,7 +57,7 @@ LatexCmds['ellipses'] = P(MathCommand, function(_, super_) {
       var leftward = cursor[L];
       while (leftward &&
         !(
-          ((leftward instanceof BinaryOperator) && (leftward.ctrlSeq != ',')) ||
+          ((leftward instanceof BinaryOperator) && ((leftward.ctrlSeq != ',') && !((leftward.ctrlSeq == '-') && (!leftward[L] || (leftward[L] && (leftward[L] instanceof BinaryOperator)))))) ||
           leftward instanceof (LatexCmds.text || noop) ||
           leftward instanceof SummationNotation ||
           leftward.ctrlSeq === '\\ ' ||
