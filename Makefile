@@ -105,8 +105,13 @@ app: css js
 	cp -f $(BUILD_DIR)/mathquill$(VERSION).js ./$(APP_DIR)/public/libraries/mathquill$(VERSION).js
 	rm -rf ./$(APP_DIR)/app/assets/fonts
 	cp -r $(FONT_SOURCE) ./$(APP_DIR)/app/assets/fonts
+	# Add in HOST helper
+	echo \<%\ host\ =\ Rails\.env\.production\?\ \?\ \(ENV[\'STAGING\']\ ==\ \'yes\'\ \?\ \'http\:\/\/staging\.swiftcalcs\.com\'\ \:\ \'https\:\/\/www\.swiftcalcs\.com\'\)\ \:\ \'http\:\/\/dev\.swiftcalcs\.com\:3000\'\ %\> | cat - ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > temp && mv temp ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
 	# Convert css to scss and use font-url to take advantage of the asset pipeline in rails 4
-	sed -e s/url\(\'font\\//font-url\(\'/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > ./$(APP_DIR)/app/assets/stylesheets/mathquill.css.scss
+	sed -e s/url\(\'font\\/Symbola\.otf\'\)/url\(\<%=\ font_url\(\'Symbola\.otf\'\,host\:host\)%\>\)/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > temp && mv temp ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+	sed -e s/url\(\'font\\/Symbola\.svg\#Symbola\'\)/url\(\<%=\ font_url\(\'Symbola\.svg\#Symbola\'\,host\:host\)%\>\)/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > temp && mv temp ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+	sed -e s/url\(\'font\\/Symbola\.ttf\'\)/url\(\<%=\ font_url\(\'Symbola\.ttf\'\,host\:host\)%\>\)/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > temp && mv temp ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+	sed -e s/url\(\'font\\/Symbola\.eot\'\)/url\(\<%=\ font_url\(\'Symbola\.eot\'\,host\:host\)%\>\)/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > ./$(APP_DIR)/app/assets/stylesheets/mathquill.css.erb
 	rm ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
 # app is used to build and auto-copy the minified js files to the swift calcs repo
 app_ugly: css uglify
@@ -117,8 +122,13 @@ app_ugly: css uglify
 	#cp -f $(BUILD_DIR)/mathquill$(VERSION).js.map ./$(APP_DIR)/public/libraries/mathquill$(VERSION).js.map
 	rm -rf ./$(APP_DIR)/app/assets/fonts
 	cp -r $(FONT_SOURCE) ./$(APP_DIR)/app/assets/fonts
+	# Add in HOST helper
+	echo \<%\ host\ =\ Rails\.env\.production\?\ \?\ \(ENV[\'STAGING\']\ ==\ \'yes\'\ \?\ \'http\:\/\/staging\.swiftcalcs\.com\'\ \:\ \'https\:\/\/www\.swiftcalcs\.com\'\)\ \:\ \'http\:\/\/dev\.swiftcalcs\.com\:3000\'\ %\> | cat - ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > temp && mv temp ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
 	# Convert css to scss and use font-url to take advantage of the asset pipeline in rails 4
-	sed -e s/url\(\'font\\//font-url\(\'/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > ./$(APP_DIR)/app/assets/stylesheets/mathquill.css.scss
+	sed -e s/url\(\'font\\/Symbola\.otf\'\)/url\(\<%=\ font_url\(\'Symbola\.otf\'\,host\:host\)%\>\)/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > temp && mv temp ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+	sed -e s/url\(\'font\\/Symbola\.svg\#Symbola\'\)/url\(\<%=\ font_url\(\'Symbola\.svg\#Symbola\'\,host\:host\)%\>\)/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > temp && mv temp ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+	sed -e s/url\(\'font\\/Symbola\.ttf\'\)/url\(\<%=\ font_url\(\'Symbola\.ttf\'\,host\:host\)%\>\)/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > temp && mv temp ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
+	sed -e s/url\(\'font\\/Symbola\.eot\'\)/url\(\<%=\ font_url\(\'Symbola\.eot\'\,host\:host\)%\>\)/g ./$(APP_DIR)/app/assets/stylesheets/mathquill.css > ./$(APP_DIR)/app/assets/stylesheets/mathquill.css.erb
 	rm ./$(APP_DIR)/app/assets/stylesheets/mathquill.css
 # dev is like all, but without minification
 dev: font css js
