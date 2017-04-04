@@ -168,7 +168,7 @@ var Variable = P(Symbol, function(_, super_) {
             var el = self.controller.element.varHelp(HTML_list[i].command);
             var html = '';
             if(el != false) {
-              var last_result = el.getLastResult();
+              var last_result = el.getLastResult(HTML_list[i].command);
               if(last_result && (last_result.length < 150)) 
                 html = window.SwiftCalcsLatexHelper.latexToHtml(last_result);
             }
@@ -337,7 +337,7 @@ var Variable = P(Symbol, function(_, super_) {
       }
       this.controller.current_tooltip = parent_el;
       if(this.controller.element.worksheet) this.controller.element.worksheet.tooltip_holder = parent_el;
-      var last_result = el.getLastResult();
+      var last_result = el.getLastResult(command);
       var html = "Defined on <a href='#' style='color: #666666;'>line " + el.myLineNumber + "</a>&nbsp;&nbsp;"
       if(last_result && (last_result.length < 150)) 
         html = window.SwiftCalcsLatexHelper.latexToHtml(last_result) + "<div style='font-style: italic; color: #666666;'>" + html + "</div>";
