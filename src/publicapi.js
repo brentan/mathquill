@@ -45,6 +45,10 @@ function APIFnFor(APIClass) {
 var Options = P(), optionProcessors = {};
 MathQuill.__options = Options.p;
 
+/*
+* Abstract mathquill is the basic mathquill class.  It can create pretty-print math on screen.  Its extended
+* by other classes and is not meant to be called directly.
+*/
 var AbstractMathQuill = P(function(_) {
   _.mathquill = true;
   _.last_action = 'none';
@@ -84,11 +88,17 @@ var AbstractMathQuill = P(function(_) {
   };
   MathQuill.accentCodes = function(command) { return accentCodes(command); }
   _.setElement = function(el) { this.__controller.element = el; this.__controller.showPopups = true; return this; };
+  //showPopups: When true, tooltips and auto-complete menus will be shown
   _.showPopups = function() { this.__controller.showPopups = true; return this; };
+  //setUnitMode: Unit mode allows only for the input of a unit (meter, inch, etc).  Used in dialogs requesting a unit
   _.setUnitMode = function(val) { this.__controller.captiveUnitMode = val; this.__controller.captiveMode = val; return this; };
+  //setCaptiveMode: Captive mode if a mathquill object is not part of a workseet, but instead is in a dialog box or similar and not connected to a Worksheet
   _.setCaptiveMode = function(val) { this.__controller.captiveMode = val; return this; };
+  //setUnitsOnly: Only allow units to be entered.  Slightly different than unitmode above, which is meant for detatched objects not in the worksheet
   _.setUnitsOnly = function(val) { this.__controller.units_only = val; return this; };
+  //setStativeMode: makes the block static, no editing allowed (highlighting/copy is allowed)
   _.setStaticMode = function(val) { this.__controller.staticMode = val; return this; };
+  //variableEntryField: set if the mathquill object is used to set a variable only (as used in a dialog)
   _.variableEntryField = function(val) {this.__controller.variableEntryField = val; return this; };
   _.el = function() { return this.__controller.container[0]; };
   var setOpts = function(opts, _this) {
@@ -104,6 +114,10 @@ var AbstractMathQuill = P(function(_) {
       opts.units_only = true;
     return opts;
   }
+ 	/* text([options]): return a textual representation of the mathquill math.  Options are:
+	 * check_for_array: determine if the input is a list or array, and if so ensure that it is wrapped in brackets []
+	 * default: if the box is blank, return this string instead of a blank string
+	 */
   _.text = function(opts) { 
     opts = setOpts(opts, this);
     var out = this.__controller.exportText(opts); 
@@ -124,6 +138,7 @@ var AbstractMathQuill = P(function(_) {
     } 
     return out;
   };
+  //highlightError(index, [options]): Will add a red squiggly line under the element requested by error_index
   _.highlightError = function(error_index, opts) {
     if(error_index < 0) return false;
     opts = setOpts(opts, this);
@@ -138,17 +153,21 @@ var AbstractMathQuill = P(function(_) {
     // call highlightError
     return this.__controller.highlightError(opts, error_index); 
   }
+  //setWidth(wide): set the max width of the element, in pixels
   _.setWidth = function(w) {
     this.jQ.css('maxWidth', w + 'px');
     return this;
   }
+  //empty: clear the element
   _.empty = function() {
     return this.__controller.exportText(this.__options).trim() == '';
   }
+  //toString: Used to produce a recognizable string that can be decoded by mathquill later to regenerate the object
   _.toString = function() { 
     var latex = this.__controller.exportLatex();
     return latex = 'latex{' + latex + '}';
   };
+  //html: Return the HTML representation of the block
   _.html = function() {
     return this.__controller.root.jQ.html()
       .replace(/ mathquill-(?:command|block)-id="?\d+"?/g, '')
@@ -156,6 +175,7 @@ var AbstractMathQuill = P(function(_) {
       .replace(/ mq-hasCursor|mq-hasCursor ?/, '')
       .replace(/ class=(""|(?= |>))/g, '');
   };
+  //reflow: Will call ‘reflow’ on all elements, causing them to update/adjust their HTML.  Should be called after window size changes.
   _.reflow = function() {
     this.__controller.root.postOrder('reflow');
     return this;
@@ -163,12 +183,14 @@ var AbstractMathQuill = P(function(_) {
 });
 MathQuill.prototype = AbstractMathQuill.prototype;
 
+// The editableField is the base mathquill object for editable WYSIWYG math.  Extended AbstractMathquill
 var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.initRootAndEvents = function(root, el, opts) {
     this.initRoot(root, el, opts);
     this.__controller.editable = true;
     this.__controller.editablesTextareaEvents();
   };
+  //focus([dir]): Focus the object.  Adds a cursor to the object.  If dir is provided, the location of the cursor is set based on dir (L or R)
   _.focus = function(dir) { 
     //The other hacky unit mode thing.  If the parent element is in unitmode but im not, ignore focus events
     if(!this.__controller.captiveUnitMode && this.__controller.element && this.__controller.element.captiveUnitMode) return this;
@@ -194,6 +216,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     //window.setTimeout(function(_this) { return function() { _this.__controller.cursor.loadPopups(); } }(this),1); // load popups after slight delay
     return this; 
   };
+  //scrollToMe(dir): Will scroll the screen until the objcet is in view.  Dir ensures that the top or bottom is the location for scrolling.
   _.scrollToMe = function(dir) {
     if(this.jQ && this.__controller.element && this.__controller.element.jQ && this.__controller.element.topOffset) {
       var top = this.jQ.position().top + this.__controller.element.topOffset() - this.jQ.closest('body').scrollTop() - 80;
@@ -213,9 +236,13 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.cursorInInitialPosition = function() {
     return this.__controller.cursor.initialPosition();
   }
+  //blur: Remove focus/cusror
   _.blur = function() { this.__controller.blur(); return this; };
+  //windowBlur: Called when the window blurs.  Cursor is maintained but switched to ‘inactive’ mode (gray highlighting, etc)
   _.windowBlur = function() { this.__controller.windowBlur(); return this; };
+  //inFocus: true/false depending on whether object has focus
   _.inFocus = function() { return !this.__controller.blurred; };
+  //write: Write the string in to the box.  Used to decode toString output and recreate a mathquill object
   _.write = function(latex) {
     this.last_action = 'write: ' + latex;
     if(this.__controller.staticMode) return this;
@@ -227,13 +254,16 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
     return this;
   };
+  //In expression mode, = key produces an = sign, otherwise it produces the assign symbol.
   _.setExpressionMode = function(val) { 
     this.__controller.API.__options.expression_mode = val;
   }
+  //Provide the list of items to use in autocomplete list.
   _.setAutocomplete = function(list) {
     this.__options.autocomplete = list.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
   }
+  //Add an item to the autocomplete list.
   _.addAutocomplete = function(item) { 
     if(typeof this.__options.autocomplete === 'undefined') this.__options.autocomplete = [item];
     else if(this.__options.autocomplete.indexOf(item) > -1) return; 
@@ -241,10 +271,12 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__options.autocomplete = this.__options.autocomplete.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
     return this;
   }
+  //flash: will flash the box to gain user attention.
   _.flash = function() {
     this.__controller.cursor.parent.flash();
     return this;
   }
+  //command(cmd, [options]): Primarily used to add special blocks to the element, and usually called when the toolbar is clicked.  See switch statement for available commands.
   _.command = function(cmd, option) {
     this.last_action = 'command: ' + cmd;
     if(this.__controller.staticMode) return this;
@@ -364,6 +396,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     if (ctrlr.blurred) cursor.hide().parent.blur();
     return this;
   };
+  //select: highlight the whole box.
   _.select = function() {
     var ctrlr = this.__controller;
     ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
@@ -371,17 +404,20 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     while (ctrlr.cursor[L]) ctrlr.selectLeft();
     return this;
   };
+  //clearSelection: will destroy all selected elements
   _.clearSelection = function() {
     this.__controller.setUndoPoint();
     this.__controller.cursor.clearSelection();
     this.__controller.notifyElementOfChange();
     return this;
   };
+  //getSelection: return a latex representation of the curent selection
   _.getSelection = function() {
     if (this.__controller.cursor.selection) 
       return this.__controller.cursor.selection.join('latex');
     return '';
   }
+  //clear: clear the box
   _.clear = function() {
     this.select();
     this.typedText('0'); // If we dont do it this way, we could be highlighting nothing and then backspacing out of the element, removing it
@@ -389,6 +425,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__controller.notifyElementOfChange();
     return this;
   }
+  //hideCursor: Remove the cursor from view
   _.hideCursor = function() {
     this.__controller.cursor.hide();
     this.__controller.cursor.workingGroupChange();
@@ -396,6 +433,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     return this;
   }
 
+  //moveToDirEnd(dir): Will move the cursor to the L or R end of the box
   _.moveToDirEnd = function(dir) {
     this.__controller.notify('move').cursor.insAtDirEnd(dir, this.__controller.root);
     this.__controller.cursor.workingGroupChange();
@@ -404,12 +442,14 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
   _.moveToLeftEnd = function() { return this.moveToDirEnd(L); };
   _.moveToRightEnd = function() { return this.moveToDirEnd(R); };
 
+  //keystroke(key, event): send a keystoke to mathquill.  The keystroke handler will then create necessary elements or perform functions (moving the cursor, cut/copy/paste, etc) based on the keystroke(s) passed.  See /services/keystroke.js for list
   _.keystroke = function(key, evt) {
     this.last_action = 'keystroke: ' + key;
     if(this.__controller.staticMode) return this;
     this.__controller.keystroke(key, evt);
     return this;
   };
+  //typedText(text): will add the character to the math box by adding the correct element
   _.typedText = function(text) {
     this.last_action = 'typedText: ' + text;
     if(this.__controller.staticMode) return this;
@@ -418,6 +458,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     for (var i = 0; i < text.length; i += 1) this.__controller.typedText(text.charAt(i));
     return this;
   };
+  //cut(event): add current selection to the ‘clipboard’ and delete selection
   _.cut = function(e) { 
     if(this.__controller.staticMode) {
       this.copy(e);
@@ -428,11 +469,14 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     }
     return this; 
   }
+  //setGhost(text): Will add a ‘ghost’ text to the box when no entry is present
   _.setGhost = function(text) {
     this.__controller.root.jQ.attr('data-ghost', text); 
     return this;
   }
+  //copy(event): Copy current selection to the ‘clipboard’
   _.copy = function(e) { this.__controller.copy(e); return this; }
+  //paste(text): Paste the ‘clipboard’ in to the element at the current position
   _.paste = function(text) { 
     this.last_action = 'paste: ' + text;
     if(this.__controller.staticMode) return this;
@@ -441,37 +485,46 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.__controller.closePopup(); 
     return this; 
   }
+  //If enabled, auto-commands (For example, typing sum( transforming in to a summation sign) will be disabled
   _.suppressAutoCommands = function(val) {
     this.__controller.suppress_auto_commands = val;
     return this;
   }
+  //closePopup: Close any active tooltip or menu
   _.closePopup = function() {
     this.__controller.closePopup();
     return this;
   }
+  //contextMenu(event): Open the contextMenu for this object.  Called on right click
   _.contextMenu = function(e) {
     return this.__controller.contextMenu(e);
   }
+  //cursorX: Get the x-axis position, in pixels, of the cursor in the box.,
   _.cursorX = function() {
     if(this.__controller.cursor.jQ && this.__controller.cursor.jQ.offset()) return this.__controller.cursor.jQ.offset().left;
     return undefined;
   }
+  //mouseDown(event): Called when a mousedown event occurs on this object (passed by swift_calcs_client)
   _.mouseDown = function(e) {
     this.last_action = 'mouseDown';
     this.__controller.mouseDown(e);
   }
+  //mouseMove(event): Called when a mousemove event occurs on this object (passed by swift_calcs_client)
   _.mouseMove = function(e) {
     this.last_action = 'mouseMove';
     this.__controller.mouseMove(e);
   }
+  //mouseUp(event): Called when a mouseup event occurs on this object (passed by swift_calcs_client)
   _.mouseUp = function(e) {
     this.last_action = 'mouseUp';
     this.__controller.mouseUp(e);
   }
+  //mouseUpShift(event): Called when a mouseup event occurs on this object which shift is pressed (passed by swift_calcs_client)
   _.mouseUpShift = function(e) {
     this.last_action = 'mouseUpShift';
     this.__controller.mouseUpShift(e);
   }
+  //mouseOut(event): Called when a mouseout event occurs on this object (passed by swift_calcs_client)
   _.mouseOut = function(e) {
     this.last_action = 'mouseOut';
     this.__controller.mouseOut(e);
@@ -485,6 +538,7 @@ var EditableField = MathQuill.EditableField = P(AbstractMathQuill, function(_) {
     this.last_action = 'currentState';
     return this.__controller.currentState();
   }
+  //renameVariable(old, new): Will search through object for variable with name ‘old’ and change to ‘new’
   _.renameVariable = function(old_name, new_name) {
     this.__controller.renameVariable(old_name, new_name);
     return this;
